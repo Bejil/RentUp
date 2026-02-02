@@ -1,0 +1,140 @@
+//
+//  RU_TabBarController.swift
+//  RentUp
+//
+//  Created by BLIN Michael on 20/01/2026.
+//
+
+import UIKit
+import SnapKit
+
+public class RU_TabBarController : UITabBarController {
+	
+	public enum Indexes : Int {
+		
+		case Home = 0
+		case Bookings = 1
+		case Settings = 2
+	}
+	
+	private lazy var indicatorView:UIView = {
+		
+		$0.backgroundColor = Colors.TabBar.Item.Selected
+		$0.isUserInteractionEnabled = false
+		$0.snp.makeConstraints { (make) in
+			make.height.equalTo(3)
+		}
+		
+		return $0
+		
+	}(UIView())
+	
+	public override func loadView() {
+		
+		super.loadView()
+		
+		tabBar.isOpaque = true
+		
+		let appearance = UITabBarAppearance()
+		appearance.configureWithDefaultBackground()
+		appearance.backgroundColor = Colors.TabBar.Background
+		
+		appearance.compactInlineLayoutAppearance.normal.iconColor = Colors.TabBar.Item.Default
+		appearance.compactInlineLayoutAppearance.normal.titleTextAttributes = [.foregroundColor : Colors.TabBar.Item.Default, .font: Fonts.TabBar.Default]
+		appearance.compactInlineLayoutAppearance.selected.iconColor = Colors.TabBar.Item.Selected
+		appearance.compactInlineLayoutAppearance.selected.titleTextAttributes = [.foregroundColor : Colors.TabBar.Item.Selected, .font: Fonts.TabBar.Selected]
+		
+		appearance.inlineLayoutAppearance.normal.iconColor = appearance.compactInlineLayoutAppearance.normal.iconColor
+		appearance.inlineLayoutAppearance.normal.titleTextAttributes = appearance.compactInlineLayoutAppearance.normal.titleTextAttributes
+		appearance.inlineLayoutAppearance.selected.iconColor = appearance.compactInlineLayoutAppearance.selected.iconColor
+		appearance.inlineLayoutAppearance.selected.titleTextAttributes = appearance.compactInlineLayoutAppearance.selected.titleTextAttributes
+		
+		appearance.stackedLayoutAppearance.normal.iconColor = appearance.compactInlineLayoutAppearance.normal.iconColor
+		appearance.stackedLayoutAppearance.normal.titleTextAttributes = appearance.compactInlineLayoutAppearance.normal.titleTextAttributes
+		appearance.stackedLayoutAppearance.selected.iconColor = appearance.compactInlineLayoutAppearance.selected.iconColor
+		appearance.stackedLayoutAppearance.selected.titleTextAttributes = appearance.compactInlineLayoutAppearance.selected.titleTextAttributes
+		
+		tabBar.standardAppearance = appearance
+		tabBar.scrollEdgeAppearance = tabBar.standardAppearance
+		tabBar.tintColor = .white
+		tabBar.isOpaque = true
+		
+		viewControllers = [RU_NavigationController(rootViewController: RU_Home_ViewController()),
+						   RU_NavigationController(rootViewController: RU_Bookings_ViewController()),
+						   RU_NavigationController(rootViewController: RU_Settings_ViewController())]
+		
+		delegate = self
+		
+		tabBar.addSubview(indicatorView)
+		
+		indicatorView.snp.makeConstraints { (make) in
+			make.left.equalToSuperview().inset(0)
+			make.width.equalTo(0)
+			make.top.equalTo(tabBar.snp.top)
+		}
+		
+		UIApplication.wait { [weak self] in
+			
+			self?.selectedIndex = 0
+		}
+	}
+	
+	public func select(_ index:Indexes) {
+		
+		if let tabBarController = UI.MainController.tabBarController as? RU_TabBarController, let indexInt = tabBarController.viewControllers?.firstIndex(where: { $0.tabBarItem.tag == index.rawValue }) {
+			
+			selectedIndex = indexInt
+		}
+	}
+	
+	public override var selectedIndex: Int {
+		
+		didSet {
+			
+			selectIndex(selectedIndex)
+		}
+	}
+	
+	override public var childForStatusBarStyle: UIViewController? {
+		
+		return self.selectedViewController
+	}
+	
+	public func view(atIndex index:Int) -> UIView? {
+		
+		let items = tabBar.subviews.filter({ $0.isUserInteractionEnabled }).sorted(by: { $0.frame.origin.x < $1.frame.origin.x })
+		return items.count > index ? items[index] : nil
+	}
+	
+	private func selectIndex(_ index:Int) {
+		
+		if indicatorView.superview != nil, let subview = view(atIndex: index), let imageView = subview.subviews.compactMap({ $0 as? UIImageView }).first {
+			
+			RU_Feedback.shared.make(.On)
+			imageView.pulse(Colors.TabBar.Item.Selected)
+			
+			UIView.animate(withDuration: 0.3, delay: 0.0, options: .curveEaseInOut) {
+				
+				self.indicatorView.snp.updateConstraints { (make) in
+					make.left.equalToSuperview().inset(subview.frame.origin.x + imageView.frame.origin.x - (UI.Margins / 2))
+					make.width.equalTo(imageView.frame.size.width + UI.Margins)
+				}
+				self.tabBar.layoutIfNeeded()
+			}
+		}
+	}
+}
+
+extension RU_TabBarController : UITabBarControllerDelegate {
+	
+	public func tabBarController(_ tabBarController: UITabBarController, shouldSelect viewController: UIViewController) -> Bool {
+		
+		if let index = viewControllers?.firstIndex(of: viewController) {
+			
+			RU_Feedback.shared.make(.On)
+			selectIndex(index)
+		}
+		
+		return true
+	}
+}

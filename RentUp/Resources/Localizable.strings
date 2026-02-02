@@ -1,0 +1,254 @@
+//
+//  Localizables.strings
+//  LettroLine
+//
+//  Created by BLIN Michael on 12/02/2025.
+//
+
+//MARK: - Placeholder
+//TODO: Empty
+"placeholder.empty.content" = "Il n'y a rien à afficher ici pour l'instant";
+"placeholder.empty.title" = "Attention";
+//TODO: Error
+"placeholder.error.button" = "Réessayer";
+"placeholder.error.title" = "Attention";
+//TODO: Loading
+"placeholder.loading.content" = "Veuillez patienter pendant le chargement";
+"placeholder.loading.title" = "Chargement en cours...";
+
+//MARK: - Alert
+"alert.cancel.button" = "Annuler";
+"alert.dismiss.button" = "Ok";
+"alert.error.title" = "Attention";
+"alert.error.button" = "Réessayer";
+"alert.loading.title" = "Chargement en cours...";
+"alert.loading.content" = "Merci de patienter pendant le chargement";
+
+//MARK: - Section
+"section.textField.placeholder" = "n/c";
+
+//MARK: - TabBar
+"tabbar.home" = "Accueil";
+"tabbar.bookings" = "Réservations";
+"tabbar.settings" = "Réglages";
+
+//MARK: - Dashboard
+"home.title" = "Accueil";
+//General
+"home.general.section.title" = "Général";
+"home.general.totalRevenue" = "Revenu net total";
+"home.general.totalNights" = "Nuitées total";
+"home.general.averageNights" = "Nuitées moyen";
+"home.general.averageTravelers" = "Voyageurs moyen";
+"home.general.mostUsedPlatform" = "Plateforme la + utilisée";
+"home.general.mostProfitablePlatform" = "Plateforme la + rentable";
+"home.general.averageOccupancy" = "Occupation moyenne";
+"home.general.forecastOccupancy" = "Occupation prévisionnelle";
+"home.general.averageProfitability" = "Rentabilité moyenne";
+"home.general.forecastProfitability" = "Rentabilité prévisionnelle";
+//Current Month
+"home.currentMonth.section.title" = "Mois en cours";
+"home.currentMonth.currentOccupancy" = "Occupation actuelle";
+"home.currentMonth.forecastOccupancy" = "Occupation prévisionnelle";
+"home.currentMonth.currentYield" = "Rendement actuel";
+"home.currentMonth.forecastYield" = "Rendement prévisionnel";
+"home.currentMonth.estimatedRevenue" = "Revenu net estimé";
+//Current Booking
+"home.currentBooking.section.title" = "Réservation en cours";
+"home.currentBooking.departure" = "Départ dans";
+"home.currentBooking.none" = "Aucune réservation en cours";
+//Next Booking
+"home.nextBooking.section.title" = "Prochaine réservation";
+"home.nextBooking.arrival" = "Arrivée dans";
+"home.nextBooking.none" = "Aucune réservation à venir";
+//Common Booking
+"home.booking.platform" = "Plateforme";
+"home.booking.nights" = "Nombre de nuitées";
+"home.booking.travelers" = "Nombre de personnes";
+"home.booking.revenue" = "Revenu net estimé";
+"home.days" = "%i jours";
+
+//MARK: - Bookings
+"bookings.title" = "Réservations";
+"bookings.status.all" = "Toutes";
+"bookings.status.current" = "En cours";
+"bookings.status.upcoming" = "À venir";
+"bookings.status.past" = "Passée";
+"bookings.filter.button" = "Filtrer";
+"bookings.filter.menu.title" = "Filtrer par";
+"bookings.filter.platform" = "Plateformes";
+"bookings.filter.classified" = "Biens";
+"bookings.filter.reset" = "Réinitialiser";
+"bookings.filter.active" = "Filtré par : ";
+"bookings.calendar.button" = "Calendrier";
+"bookings.total.label" = "Revenu total";
+"bookings.create.button" = "Nouvelle réservation";
+//Create
+"bookings.create.title.new" = "Nouvelle réservation";
+"bookings.create.title.update" = "Modifier la réservation";
+"bookings.create.classified.section.title" = "Bien";
+"bookings.create.classified.section.subtitle" = "Quel bien a été réservé ?";
+"bookings.create.classified.button" = "Choisissez un bien";
+"bookings.create.platform.section.title" = "Plateforme";
+"bookings.create.platform.section.subtitle" = "Sur quelle plateforme la réservation a t'elle été faite ?";
+"bookings.create.dates.section.title" = "Dates du séjour";
+"bookings.create.dates.section.subtitle" = "Quelles sont les dates d'arrivée et de départ des voyageurs ?";
+"bookings.create.dates.start" = "Arrivée";
+"bookings.create.dates.end" = "Départ";
+"bookings.create.dates.button" = "Sélectionner les dates";
+"bookings.calendar.title" = "Sélection des dates";
+"bookings.calendar.placeholder" = "Sélectionnez une date d'arrivée";
+"bookings.calendar.validate" = "Valider";
+"bookings.calendar.overview.title" = "Calendrier";
+"bookings.create.travelers.section.title" = "Voyageurs";
+"bookings.create.travelers.section.subtitle" = "Le nombre et le type de voyageur aidera à définir le prix ainsi que la configuration du logement";
+"bookings.create.configuration.section.title" = "Configuration";
+"bookings.create.configuration.section.subtitle" = "De quels types de lits les voyageurs auront-ils besoin ?";
+"bookings.create.configuration.section.beds" = "Lits";
+"bookings.create.configuration.section.beds.double" = "Double";
+"bookings.create.configuration.section.beds.simple" = "Simple";
+"bookings.create.configuration.section.beds.baby" = "Parapluie";
+"bookings.create.travelers.adults" = "Adultes";
+"bookings.create.travelers.children" = "Enfants";
+"bookings.create.travelers.babies" = "Bébés";
+"bookings.create.save.button" = "Enregistrer";
+"bookings.create.delete.button" = "Supprimer";
+//Errors
+"bookings.error.getAll" = "Une erreur est survenue pendant la récupération des réservations";
+"bookings.error.save" = "Une erreur est survenue pendant la sauvegarde de la réservation";
+"bookings.error.delete" = "Une erreur est survenue pendant la suppression de la réservation";
+//Status
+"booking.status.past.name" = "Passée";
+"booking.status.current.name" = "En cours";
+"booking.status.upcoming.name" = "À venir";
+//Cell
+"bookings.cell.dates.format" = "Du %@ au %@";
+"bookings.cell.edit.button" = "Modifier";
+"bookings.cell.delete.button" = "Supprimer";
+//Delete alert
+"bookings.delete.alert.title" = "Attention";
+"bookings.delete.alert.content" = "Voulez-vous vraiment supprimer cette réservation ?";
+"bookings.delete.alert.button" = "Supprimer";
+//Details
+"bookings.details.title" = "Détails de la réservation";
+"bookings.details.dates.section.title" = "Séjour";
+"bookings.details.platform" = "Plateforme";
+"bookings.details.dates.start" = "Arrivée";
+"bookings.details.dates.end" = "Départ";
+"bookings.details.nights.label" = "Nombre de nuits";
+"bookings.details.night" = "nuit";
+"bookings.details.nights" = "nuits";
+"bookings.details.status" = "Statut";
+"bookings.details.travelers.section.title" = "Voyageurs";
+"bookings.details.configuration.section.title" = "Configuration";
+"bookings.details.configuration.beds.double" = "Lits doubles";
+"bookings.details.configuration.beds.single" = "Lits simples";
+"bookings.details.configuration.beds.baby" = "Lits bébé";
+"bookings.details.travelerPrice.section.title" = "Prix public";
+"bookings.details.hostRevenue.section.title" = "Revenus nets";
+"bookings.details.price.nights" = "Nuitées";
+"bookings.details.price.discount" = "Réduction";
+"bookings.details.price.cleaning" = "Ménage";
+"bookings.details.price.travelerFees" = "Frais voyageur";
+"bookings.details.price.touristTax" = "Taxe de séjour";
+"bookings.details.price.travelerTotal" = "TOTAL";
+"bookings.details.price.hostFees" = "Frais déduits";
+"bookings.details.price.hostTotal" = "TOTAL";
+
+//MARK: - Settings
+"settings.title" = "Réglages";
+"settings.platforms.section.title" = "Paramètres des plateformes";
+"settings.platforms.section.subtitle" = "Configurez les commissions, frais et tarifs pour chaque plateforme";
+"settings.platform.tip.title" = "Prix public et revenus nets";
+"settings.platform.tip.content.traveler" = "Prix public:";
+"settings.platform.tip.content.host" = "Revenus nets:";
+"settings.platform.commissionFees.section.title" = "Commissions et frais";
+"settings.platform.commissionFees.section.subtitle" = "Paramétrez les commissions propres à la plateforme";
+"settings.platform.commission.touristTax" = "Taxe de séjour/pers/nuit";
+"settings.platform.commission.host" = "Frais de service hôte";
+"settings.platform.commission.traveler" = "Frais de service voyageur";
+"settings.platform.commission.platform" = "Commission plateforme";
+"settings.platform.commission.bank" = "Frais bancaires";
+"settings.platform.commission.vat" = "TVA";
+"settings.platform.value.amount" = "€";
+"settings.platform.value.percentage" = "%";
+"settings.platform.save.button" = "Appliquer";
+"settings.platform.cell.touristTax" = "Taxe %.2f€";
+"settings.platform.cell.commission.host" = "Hôte %.1f%%";
+"settings.platform.cell.commission.traveler" = "Voyageur %.1f%%";
+"settings.platform.cell.commission.platform" = "Commission %.1f%%";
+"settings.classifieds.section.title" = "Paramètres des biens";
+"settings.classifieds.section.subtitle" = "Configurez les biens que vous avez en gestion";
+"settings.classifieds.section.button" = "Ajouter un bien";
+"settings.classifieds.section.all" = "Tous vos biens";
+//Classified
+"settings.classified.title.create" = "Ajouter un bien";
+"settings.classified.title.update" = "Modifier un bien";
+"settings.classified.general.section.title" = "Informations générales";
+"settings.classified.general.section.subtitle" = "Identifiez votre bien";
+"settings.classified.name" = "Nom du bien";
+"settings.classified.name.placeholder" = "Nom de votre bien";
+"settings.classified.capacity" = "Capacité max";
+"settings.classified.capacity.placeholder" = "Nombre de personnes max";
+"settings.classified.tarification.section.title" = "Tarification";
+"settings.classified.tarification.section.subtitle" = "Paramétrez les prix appliqués au bien";
+"settings.classified.tarification.alert.content" = "Paramétrez les prix appliqués au bien";
+
+"settings.classified.platform.tarification.price" = "Prix par nuit";
+"settings.classified.platform.tarification.cleaning" = "Montant du ménage";
+"settings.classified.platform.tarification.offer.week" = "Réduction semaine";
+"settings.classified.platform.tarification.offer.month" = "Réduction mois";
+"settings.classified.platform.tarification.prices.section.title" = "Tarification";
+"settings.classified.platform.tarification.prices.section.subtitle" = "Définissez le prix par nuit et les frais de ménage";
+"settings.classified.platform.tarification.offers.section.title" = "Réductions";
+"settings.classified.platform.tarification.offers.section.subtitle" = "Appliquez des réductions pour les séjours longs";
+"settings.classified.platform.tarification.save.button" = "Enregistrer";
+
+"settings.classified.configuration.section.title" = "Configuration";
+"settings.classified.configuration.section.subtitle" = "Définissez les types de lits que vous mettez à disposition";
+"settings.classified.beds.double" = "Lits doubles";
+"settings.classified.beds.single" = "Lits simples";
+"settings.classified.beds.baby" = "Lits bébé";
+"settings.classified.price" = "%i€ par nuit";
+"settings.classified.cleaning" = "Ménage: %i€";
+"settings.classified.offer.week" = "-%i%% semaine";
+"settings.classified.offer.month" = "-%i%% mois";
+"settings.classified.save.button" = "Enregistrer";
+"settings.classified.delete.button" = "Supprimer";
+"settings.classified.error.getAll" = "Une erreur est survenue pendant la récupération des biens";
+"settings.classified.error.save" = "Une erreur est survenue pendant la sauvegarde du bien";
+"settings.classified.error.delete" = "Une erreur est survenue pendant la suppression du bien";
+"settings.classified.delete.alert.title" = "Attention";
+"settings.classified.delete.alert.content" = "Voulez-vous vraiment supprimer ce bien ?";
+"settings.classified.delete.alert.button" = "Supprimer";
+"settings.classified.cell.edit.button" = "Modifier";
+"settings.classified.cell.delete.button" = "Supprimer";
+"settings.classified.cell.capacity" = "%i pers. max";
+"settings.classified.cell.beds.double" = "%i lit double";
+"settings.classified.cell.beds.doubles" = "%i lits doubles";
+"settings.classified.cell.beds.single" = "%i lit simple";
+"settings.classified.cell.beds.singles" = "%i lits simples";
+"settings.classified.cell.beds.baby" = "%i lit bébé";
+"settings.classified.cell.beds.babies" = "%i lits bébé";
+//About
+"settings.about.section.title" = "À propos";
+"settings.about.version" = "Version";
+//Reset
+"settings.reset.button" = "Réinitialiser les données";
+"settings.reset.alert.title" = "Attention";
+"settings.reset.alert.content" = "Voulez-vous vraiment réinitialiser toutes les données ? Cette action est irréversible.";
+"settings.reset.alert.button" = "Réinitialiser";
+
+//MARK: - Platform
+"platform.airbnb.name" = "Airbnb";
+"platform.airbnb.priceFormula.traveler" = "Le voyageur paie le total des nuitées et du ménage, auquel s'ajoutent les frais de service voyageur et la taxe de séjour par personne et par nuit.";
+"platform.airbnb.priceFormula.host" = "Vous touchez le total des nuitées et du ménage, moins les frais de service hôte auxquels s'applique la TVA.";
+"platform.booking.name" = "Booking";
+"platform.booking.priceFormula.traveler" = "Le voyageur paie le total des nuitées et du ménage, auquel s'ajoute la taxe de séjour par personne et par nuit.";
+"platform.booking.priceFormula.host" = "Vous touchez le total des nuitées et du ménage, moins la commission de la plateforme et les frais bancaires.";
+"platform.abritel.name" = "Abritel";
+"platform.abritel.priceFormula.traveler" = "Le voyageur paie le total des nuitées et du ménage, auquel s'ajoutent la taxe de séjour et les frais de service voyageur calculés en pourcentage.";
+"platform.abritel.priceFormula.host" = "Vous touchez le total des nuitées et du ménage, moins la commission de la plateforme et les frais bancaires.";
+
+//MARK: - TextField
+"textfield.done.button" = "Valider";
