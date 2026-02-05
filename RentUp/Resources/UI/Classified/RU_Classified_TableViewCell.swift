@@ -47,11 +47,6 @@ public class RU_Classified_TableViewCell : RU_TableViewCell {
 				details.append(String(format: String(key: key), babies))
 			}
 			
-			if let price = classified?.tarification.first?.price, price > 0 {
-				
-				details.append(String(format: String(key: "settings.classified.price"), price))
-			}
-			
 			detailsLabel.text = details.joined(separator: " • ")
 		}
 	}

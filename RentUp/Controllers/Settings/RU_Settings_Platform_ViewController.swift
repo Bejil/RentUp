@@ -76,26 +76,6 @@ public class RU_Settings_Platform_ViewController: RU_ViewController {
 			}
 		}
 	}
-	private lazy var contentScrollView:RU_ScrollView = {
-		
-		$0.isCentered = false
-		$0.addSubview(contentStackView)
-		contentStackView.snp.makeConstraints { make in
-			make.top.bottom.left.equalToSuperview()
-			make.right.width.equalToSuperview()
-		}
-		return $0
-		
-	}(RU_ScrollView())
-	private lazy var contentStackView:RU_StackView = {
-		
-		$0.axis = .vertical
-		$0.spacing = 2*UI.Margins
-		$0.isLayoutMarginsRelativeArrangement = true
-		$0.layoutMargins = .init(UI.Margins)
-		return $0
-		
-	}(RU_StackView())
 	private lazy var tipStackView:RU_Tip_StackView = {
 		
 		$0.title = String(key: "settings.platform.tip.title")
@@ -155,12 +135,24 @@ public class RU_Settings_Platform_ViewController: RU_ViewController {
 		
 		super.loadView()
 		
+		let contentScrollView:RU_ScrollView = .init()
+		contentScrollView.isCentered = false
+		
+		let contentStackView:RU_StackView = .init()
+		contentStackView.axis = .vertical
+		contentStackView.spacing = 2*UI.Margins
+		contentStackView.isLayoutMarginsRelativeArrangement = true
+		contentStackView.layoutMargins = .init(UI.Margins)
+		contentScrollView.addSubview(contentStackView)
+		contentStackView.snp.makeConstraints { make in
+			make.top.bottom.left.equalToSuperview()
+			make.right.width.equalToSuperview()
+		}
+		
 		contentView.addSubview(contentScrollView)
 		contentScrollView.snp.makeConstraints { make in
 			make.edges.equalToSuperview()
 		}
-		
-		contentStackView.addArrangedSubview(tipStackView)
 		
 		let commissionFeesSectionTitleStackView:RU_Section_StackView = .init()
 		commissionFeesSectionTitleStackView.title = String(key: "settings.platform.commissionFees.section.title")

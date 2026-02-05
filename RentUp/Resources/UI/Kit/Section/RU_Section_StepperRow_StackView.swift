@@ -13,6 +13,7 @@ public class RU_Section_StepperRow_StackView : RU_Section_Row_StackView {
 		
 		didSet {
 			
+			stepper.value = Double(value ?? "0")!
 			valueLabel.text = value
 		}
 	}

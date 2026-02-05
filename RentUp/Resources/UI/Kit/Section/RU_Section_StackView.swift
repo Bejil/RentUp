@@ -16,8 +16,6 @@ public class RU_Section_StackView : RU_StackView {
 			
 			titleLabel.text = title
 			titleLabel.isHidden = title?.isEmpty ?? true
-			
-			updateUI()
 		}
 	}
 	public var subtitle:String? {
@@ -26,14 +24,12 @@ public class RU_Section_StackView : RU_StackView {
 			
 			subtitleLabel.text = subtitle
 			subtitleLabel.isHidden = subtitle?.isEmpty ?? true
-			
-			updateUI()
 		}
 	}
 	private lazy var titleLabel:RU_Label = {
 		
 		$0.isHidden = true
-		$0.font = Fonts.Content.Title.H4
+		$0.font = Fonts.Content.Title.H3
 		return $0
 		
 	}(RU_Label())
@@ -45,6 +41,35 @@ public class RU_Section_StackView : RU_StackView {
 		return $0
 		
 	}(RU_Label())
+	public var accessoryView:UIView? {
+		
+		didSet {
+			
+			if let oldValue {
+				
+				oldValue.removeFromSuperview()
+			}
+			
+			if let accessoryView {
+				
+				headerStackView.addArrangedSubview(accessoryView)
+			}
+		}
+	}
+	private lazy var headerStackView:RU_StackView = {
+		
+		$0.axis = .horizontal
+		$0.spacing = UI.Margins
+		$0.alignment = .center
+		
+		let textStackView:RU_StackView = .init(arrangedSubviews: [titleLabel,subtitleLabel])
+		textStackView.axis = .vertical
+		textStackView.spacing = UI.Margins/2
+		$0.addArrangedSubview(textStackView)
+		
+		return $0
+		
+	}(RU_StackView())
 	
 	public override init(frame: CGRect) {
 		
@@ -52,24 +77,11 @@ public class RU_Section_StackView : RU_StackView {
 		
 		axis = .vertical
 		spacing = UI.Margins/2
-		addArrangedSubview(titleLabel)
-		addArrangedSubview(subtitleLabel)
+		addArrangedSubview(headerStackView)
+		setCustomSpacing(UI.Margins, after: headerStackView)
 	}
 	
 	@MainActor required init(coder: NSCoder) {
 		fatalError("init(coder:) has not been implemented")
-	}
-	
-	private func updateUI() {
-		
-		if subtitleLabel.isHidden {
-			
-			setCustomSpacing(UI.Margins, after: titleLabel)
-		}
-		else {
-			
-			setCustomSpacing(UI.Margins/2, after: titleLabel)
-			setCustomSpacing(UI.Margins, after: subtitleLabel)
-		}
 	}
 }

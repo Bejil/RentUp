@@ -1,5 +1,5 @@
 //
-//  RU_Settings_Classified_Platform_ViewController.swift
+//  RU_Classifieds_Edit_Platform_ViewController.swift
 //  RentUp
 //
 //  Created by BLIN Michael on 01/02/2026.
@@ -8,7 +8,7 @@
 import UIKit
 import SnapKit
 
-public class RU_Settings_Classified_Platform_ViewController : RU_ViewController {
+public class RU_Classifieds_Edit_Platform_ViewController : RU_ViewController {
 	
 	public var completion:(()->Void)?
 	public var classified:RU_Classified? {

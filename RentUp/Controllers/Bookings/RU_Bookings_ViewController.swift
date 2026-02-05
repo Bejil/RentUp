@@ -14,7 +14,8 @@ public class RU_Bookings_ViewController: RU_ViewController {
 		
 		didSet {
 			
-			filteredBookings = bookings
+			let sortedBookings = bookings?.sorted { $0.dates.start > $1.dates.start }
+			filteredBookings = sortedBookings
 		}
 	}
 	private var filteredBookings:[RU_Booking]? {
@@ -23,16 +24,18 @@ public class RU_Bookings_ViewController: RU_ViewController {
 			
 			bookingsTableView.dismissPlaceholder()
 			bookingsTableView.reloadData()
-			bookingsTableView.contentOffset = .zero
+			
+			if let index = filteredBookings?.lastIndex(where: { $0.status == .current || $0.status == .upcoming }) {
+				
+				DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) { [weak self] in
+					
+					self?.bookingsTableView.scrollToRow(at: IndexPath(row: index, section: 0), at: .top, animated: false)
+				}
+			}
 			
 			if filteredBookings?.isEmpty ?? true {
 				
 				bookingsTableView.showPlaceholder(.Empty)
-			}
-			
-			UIApplication.wait { [weak self] in
-				
-				self?.bookingsTableView.reloadData()
 			}
 			
 			let total = filteredBookings?.compactMap { $0.platform?.calculatePrice(for: $0)?.hostTotal }.reduce(0, +) ?? 0
@@ -79,7 +82,7 @@ public class RU_Bookings_ViewController: RU_ViewController {
 		
 		super.init(nibName: nibNameOrNil, bundle: nibBundleOrNil)
 		
-		tabBarItem = .init(title: String(key: "tabbar.bookings"), image: UIImage(systemName: "list.bullet.clipboard"), tag: RU_TabBarController.Indexes.Bookings.rawValue)
+		tabBarItem = .init(title: String(key: "tabbar.bookings"), image: UIImage(systemName: "list.bullet.clipboard"), tag: RU_TabBarController.Indexes.allCases.firstIndex(of: .Bookings) ?? 0)
 	}
 	
 	required init?(coder: NSCoder) {
@@ -153,6 +156,11 @@ public class RU_Bookings_ViewController: RU_ViewController {
 			
 			self?.updateData()
 		}
+	}
+	
+	public override func viewWillAppear(_ animated: Bool) {
+		
+		super.viewWillAppear(animated)
 		
 		updateData()
 	}
@@ -169,6 +177,7 @@ public class RU_Bookings_ViewController: RU_ViewController {
 				
 				self?.bookingsTableView.showPlaceholder(.Error, error) { [weak self] _ in
 					
+					self?.bookingsTableView.dismissPlaceholder()
 					self?.updateData()
 				}
 			}

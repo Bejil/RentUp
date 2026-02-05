@@ -1,5 +1,5 @@
 //
-//  RU_Settings_Classified_ViewController.swift
+//  RU_Classifieds_Edit_ViewController.swift
 //  RentUp
 //
 //  Created by BLIN Michael on 24/01/2026.
@@ -8,7 +8,7 @@
 import UIKit
 import SnapKit
 
-public class RU_Settings_Classified_ViewController : RU_ViewController {
+public class RU_Classifieds_Edit_ViewController : RU_ViewController {
 	
 	public var classified:RU_Classified? = .init() {
 		
@@ -242,7 +242,7 @@ public class RU_Settings_Classified_ViewController : RU_ViewController {
 	}
 }
 
-extension RU_Settings_Classified_ViewController : UITableViewDelegate, UITableViewDataSource {
+extension RU_Classifieds_Edit_ViewController : UITableViewDelegate, UITableViewDataSource {
 	
 	public func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
 		
@@ -291,7 +291,7 @@ extension RU_Settings_Classified_ViewController : UITableViewDelegate, UITableVi
 		
 		let platform = RU_Platform.all?[indexPath.row]
 		
-		let viewController:RU_Settings_Classified_Platform_ViewController = .init()
+		let viewController:RU_Classifieds_Edit_Platform_ViewController = .init()
 		viewController.classified = classified
 		viewController.platform = platform
 		viewController.completion = { [weak self] in

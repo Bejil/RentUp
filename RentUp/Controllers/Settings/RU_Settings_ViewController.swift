@@ -10,46 +10,10 @@ import SnapKit
 
 public class RU_Settings_ViewController: RU_ViewController {
 	
-	private var classifieds:[RU_Classified]? {
-		
-		didSet {
-			
-			classifiedsTableView.reloadData()
-		}
-	}
-	private lazy var contentScrollView:RU_ScrollView = {
-		
-		$0.isCentered = false
-		$0.addSubview(contentStackView)
-		contentStackView.snp.makeConstraints { make in
-			make.top.bottom.left.equalToSuperview()
-			make.right.width.equalToSuperview()
-		}
-		return $0
-		
-	}(RU_ScrollView())
-	private lazy var contentStackView:RU_StackView = {
-		
-		$0.axis = .vertical
-		$0.spacing = 2*UI.Margins
-		$0.isLayoutMarginsRelativeArrangement = true
-		$0.layoutMargins = .init(UI.Margins)
-		return $0
-		
-	}(RU_StackView())
 	private lazy var platformsTableView:RU_TableView = {
 		
 		$0.isHeightDynamic = true
 		$0.register(RU_Platform_TableViewCell.self, forCellReuseIdentifier: RU_Platform_TableViewCell.identifier)
-		$0.delegate = self
-		$0.dataSource = self
-		return $0
-		
-	}(RU_TableView(frame: .zero, style: .plain))
-	private lazy var classifiedsTableView:RU_TableView = {
-		
-		$0.isHeightDynamic = true
-		$0.register(RU_Classified_TableViewCell.self, forCellReuseIdentifier: RU_Classified_TableViewCell.identifier)
 		$0.delegate = self
 		$0.dataSource = self
 		return $0
@@ -60,7 +24,7 @@ public class RU_Settings_ViewController: RU_ViewController {
 		
 		super.init(nibName: nibNameOrNil, bundle: nibBundleOrNil)
 		
-		tabBarItem = .init(title: String(key: "tabbar.settings"), image: UIImage(systemName: "slider.horizontal.3"), tag: RU_TabBarController.Indexes.Settings.rawValue)
+		tabBarItem = .init(title: String(key: "tabbar.settings"), image: UIImage(systemName: "slider.horizontal.3"), tag: RU_TabBarController.Indexes.allCases.firstIndex(of: .Settings) ?? 0)
 	}
 	
 	required init?(coder: NSCoder) {
@@ -74,6 +38,20 @@ public class RU_Settings_ViewController: RU_ViewController {
 		
 		navigationItem.title = String(key: "settings.title")
 		
+		let contentScrollView:RU_ScrollView = .init()
+		contentScrollView.isCentered = false
+		
+		let contentStackView:RU_StackView = .init()
+		contentStackView.axis = .vertical
+		contentStackView.spacing = 2*UI.Margins
+		contentStackView.isLayoutMarginsRelativeArrangement = true
+		contentStackView.layoutMargins = .init(UI.Margins)
+		contentScrollView.addSubview(contentStackView)
+		contentStackView.snp.makeConstraints { make in
+			make.top.bottom.left.equalToSuperview()
+			make.right.width.equalToSuperview()
+		}
+		
 		contentView.addSubview(contentScrollView)
 		contentScrollView.snp.makeConstraints { make in
 			make.edges.equalToSuperview()
@@ -85,24 +63,10 @@ public class RU_Settings_ViewController: RU_ViewController {
 		platformsSectionTitleStackView.addArrangedSubview(platformsTableView)
 		contentStackView.addArrangedSubview(platformsSectionTitleStackView)
 		
-		let classifiedsSectionTitleStackView:RU_Section_StackView = .init()
-		classifiedsSectionTitleStackView.title = String(key: "settings.classifieds.section.title")
-		classifiedsSectionTitleStackView.subtitle = String(key: "settings.classifieds.section.subtitle")
-		classifiedsSectionTitleStackView.addArrangedSubview(classifiedsTableView)
-		
-		let addClassifiedButton:RU_Button = .init(String(key: "settings.classifieds.section.button")) { _ in
-			
-			let viewController:RU_Settings_Classified_ViewController = .init()
-			UI.MainController.present(RU_NavigationController(rootViewController: viewController), animated: true)
-		}
-		addClassifiedButton.image = UIImage(systemName: "plus.circle")
-		classifiedsSectionTitleStackView.addArrangedSubview(addClassifiedButton)
-		
-		contentStackView.addArrangedSubview(classifiedsSectionTitleStackView)
-		
 		// MARK: - About Section
 		let aboutSectionStackView:RU_Section_StackView = .init()
 		aboutSectionStackView.title = String(key: "settings.about.section.title")
+		aboutSectionStackView.subtitle = String(key: "settings.about.section.subtitle")
 		
 		let versionLabel:RU_Label = .init()
 		versionLabel.text = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String
@@ -111,6 +75,7 @@ public class RU_Settings_ViewController: RU_ViewController {
 		versionRow.title = String(key: "settings.about.version")
 		versionRow.view = versionLabel
 		aboutSectionStackView.addArrangedSubview(versionRow)
+		contentStackView.addArrangedSubview(aboutSectionStackView)
 		
 		let resetButton:RU_Button = .init(String(key: "settings.reset.button")) { _ in
 			
@@ -130,42 +95,11 @@ public class RU_Settings_ViewController: RU_ViewController {
 		}
 		resetButton.type = .delete
 		resetButton.image = UIImage(systemName: "trash")
-		aboutSectionStackView.addArrangedSubview(resetButton)
-		
-		contentStackView.addArrangedSubview(aboutSectionStackView)
+		contentStackView.addArrangedSubview(resetButton)
 		
 		NotificationCenter.add(.updatePlatforms) { [weak self] _ in
 			
 			self?.platformsTableView.reloadData()
-		}
-		
-		NotificationCenter.add(.updateClassifieds) { [weak self] _ in
-			
-			self?.updateClassifieds()
-		}
-		
-		updateClassifieds()
-	}
-	
-	private func updateClassifieds() {
-		
-		RU_Alert_ViewController.presentLoading { [weak self] alertController in
-			
-			RU_Classified.getAll { [weak self] error, classifieds in
-				
-				alertController?.close { [weak self] in
-					
-					if let error {
-						
-						RU_Alert_ViewController.present(error) { [weak self] in
-							
-							self?.updateClassifieds()
-						}
-					}
-					
-					self?.classifieds = classifieds
-				}
-			}
 		}
 	}
 	
@@ -202,49 +136,14 @@ extension RU_Settings_ViewController : UITableViewDelegate, UITableViewDataSourc
 	
 	public func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
 		
-		if tableView == platformsTableView {
-			
-			return RU_Platform.all?.count ?? 0
-		}
-		else if tableView == classifiedsTableView {
-			
-			return classifieds?.count ?? 0
-		}
-		
-		return 0
+		return RU_Platform.all?.count ?? 0
 	}
 	
 	public func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
 		
-		if tableView == platformsTableView {
-			
-			let cell = tableView.dequeueReusableCell(withIdentifier: RU_Platform_TableViewCell.identifier, for: indexPath) as! RU_Platform_TableViewCell
-			cell.platform = RU_Platform.all?[indexPath.row]
-			cell.detailsLabel.text = RU_Platform.all?[indexPath.row].detail
-			return cell
-		}
-		else if tableView == classifiedsTableView {
-			
-			let classified = classifieds?[indexPath.row]
-			
-			let cell = tableView.dequeueReusableCell(withIdentifier: RU_Classified_TableViewCell.identifier, for: indexPath) as! RU_Classified_TableViewCell
-			cell.classified = classified
-			cell.deleteHandler = { classified in
-				
-				let alertController:RU_Classified_Delete_Alert_ViewController = .init()
-				alertController.classified = classified
-				alertController.present()
-			}
-			cell.editHandler = { [weak self] classified in
-				
-				let viewController:RU_Settings_Classified_ViewController = .init()
-				viewController.classified = classified
-				self?.navigationController?.pushViewController(viewController, animated: true)
-			}
-			return cell
-		}
-		
-		let cell = tableView.dequeueReusableCell(withIdentifier: RU_TableViewCell.identifier, for: indexPath) as! RU_TableViewCell
+		let cell = tableView.dequeueReusableCell(withIdentifier: RU_Platform_TableViewCell.identifier, for: indexPath) as! RU_Platform_TableViewCell
+		cell.platform = RU_Platform.all?[indexPath.row]
+		cell.detailsLabel.text = RU_Platform.all?[indexPath.row].detail
 		return cell
 	}
 	
@@ -252,60 +151,9 @@ extension RU_Settings_ViewController : UITableViewDelegate, UITableViewDataSourc
 		
 		tableView.deselectRow(at: indexPath, animated: true)
 		
-		if tableView == platformsTableView {
-			
-			let viewController:RU_Settings_Platform_ViewController = .init()
-			viewController.platform = RU_Platform.all?[indexPath.row]
-			navigationController?.pushViewController(viewController, animated: true)
-		}
-		else if tableView == classifiedsTableView {
-			
-			let viewController:RU_Settings_Classified_ViewController = .init()
-			viewController.classified = classifieds?[indexPath.row]
-			navigationController?.pushViewController(viewController, animated: true)
-		}
-	}
-	
-	public func tableView(_ tableView: UITableView, contextMenuConfigurationForRowAt indexPath: IndexPath, point: CGPoint) -> UIContextMenuConfiguration? {
-		
-		if tableView == classifiedsTableView {
-			
-			return UIContextMenuConfiguration.init(identifier: indexPath as NSIndexPath, previewProvider: { () -> UIViewController? in
-				
-				return nil
-				
-			}) { (suggestedActions) -> UIMenu? in
-				
-				let cell = tableView.cellForRow(at: indexPath) as? RU_Classified_TableViewCell
-				return cell?.menu
-			}
-		}
-		
-		return nil
-	}
-	
-	public func tableView(_ tableView: UITableView, willPerformPreviewActionForMenuWith configuration: UIContextMenuConfiguration, animator: UIContextMenuInteractionCommitAnimating) {
-		
-		if let indexPath = configuration.identifier as? IndexPath {
-			
-			animator.addCompletion {
-				
-				tableView.delegate?.tableView?(tableView, didSelectRowAt: indexPath)
-			}
-		}
-		
-		return
-	}
-	
-	public func tableView(_ tableView: UITableView, trailingSwipeActionsConfigurationForRowAt indexPath: IndexPath) -> UISwipeActionsConfiguration? {
-		
-		if tableView == classifiedsTableView {
-			
-			let cell = tableView.cellForRow(at: indexPath) as? RU_Classified_TableViewCell
-			return cell?.trailingSwipeActionsConfiguration
-		}
-		
-		return nil
+		let viewController:RU_Settings_Platform_ViewController = .init()
+		viewController.platform = RU_Platform.all?[indexPath.row]
+		navigationController?.pushViewController(viewController, animated: true)
 	}
 }
 

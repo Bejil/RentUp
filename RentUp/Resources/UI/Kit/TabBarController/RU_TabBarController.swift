@@ -10,11 +10,13 @@ import SnapKit
 
 public class RU_TabBarController : UITabBarController {
 	
-	public enum Indexes : Int {
+	public enum Indexes : CaseIterable {
 		
-		case Home = 0
-		case Bookings = 1
-		case Settings = 2
+		case Home
+		case Reporting
+		case Bookings
+		case Classifieds
+		case Settings
 	}
 	
 	private lazy var indicatorView:UIView = {
@@ -59,9 +61,24 @@ public class RU_TabBarController : UITabBarController {
 		tabBar.tintColor = .white
 		tabBar.isOpaque = true
 		
-		viewControllers = [RU_NavigationController(rootViewController: RU_Home_ViewController()),
-						   RU_NavigationController(rootViewController: RU_Bookings_ViewController()),
-						   RU_NavigationController(rootViewController: RU_Settings_ViewController())]
+		viewControllers = Indexes.allCases.compactMap({
+			
+			switch $0 {
+			case .Home:
+				RU_Home_ViewController()
+			case .Reporting:
+				RU_Reporting_ViewController()
+			case .Bookings:
+				RU_Bookings_ViewController()
+			case .Classifieds:
+				RU_Classifieds_ViewController()
+			case .Settings:
+				RU_Settings_ViewController()
+			}
+		}).compactMap({
+			
+			RU_NavigationController(rootViewController: $0)
+		})
 		
 		delegate = self
 		
@@ -81,9 +98,9 @@ public class RU_TabBarController : UITabBarController {
 	
 	public func select(_ index:Indexes) {
 		
-		if let tabBarController = UI.MainController.tabBarController as? RU_TabBarController, let indexInt = tabBarController.viewControllers?.firstIndex(where: { $0.tabBarItem.tag == index.rawValue }) {
+		if let tabIndex = RU_TabBarController.Indexes.allCases.firstIndex(of: index) {
 			
-			selectedIndex = indexInt
+			selectedIndex = tabIndex
 		}
 	}
 	

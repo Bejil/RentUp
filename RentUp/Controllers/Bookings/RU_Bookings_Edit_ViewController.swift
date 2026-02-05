@@ -60,6 +60,8 @@ public class RU_Bookings_Edit_ViewController : RU_ViewController {
 				babyBedsRow.stepper.sendActions(for: .valueChanged)
 			}
 			
+			commentTextField.text = booking?.comment
+			
 			deleteButton.isHidden = false
 			
 			updateSaveButton()
@@ -69,6 +71,12 @@ public class RU_Bookings_Edit_ViewController : RU_ViewController {
 		
 		$0.showsMenuAsPrimaryAction = true
 		$0.type = .secondary
+		$0.titleFont = Fonts.Content.Text.Regular
+		$0.setContentHuggingPriority(.required, for: .horizontal)
+		$0.setContentCompressionResistancePriority(.required, for: .horizontal)
+		$0.image = UIImage(systemName: "arrowtriangle.down.square.fill")?.applyingSymbolConfiguration(.init(scale: .small))
+		$0.configuration?.imagePlacement = .trailing
+		$0.configuration?.imagePadding = UI.Margins/2
 		return $0
 		
 	}(RU_Button(String(key: "bookings.create.classified.button")))
@@ -89,34 +97,45 @@ public class RU_Bookings_Edit_ViewController : RU_ViewController {
 	private lazy var datesButton:RU_Button = {
 		
 		$0.type = .secondary
+		$0.titleFont = Fonts.Content.Text.Regular
+		$0.setContentHuggingPriority(.required, for: .horizontal)
+		$0.setContentCompressionResistancePriority(.required, for: .horizontal)
+		$0.image = UIImage(systemName: "arrowtriangle.down.square.fill")?.applyingSymbolConfiguration(.init(scale: .small))
+		$0.configuration?.imagePlacement = .trailing
+		$0.configuration?.imagePadding = UI.Margins/2
 		return $0
 		
-	}(RU_Button(String(key: "bookings.create.dates.button")) { [weak self] _ in
+	}(RU_Button(String(key: "bookings.create.dates.button")) { [weak self] button in
 		
-		self?.presentCalendar()
-	})
-	
-	private func presentCalendar() {
+		button?.isLoading = true
 		
-		// Charger les réservations existantes
 		RU_Booking.getAll { [weak self] error, bookings in
 			
-			let calendarViewController = RU_Calendar_ViewController()
-			calendarViewController.startDate = self?.booking?.dates.start
-			calendarViewController.endDate = self?.booking?.dates.end
-			calendarViewController.existingBookings = bookings
-			calendarViewController.currentBooking = self?.booking
-			calendarViewController.didSelectRange = { [weak self] startDate, endDate in
-				
-				self?.booking?.dates.start = startDate
-				self?.booking?.dates.end = endDate
-				self?.updateDatesButton()
-				self?.updateSaveButton()
-			}
+			button?.isLoading = false
 			
-			UI.MainController.present(RU_NavigationController(rootViewController: calendarViewController), animated: true)
+			if let error {
+				
+				RU_Alert_ViewController.present(error)
+			}
+			else {
+				
+				let calendarViewController = RU_Calendar_ViewController()
+				calendarViewController.startDate = self?.booking?.dates.start
+				calendarViewController.endDate = self?.booking?.dates.end
+				calendarViewController.existingBookings = bookings
+				calendarViewController.currentBooking = self?.booking
+				calendarViewController.didSelectRange = { [weak self] startDate, endDate in
+					
+					self?.booking?.dates.start = startDate
+					self?.booking?.dates.end = endDate
+					self?.updateDatesButton()
+					self?.updateSaveButton()
+				}
+				
+				UI.MainController.present(RU_NavigationController(rootViewController: calendarViewController), animated: true)
+			}
 		}
-	}
+	})
 	private lazy var adultsRow:RU_Section_StepperRow_StackView = {
 		
 		$0.image = UIImage(systemName: "person.fill")
@@ -124,10 +143,17 @@ public class RU_Bookings_Edit_ViewController : RU_ViewController {
 		$0.stepper.minimumValue = 0.0
 		$0.stepper.addAction(.init(handler: { [weak self] _ in
 			
-			if let value = self?.adultsRow.stepper.value {
-				
-				self?.booking?.travelers.adults = Int(value)
-				self?.updateSaveButton()
+			guard let self = self else { return }
+			
+			let newValue = Int(self.adultsRow.stepper.value)
+			let previousValue = self.booking?.travelers.adults ?? 0
+			
+			if self.wouldExceedCapacity(adults: newValue) {
+				self.adultsRow.value = String(previousValue)
+				self.showCapacityError()
+			} else {
+				self.booking?.travelers.adults = newValue
+				self.updateSaveButton()
 			}
 			
 		}), for: .valueChanged)
@@ -141,10 +167,17 @@ public class RU_Bookings_Edit_ViewController : RU_ViewController {
 		$0.stepper.minimumValue = 0.0
 		$0.stepper.addAction(.init(handler: { [weak self] _ in
 			
-			if let value = self?.childrenRow.stepper.value {
-				
-				self?.booking?.travelers.children = Int(value)
-				self?.updateSaveButton()
+			guard let self = self else { return }
+			
+			let newValue = Int(self.childrenRow.stepper.value)
+			let previousValue = self.booking?.travelers.children ?? 0
+			
+			if self.wouldExceedCapacity(children: newValue) {
+				self.childrenRow.value = String(previousValue)
+				self.showCapacityError()
+			} else {
+				self.booking?.travelers.children = newValue
+				self.updateSaveButton()
 			}
 			
 		}), for: .valueChanged)
@@ -158,10 +191,17 @@ public class RU_Bookings_Edit_ViewController : RU_ViewController {
 		$0.stepper.minimumValue = 0.0
 		$0.stepper.addAction(.init(handler: { [weak self] _ in
 			
-			if let value = self?.babiesRow.stepper.value {
-				
-				self?.booking?.travelers.babies = Int(value)
-				self?.updateSaveButton()
+			guard let self = self else { return }
+			
+			let newValue = Int(self.babiesRow.stepper.value)
+			let previousValue = self.booking?.travelers.babies ?? 0
+			
+			if self.wouldExceedCapacity(babies: newValue) {
+				self.babiesRow.value = String(previousValue)
+				self.showCapacityError()
+			} else {
+				self.booking?.travelers.babies = newValue
+				self.updateSaveButton()
 			}
 			
 		}), for: .valueChanged)
@@ -219,6 +259,7 @@ public class RU_Bookings_Edit_ViewController : RU_ViewController {
 		return $0
 		
 	}(RU_Section_StepperRow_StackView())
+	private lazy var commentTextField:RU_TextView = .init()
 	private lazy var deleteButton:RU_Button = {
 		
 		$0.isHidden = true
@@ -245,6 +286,8 @@ public class RU_Bookings_Edit_ViewController : RU_ViewController {
 	}(RU_Button(String(key: "bookings.create.save.button")) { [weak self] button in
 		
 		button?.isLoading = true
+		
+		self?.booking?.comment = self?.commentTextField.text
 		
 		self?.booking?.save { [weak self] error in
 			
@@ -292,8 +335,10 @@ public class RU_Bookings_Edit_ViewController : RU_ViewController {
 		let classifiedSectionTitleStackView:RU_Section_StackView = .init()
 		classifiedSectionTitleStackView.title = String(key: "bookings.create.classified.section.title")
 		classifiedSectionTitleStackView.subtitle = String(key: "bookings.create.classified.section.subtitle")
-		classifiedSectionTitleStackView.addArrangedSubview(classifiedButton)
-		getClassifieds()
+		classifiedSectionTitleStackView.accessoryView = classifiedButton
+		classifiedButton.snp.remakeConstraints { make in
+			make.width.lessThanOrEqualToSuperview().multipliedBy(0.5)
+		}
 		contentStackView.addArrangedSubview(classifiedSectionTitleStackView)
 		
 		let platformsSectionTitleStackView:RU_Section_StackView = .init()
@@ -305,8 +350,10 @@ public class RU_Bookings_Edit_ViewController : RU_ViewController {
 		let datesSectionTitleStackView:RU_Section_StackView = .init()
 		datesSectionTitleStackView.title = String(key: "bookings.create.dates.section.title")
 		datesSectionTitleStackView.subtitle = String(key: "bookings.create.dates.section.subtitle")
-		datesButton.image = UIImage(systemName: "calendar")
-		datesSectionTitleStackView.addArrangedSubview(datesButton)
+		datesSectionTitleStackView.accessoryView = datesButton
+		datesButton.snp.remakeConstraints { make in
+			make.width.lessThanOrEqualToSuperview().multipliedBy(0.5)
+		}
 		contentStackView.addArrangedSubview(datesSectionTitleStackView)
 		
 		let travelersSectionTitleStackView:RU_Section_StackView = .init()
@@ -325,51 +372,82 @@ public class RU_Bookings_Edit_ViewController : RU_ViewController {
 		configurationSectionTitleStackView.addArrangedSubview(babyBedsRow)
 		contentStackView.addArrangedSubview(configurationSectionTitleStackView)
 		
+		let commentSectionTitleStackView:RU_Section_StackView = .init()
+		commentSectionTitleStackView.title = String(key: "bookings.create.comment.section.title")
+		commentSectionTitleStackView.subtitle = String(key: "bookings.create.comment.section.subtitle")
+		commentSectionTitleStackView.addArrangedSubview(commentTextField)
+		contentStackView.addArrangedSubview(commentSectionTitleStackView)
+		
 		contentStackView.addArrangedSubview(deleteButton)
 		
 		bottomButtonsStackView.addArrangedSubview(saveButton)
+		
+		getClassifieds()
 	}
 	
 	private func getClassifieds() {
 		
 		classifiedButton.isLoading = true
 		
-		RU_Alert_ViewController.presentLoading { [weak self] alertController in
+		RU_Classified.getAll { [weak self] error, classifieds in
 			
-			RU_Classified.getAll { [weak self] error, classifieds in
+			self?.classifiedButton.isLoading = false
+			
+			if let error {
 				
-				self?.classifiedButton.isLoading = false
-				
-				alertController?.close { [weak self] in
+				RU_Alert_ViewController.present(error) { [weak self] in
 					
-					if let error {
-						
-						RU_Alert_ViewController.present(error) { [weak self] in
-							
-							self?.getClassifieds()
-						}
-					}
-					else {
-						
-						self?.classifiedButton.menu = .init(title: String(key: ""), children: classifieds?.compactMap({ [weak self] classified in
-							
-							return UIAction(title: classified.name ?? "", handler: { [weak self] _ in
-								
-								self?.booking?.classified = classified
-								self?.updateClassified()
-							})
-							
-						}) ?? .init())
-					}
+					self?.getClassifieds()
 				}
+			}
+			else {
 				
+				self?.classifiedButton.menu = .init(title: String(key: ""), children: classifieds?.compactMap({ [weak self] classified in
+					
+					return UIAction(title: classified.name ?? "", handler: { [weak self] _ in
+						
+						self?.booking?.classified = classified
+						
+						self?.adultsRow.value = String(0)
+						self?.adultsRow.stepper.sendActions(for: .valueChanged)
+						
+						self?.childrenRow.value = String(0)
+						self?.childrenRow.stepper.sendActions(for: .valueChanged)
+						
+						self?.babiesRow.value = String(0)
+						self?.babiesRow.stepper.sendActions(for: .valueChanged)
+						
+						self?.doubleBedsRow.isHidden = classified.configuration.beds.doubles ?? 0 == 0
+						self?.doubleBedsRow.value = String(0)
+						self?.doubleBedsRow.stepper.sendActions(for: .valueChanged)
+						
+						self?.singleBedsRow.isHidden = classified.configuration.beds.singles ?? 0 == 0
+						self?.singleBedsRow.value = String(0)
+						self?.singleBedsRow.stepper.sendActions(for: .valueChanged)
+						
+						self?.babyBedsRow.isHidden = classified.configuration.beds.babies ?? 0 == 0
+						self?.babyBedsRow.value = String(0)
+						self?.babyBedsRow.stepper.sendActions(for: .valueChanged)
+						
+						self?.updateClassified()
+					})
+					
+				}) ?? .init())
 			}
 		}
 	}
 	
 	private func updateClassified() {
 		
-		classifiedButton.subtitle = booking?.classified?.name
+		classifiedButton.title = booking?.classified?.name
+		
+		if classifiedButton.superview != nil {
+			
+			classifiedButton.snp.remakeConstraints { make in
+				make.width.lessThanOrEqualToSuperview().multipliedBy(0.5)
+			}
+		}
+		
 		platformSegmentedControl.classified = booking?.classified
 		
 		if let value = booking?.classified?.configuration.beds.doubles {
@@ -405,6 +483,30 @@ public class RU_Bookings_Edit_ViewController : RU_ViewController {
 		saveButton.isEnabled = booking?.canSave ?? false
 	}
 	
+	private func wouldExceedCapacity(adults: Int? = nil, children: Int? = nil, babies: Int? = nil) -> Bool {
+		
+		if let capacity = booking?.classified?.configuration.capacity {
+			
+			let totalAdults = adults ?? (booking?.travelers.adults ?? 0)
+			let totalChildren = children ?? (booking?.travelers.children ?? 0)
+			let totalBabies = babies ?? (booking?.travelers.babies ?? 0)
+			
+			let totalTravelers = totalAdults + totalChildren + totalBabies
+			
+			return totalTravelers > capacity
+		}
+		
+		return false
+	}
+	
+	private func showCapacityError() {
+		
+		if let capacity = booking?.classified?.configuration.capacity {
+			
+			RU_Alert_ViewController.present(RU_Error(String(format: String(key: "bookings.create.capacity.error"), capacity)))
+		}
+	}
+	
 	private func updateDatesButton() {
 		
 		let dateFormatter = DateFormatter()
@@ -420,11 +522,18 @@ public class RU_Bookings_Edit_ViewController : RU_ViewController {
 			let nights = calendar.dateComponents([.day], from: startDate, to: endDate).day ?? 0
 			let nightsString = nights > 1 ? String(key: "bookings.details.nights") : String(key: "bookings.details.night")
 			
-			datesButton.subtitle = "\(startString) ➜ \(endString) • \(nights) \(nightsString)"
+			datesButton.title = "\(startString) ➜ \(endString) • \(nights) \(nightsString)"
 		}
 		else {
 			
-			datesButton.subtitle = nil
+			datesButton.title = nil
+		}
+		
+		if datesButton.superview != nil {
+			
+			datesButton.snp.remakeConstraints { make in
+				make.width.lessThanOrEqualToSuperview().multipliedBy(0.5)
+			}
 		}
 	}
 	

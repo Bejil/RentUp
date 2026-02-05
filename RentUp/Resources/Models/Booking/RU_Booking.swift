@@ -35,4 +35,5 @@ public class RU_Booking : Codable, Equatable {
 	public var travelers:Travelers = .init()
 	public var classified:RU_Classified?
 	public var beds:RU_Classified.Configuration.Beds = .init()
+	public var comment:String?
 }

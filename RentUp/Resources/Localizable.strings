@@ -28,12 +28,21 @@
 "section.textField.placeholder" = "n/c";
 
 //MARK: - TabBar
-"tabbar.home" = "Accueil";
-"tabbar.bookings" = "Réservations";
+"tabbar.home" = "Actus";
+"tabbar.bookings" = "Résas";
+"tabbar.reporting" = "Stats";
+"tabbar.classifieds" = "Biens";
 "tabbar.settings" = "Réglages";
 
+//MARK: - Reporting
+"reporting.title" = "Vos statistiques";
+
+//MARK: - Classifieds
+"classifieds.title" = "Vos biens";
+"classifieds.create.button" = "Nouveau bien";
+
 //MARK: - Dashboard
-"home.title" = "Accueil";
+"home.title" = "Vos actualités";
 //General
 "home.general.section.title" = "Général";
 "home.general.totalRevenue" = "Revenu net total";
@@ -62,14 +71,11 @@
 "home.nextBooking.arrival" = "Arrivée dans";
 "home.nextBooking.none" = "Aucune réservation à venir";
 //Common Booking
-"home.booking.platform" = "Plateforme";
 "home.booking.nights" = "Nombre de nuitées";
-"home.booking.travelers" = "Nombre de personnes";
-"home.booking.revenue" = "Revenu net estimé";
 "home.days" = "%i jours";
 
 //MARK: - Bookings
-"bookings.title" = "Réservations";
+"bookings.title" = "Vos réservations";
 "bookings.status.all" = "Toutes";
 "bookings.status.current" = "En cours";
 "bookings.status.upcoming" = "À venir";
@@ -88,14 +94,14 @@
 "bookings.create.title.update" = "Modifier la réservation";
 "bookings.create.classified.section.title" = "Bien";
 "bookings.create.classified.section.subtitle" = "Quel bien a été réservé ?";
-"bookings.create.classified.button" = "Choisissez un bien";
+"bookings.create.classified.button" = "Sélectionnez";
 "bookings.create.platform.section.title" = "Plateforme";
 "bookings.create.platform.section.subtitle" = "Sur quelle plateforme la réservation a t'elle été faite ?";
 "bookings.create.dates.section.title" = "Dates du séjour";
 "bookings.create.dates.section.subtitle" = "Quelles sont les dates d'arrivée et de départ des voyageurs ?";
 "bookings.create.dates.start" = "Arrivée";
 "bookings.create.dates.end" = "Départ";
-"bookings.create.dates.button" = "Sélectionner les dates";
+"bookings.create.dates.button" = "Sélectionner";
 "bookings.calendar.title" = "Sélection des dates";
 "bookings.calendar.placeholder" = "Sélectionnez une date d'arrivée";
 "bookings.calendar.validate" = "Valider";
@@ -108,6 +114,8 @@
 "bookings.create.configuration.section.beds.double" = "Double";
 "bookings.create.configuration.section.beds.simple" = "Simple";
 "bookings.create.configuration.section.beds.baby" = "Parapluie";
+"bookings.create.comment.section.title" = "Commentaires";
+"bookings.create.comment.section.subtitle" = "Si vous avez des commentaires spécifiques à ajouter comme des demandes ou des retours";
 "bookings.create.travelers.adults" = "Adultes";
 "bookings.create.travelers.children" = "Enfants";
 "bookings.create.travelers.babies" = "Bébés";
@@ -117,6 +125,7 @@
 "bookings.error.getAll" = "Une erreur est survenue pendant la récupération des réservations";
 "bookings.error.save" = "Une erreur est survenue pendant la sauvegarde de la réservation";
 "bookings.error.delete" = "Une erreur est survenue pendant la suppression de la réservation";
+"bookings.create.capacity.error" = "Le nombre de voyageurs dépasse la capacité maximale du bien (%i personnes).";
 //Status
 "booking.status.past.name" = "Passée";
 "booking.status.current.name" = "En cours";
@@ -138,6 +147,7 @@
 "bookings.details.nights.label" = "Nombre de nuits";
 "bookings.details.night" = "nuit";
 "bookings.details.nights" = "nuits";
+"bookings.details.comment.title" = "Commentaires";
 "bookings.details.status" = "Statut";
 "bookings.details.travelers.section.title" = "Voyageurs";
 "bookings.details.configuration.section.title" = "Configuration";
@@ -156,7 +166,7 @@
 "bookings.details.price.hostTotal" = "TOTAL";
 
 //MARK: - Settings
-"settings.title" = "Réglages";
+"settings.title" = "Vos réglages";
 "settings.platforms.section.title" = "Paramètres des plateformes";
 "settings.platforms.section.subtitle" = "Configurez les commissions, frais et tarifs pour chaque plateforme";
 "settings.platform.tip.title" = "Prix public et revenus nets";
@@ -177,10 +187,6 @@
 "settings.platform.cell.commission.host" = "Hôte %.1f%%";
 "settings.platform.cell.commission.traveler" = "Voyageur %.1f%%";
 "settings.platform.cell.commission.platform" = "Commission %.1f%%";
-"settings.classifieds.section.title" = "Paramètres des biens";
-"settings.classifieds.section.subtitle" = "Configurez les biens que vous avez en gestion";
-"settings.classifieds.section.button" = "Ajouter un bien";
-"settings.classifieds.section.all" = "Tous vos biens";
 //Classified
 "settings.classified.title.create" = "Ajouter un bien";
 "settings.classified.title.update" = "Modifier un bien";
@@ -232,6 +238,7 @@
 "settings.classified.cell.beds.babies" = "%i lits bébé";
 //About
 "settings.about.section.title" = "À propos";
+"settings.about.section.subtitle" = "Informations générales à propos de l'application";
 "settings.about.version" = "Version";
 //Reset
 "settings.reset.button" = "Réinitialiser les données";
@@ -252,3 +259,6 @@
 
 //MARK: - TextField
 "textfield.done.button" = "Valider";
+
+//MARK: - TextView
+"textview.done.button" = "Valider";

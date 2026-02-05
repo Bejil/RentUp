@@ -9,7 +9,7 @@ import UIKit
 import SnapKit
 
 public class RU_Bookings_Detail_ViewController : RU_ViewController {
-	
+#warning("Ajouter le bien")
 	public var booking:RU_Booking? {
 		
 		didSet {
@@ -40,6 +40,18 @@ public class RU_Bookings_Detail_ViewController : RU_ViewController {
 				
 				let nightsString = nights > 1 ? String(key: "bookings.details.nights") : String(key: "bookings.details.night")
 				nightsValueLabel.text = "\(nights) \(nightsString)"
+			}
+			
+			commentTipStackView.reset()
+			
+			if let comment = booking?.comment, !comment.isEmpty {
+				
+				commentTipStackView.isHidden = false
+				commentTipStackView.add(comment)
+			}
+			else {
+				
+				commentTipStackView.isHidden = true
 			}
 			
 			if let adults = booking?.travelers.adults {
@@ -158,30 +170,16 @@ public class RU_Bookings_Detail_ViewController : RU_ViewController {
 	private lazy var singleBedsSectionRowStackView:RU_Section_Row_StackView = createRow(icon: "bed.double", title: String(key: "bookings.details.configuration.beds.single"), view: singleBedsValueLabel)
 	private lazy var babyBedsValueLabel:RU_Label = .init()
 	private lazy var babyBedsSectionRowStackView:RU_Section_Row_StackView = createRow(icon: "stroller", title: String(key: "bookings.details.configuration.beds.baby"), view: babyBedsValueLabel)
-	private lazy var contentScrollView:RU_ScrollView = {
-		
-		$0.isCentered = false
-		$0.addSubview(contentStackView)
-		contentStackView.snp.makeConstraints { make in
-			make.top.bottom.left.equalToSuperview()
-			make.right.width.equalToSuperview()
-		}
-		return $0
-		
-	}(RU_ScrollView())
-	private lazy var contentStackView:RU_StackView = {
-		
-		$0.axis = .vertical
-		$0.spacing = 2*UI.Margins
-		$0.isLayoutMarginsRelativeArrangement = true
-		$0.layoutMargins = .init(UI.Margins)
-		return $0
-		
-	}(RU_StackView())
 	private lazy var platformLabel:RU_Platform_Label = .init()
 	private lazy var datesStartValueLabel:RU_Label = .init()
 	private lazy var datesEndValueLabel:RU_Label = .init()
 	private lazy var nightsValueLabel:RU_Label = .init()
+	private lazy var commentTipStackView:RU_Tip_StackView = {
+		
+		$0.title = String(key: "bookings.details.comment.title")
+		return $0
+		
+	}(RU_Tip_StackView())
 	private lazy var adultsValueLabel:RU_Label = .init()
 	private lazy var childrenValueLabel:RU_Label = .init()
 	private lazy var babiesValueLabel:RU_Label = .init()
@@ -256,6 +254,22 @@ public class RU_Bookings_Detail_ViewController : RU_ViewController {
 		
 		super.loadView()
 		
+		isModal = true
+		
+		let contentScrollView:RU_ScrollView = .init()
+		contentScrollView.isCentered = false
+		
+		let contentStackView:RU_StackView = .init()
+		contentStackView.axis = .vertical
+		contentStackView.spacing = 2*UI.Margins
+		contentStackView.isLayoutMarginsRelativeArrangement = true
+		contentStackView.layoutMargins = .init(UI.Margins)
+		contentScrollView.addSubview(contentStackView)
+		contentStackView.snp.makeConstraints { make in
+			make.top.bottom.left.equalToSuperview()
+			make.right.width.equalToSuperview()
+		}
+		
 		contentView.addSubview(contentScrollView)
 		contentScrollView.snp.makeConstraints { make in
 			make.edges.equalToSuperview()
@@ -273,6 +287,8 @@ public class RU_Bookings_Detail_ViewController : RU_ViewController {
 		datesSectionTitleStackView.addArrangedSubview(createRow(icon: "airplane.departure", title: String(key: "bookings.details.dates.end"), view: datesEndValueLabel))
 		datesSectionTitleStackView.addArrangedSubview(createRow(icon: "moon.fill", title: String(key: "bookings.details.nights.label"), view: nightsValueLabel))
 		contentStackView.addArrangedSubview(datesSectionTitleStackView)
+		
+		contentStackView.addArrangedSubview(commentTipStackView)
 		
 		let travelersSectionTitleStackView:RU_Section_StackView = .init()
 		travelersSectionTitleStackView.title = String(key: "bookings.details.travelers.section.title")
