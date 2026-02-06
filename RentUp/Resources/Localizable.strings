@@ -73,6 +73,7 @@
 //Common Booking
 "home.booking.nights" = "Nombre de nuitées";
 "home.days" = "%i jours";
+"home.details.button" = "Plus de détails";
 
 //MARK: - Bookings
 "bookings.title" = "Vos réservations";
@@ -90,6 +91,7 @@
 "bookings.total.label" = "Revenu total";
 "bookings.create.button" = "Nouvelle réservation";
 //Create
+"bookings.create.noClassifieds" = "Vous n'avez pas encore ajouté de biens. Veuillez en créer un pour pouvoir ajouter une réservation";
 "bookings.create.title.new" = "Nouvelle réservation";
 "bookings.create.title.update" = "Modifier la réservation";
 "bookings.create.classified.section.title" = "Bien";
@@ -119,6 +121,10 @@
 "bookings.create.travelers.adults" = "Adultes";
 "bookings.create.travelers.children" = "Enfants";
 "bookings.create.travelers.babies" = "Bébés";
+"bookings.create.costs.section.title" = "Coûts additionnels";
+"bookings.create.costs.section.subtitle" = "Si vous avez prévu de faire passer une femme de ménage ou si les clients doivent recevoir une compensation";
+"bookings.create.configuration.section.costs.cleaning" = "Ménage";
+"bookings.create.configuration.section.costs.compensation" = "Compensation";
 "bookings.create.save.button" = "Enregistrer";
 "bookings.create.delete.button" = "Supprimer";
 //Errors
@@ -155,6 +161,8 @@
 "bookings.details.configuration.beds.single" = "Lits simples";
 "bookings.details.configuration.beds.baby" = "Lits bébé";
 "bookings.details.travelerPrice.section.title" = "Prix public";
+"bookings.details.price.costs.cleaning" = "Ménage";
+"bookings.details.price.costs.compensation" = "Compensation";
 "bookings.details.hostRevenue.section.title" = "Revenus nets";
 "bookings.details.price.nights" = "Nuitées";
 "bookings.details.price.discount" = "Réduction";
@@ -194,6 +202,7 @@
 "settings.classified.general.section.subtitle" = "Identifiez votre bien";
 "settings.classified.name" = "Nom du bien";
 "settings.classified.name.placeholder" = "Nom de votre bien";
+"settings.classified.fees" = "Charges";
 "settings.classified.capacity" = "Capacité max";
 "settings.classified.capacity.placeholder" = "Nombre de personnes max";
 "settings.classified.tarification.section.title" = "Tarification";

@@ -20,6 +20,8 @@ extension RU_Platform {
 		public let travelerTotal: Double
 		public let hostFees: Double
 		public let hostTotal: Double
+        public let hostCleaningCost: Double
+        public let hostCompensationCost: Double
 		public let discount: Double
 		public let discountPercent: Double
 	}
@@ -221,7 +223,11 @@ extension RU_Platform {
 		}
 		
 		let travelerTotal = totalNightsCleaning + travelerFees + touristTax
-		let hostTotal = totalNightsCleaning - hostFees
+        
+        // Coûts spécifiques pour l'hôte (ménage + compensation)
+        let hostCleaningCost = Double(booking.costs.cleaning ?? 0)
+        let hostCompensationCost = Double(booking.costs.compensation ?? 0)
+        let hostTotal = totalNightsCleaning - hostFees - hostCleaningCost - hostCompensationCost
 		
 		return PriceCalculation(
 			nights: nights,
@@ -233,6 +239,8 @@ extension RU_Platform {
 			travelerTotal: travelerTotal,
 			hostFees: hostFees,
 			hostTotal: hostTotal,
+            hostCleaningCost: hostCleaningCost,
+            hostCompensationCost: hostCompensationCost,
 			discount: discount,
 			discountPercent: discountPercent
 		)

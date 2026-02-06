@@ -26,6 +26,12 @@ public class RU_Booking : Codable, Equatable {
 		public var children:Int?
 		public var babies:Int?
 	}
+    
+    public class Costs : Codable {
+        
+        public var cleaning:Int?
+        public var compensation:Int?
+    }
 	
 	public var id:String = UUID().uuidString
 	public var creationDate:Date = .init()
@@ -36,4 +42,5 @@ public class RU_Booking : Codable, Equatable {
 	public var classified:RU_Classified?
 	public var beds:RU_Classified.Configuration.Beds = .init()
 	public var comment:String?
+    public var costs:Costs = .init()
 }

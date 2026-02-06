@@ -34,8 +34,6 @@ public class RU_Classifieds_Edit_Platform_ViewController : RU_ViewController {
 		$0.image = UIImage(systemName: "eurosign")
 		$0.suffix = String(key: "settings.platform.value.amount")
 		$0.isLayoutMarginsRelativeArrangement = true
-		$0.layoutMargins.left = UI.Margins
-		$0.layoutMargins.right = UI.Margins
 		$0.layoutMargins.bottom = UI.Margins/2
 		$0.textField.addAction(.init(handler: { [weak self] _ in
 			
@@ -52,8 +50,6 @@ public class RU_Classifieds_Edit_Platform_ViewController : RU_ViewController {
 		$0.image = UIImage(systemName: "sparkles")
 		$0.suffix = String(key: "settings.platform.value.amount")
 		$0.isLayoutMarginsRelativeArrangement = true
-		$0.layoutMargins.left = UI.Margins
-		$0.layoutMargins.right = UI.Margins
 		$0.layoutMargins.bottom = UI.Margins/2
 		return $0
 		
@@ -65,8 +61,6 @@ public class RU_Classifieds_Edit_Platform_ViewController : RU_ViewController {
 		$0.image = UIImage(systemName: "calendar")
 		$0.suffix = String(key: "settings.platform.value.percentage")
 		$0.isLayoutMarginsRelativeArrangement = true
-		$0.layoutMargins.left = UI.Margins
-		$0.layoutMargins.right = UI.Margins
 		$0.layoutMargins.bottom = UI.Margins/2
 		return $0
 		
@@ -78,8 +72,6 @@ public class RU_Classifieds_Edit_Platform_ViewController : RU_ViewController {
 		$0.image = UIImage(systemName: "calendar")
 		$0.suffix = String(key: "settings.platform.value.percentage")
 		$0.isLayoutMarginsRelativeArrangement = true
-		$0.layoutMargins.left = UI.Margins
-		$0.layoutMargins.right = UI.Margins
 		$0.layoutMargins.bottom = UI.Margins/2
 		return $0
 		

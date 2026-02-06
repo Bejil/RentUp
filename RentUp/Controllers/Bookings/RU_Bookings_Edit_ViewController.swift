@@ -59,6 +59,16 @@ public class RU_Bookings_Edit_ViewController : RU_ViewController {
 				babyBedsRow.stepper.value = Double(value)
 				babyBedsRow.stepper.sendActions(for: .valueChanged)
 			}
+            
+            if let value = booking?.costs.cleaning {
+                
+                costsCleaningTextFieldRowStack.textField.text = "\(value)"
+            }
+            
+            if let value = booking?.costs.compensation {
+                
+                costsCompensationTextFieldRowStack.textField.text = "\(value)"
+            }
 			
 			commentTextField.text = booking?.comment
 			
@@ -252,13 +262,50 @@ public class RU_Bookings_Edit_ViewController : RU_ViewController {
 			if let value = self?.babyBedsRow.stepper.value {
 				
 				self?.booking?.beds.babies = Int(value)
-				self?.updateSaveButton()
 			}
 			
 		}), for: .valueChanged)
 		return $0
 		
 	}(RU_Section_StepperRow_StackView())
+    private lazy var costsCleaningTextFieldRowStack:RU_Section_TextFieldRow_StackView = {
+        
+        $0.backgroundColor = Colors.Background.View
+        $0.title = String(key: "bookings.create.configuration.section.costs.cleaning")
+        $0.image = UIImage(systemName: "sparkles")
+        $0.suffix = String(key: "settings.platform.value.amount")
+        $0.isLayoutMarginsRelativeArrangement = true
+        $0.layoutMargins.bottom = UI.Margins/2
+        $0.textField.addAction(.init(handler: { [weak self] _ in
+            
+            if let value = self?.costsCleaningTextFieldRowStack.textField.text {
+                
+                self?.booking?.costs.cleaning = Int(value)
+            }
+            
+        }), for: .editingChanged)
+        return $0
+        
+    }(RU_Section_TextFieldRow_StackView())
+    private lazy var costsCompensationTextFieldRowStack:RU_Section_TextFieldRow_StackView = {
+        
+        $0.backgroundColor = Colors.Background.View
+        $0.title = String(key: "bookings.create.configuration.section.costs.compensation")
+        $0.image = UIImage(systemName: "hand.wave")
+        $0.suffix = String(key: "settings.platform.value.amount")
+        $0.isLayoutMarginsRelativeArrangement = true
+        $0.layoutMargins.bottom = UI.Margins/2
+        $0.textField.addAction(.init(handler: { [weak self] _ in
+            
+            if let value = self?.costsCompensationTextFieldRowStack.textField.text {
+                
+                self?.booking?.costs.compensation = Int(value)
+            }
+            
+        }), for: .editingChanged)
+        return $0
+        
+    }(RU_Section_TextFieldRow_StackView())
 	private lazy var commentTextField:RU_TextView = .init()
 	private lazy var deleteButton:RU_Button = {
 		
@@ -284,7 +331,7 @@ public class RU_Bookings_Edit_ViewController : RU_ViewController {
 		return $0
 		
 	}(RU_Button(String(key: "bookings.create.save.button")) { [weak self] button in
-		
+        
 		button?.isLoading = true
 		
 		self?.booking?.comment = self?.commentTextField.text
@@ -371,6 +418,13 @@ public class RU_Bookings_Edit_ViewController : RU_ViewController {
 		configurationSectionTitleStackView.addArrangedSubview(singleBedsRow)
 		configurationSectionTitleStackView.addArrangedSubview(babyBedsRow)
 		contentStackView.addArrangedSubview(configurationSectionTitleStackView)
+        
+        let costsSectionTitleStackView:RU_Section_StackView = .init()
+        costsSectionTitleStackView.title = String(key: "bookings.create.costs.section.title")
+        costsSectionTitleStackView.subtitle = String(key: "bookings.create.costs.section.subtitle")
+        costsSectionTitleStackView.addArrangedSubview(costsCleaningTextFieldRowStack)
+        costsSectionTitleStackView.addArrangedSubview(costsCompensationTextFieldRowStack)
+        contentStackView.addArrangedSubview(costsSectionTitleStackView)
 		
 		let commentSectionTitleStackView:RU_Section_StackView = .init()
 		commentSectionTitleStackView.title = String(key: "bookings.create.comment.section.title")
@@ -401,41 +455,53 @@ public class RU_Bookings_Edit_ViewController : RU_ViewController {
 				}
 			}
 			else {
+                
+                let completion: ((RU_Classified?) -> Void)? = { [weak self] classified in
+                    
+                    self?.booking?.classified = classified
+                    
+                    self?.adultsRow.value = String(0)
+                    self?.adultsRow.stepper.sendActions(for: .valueChanged)
+                    
+                    self?.childrenRow.value = String(0)
+                    self?.childrenRow.stepper.sendActions(for: .valueChanged)
+                    
+                    self?.babiesRow.value = String(0)
+                    self?.babiesRow.stepper.sendActions(for: .valueChanged)
+                    
+                    self?.doubleBedsRow.isHidden = classified?.configuration.beds.doubles ?? 0 == 0
+                    self?.doubleBedsRow.value = String(0)
+                    self?.doubleBedsRow.stepper.sendActions(for: .valueChanged)
+                    
+                    self?.singleBedsRow.isHidden = classified?.configuration.beds.singles ?? 0 == 0
+                    self?.singleBedsRow.value = String(0)
+                    self?.singleBedsRow.stepper.sendActions(for: .valueChanged)
+                    
+                    self?.babyBedsRow.isHidden = classified?.configuration.beds.babies ?? 0 == 0
+                    self?.babyBedsRow.value = String(0)
+                    self?.babyBedsRow.stepper.sendActions(for: .valueChanged)
+                    
+                    self?.updateClassified()
+                }
 				
-				self?.classifiedButton.menu = .init(title: String(key: ""), children: classifieds?.compactMap({ [weak self] classified in
+				self?.classifiedButton.menu = .init(title: String(key: ""), children: classifieds?.compactMap({ classified in
 					
-					return UIAction(title: classified.name ?? "", handler: { [weak self] _ in
+					return UIAction(title: classified.name ?? "", handler: { _ in
 						
-						self?.booking?.classified = classified
-						
-						self?.adultsRow.value = String(0)
-						self?.adultsRow.stepper.sendActions(for: .valueChanged)
-						
-						self?.childrenRow.value = String(0)
-						self?.childrenRow.stepper.sendActions(for: .valueChanged)
-						
-						self?.babiesRow.value = String(0)
-						self?.babiesRow.stepper.sendActions(for: .valueChanged)
-						
-						self?.doubleBedsRow.isHidden = classified.configuration.beds.doubles ?? 0 == 0
-						self?.doubleBedsRow.value = String(0)
-						self?.doubleBedsRow.stepper.sendActions(for: .valueChanged)
-						
-						self?.singleBedsRow.isHidden = classified.configuration.beds.singles ?? 0 == 0
-						self?.singleBedsRow.value = String(0)
-						self?.singleBedsRow.stepper.sendActions(for: .valueChanged)
-						
-						self?.babyBedsRow.isHidden = classified.configuration.beds.babies ?? 0 == 0
-						self?.babyBedsRow.value = String(0)
-						self?.babyBedsRow.stepper.sendActions(for: .valueChanged)
-						
-						self?.updateClassified()
+						completion?(classified)
 					})
 					
 				}) ?? .init())
+                
+                if self?.booking?.classified == nil && classifieds?.count ?? 0 == 1 {
+                    
+                    completion?(classifieds?.first)
+                }
 			}
 		}
 	}
+    
+    
 	
 	private func updateClassified() {
 		

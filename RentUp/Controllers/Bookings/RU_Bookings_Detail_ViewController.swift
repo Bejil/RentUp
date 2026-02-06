@@ -9,7 +9,7 @@ import UIKit
 import SnapKit
 
 public class RU_Bookings_Detail_ViewController : RU_ViewController {
-#warning("Ajouter le bien")
+    
 	public var booking:RU_Booking? {
 		
 		didSet {
@@ -77,7 +77,6 @@ public class RU_Bookings_Detail_ViewController : RU_ViewController {
 				babiesSectionRowStackView.isHidden = true
 			}
 			
-			// Configuration des lits
 			if let doubles = booking?.beds.doubles, doubles > 0 {
 				
 				doubleBedsValueLabel.text = "\(doubles)"
@@ -108,7 +107,6 @@ public class RU_Bookings_Detail_ViewController : RU_ViewController {
 				babyBedsSectionRowStackView.isHidden = true
 			}
 			
-			// Masquer la section configuration si aucun lit
 			let hasAnyBed = (booking?.beds.doubles ?? 0) > 0 || (booking?.beds.singles ?? 0) > 0 || (booking?.beds.babies ?? 0) > 0
 			configurationSectionStackView.isHidden = !hasAnyBed
 			
@@ -139,6 +137,13 @@ public class RU_Bookings_Detail_ViewController : RU_ViewController {
 				hostCleaningValueLabel.text = String(format: "%.2f €", calculation.cleaning)
 				
 				hostFeesValueLabel.text = String(format: "%.2f €", calculation.hostFees)
+                
+                hostCostsCleaningSectionRowStackView.isHidden = calculation.hostCleaningCost == 0
+                hostCostsCleaningValueLabel.text = String(format: "%.2f €", calculation.hostCleaningCost)
+                
+                hostCostsCompensationSectionRowStackView.isHidden = calculation.hostCompensationCost == 0
+                hostCostsCompensationValueLabel.text = String(format: "%.2f €", calculation.hostCompensationCost)
+                
 				hostTotalValueLabel.text = String(format: "%.2f €", calculation.hostTotal)
 				
 				// Masquer les sections si pas de calcul possible
@@ -237,6 +242,8 @@ public class RU_Bookings_Detail_ViewController : RU_ViewController {
 		$0.addArrangedSubview(hostDiscountSectionRowStackView)
 		$0.addArrangedSubview(hostCleaningSectionRowStackView)
 		$0.addArrangedSubview(createRow(icon: "minus", title: String(key: "bookings.details.price.hostFees"), view: hostFeesValueLabel))
+        $0.addArrangedSubview(hostCostsCleaningSectionRowStackView)
+        $0.addArrangedSubview(hostCostsCompensationSectionRowStackView)
 		$0.addArrangedSubview(createRow(icon: "equal.circle.fill", title: String(key: "bookings.details.price.hostTotal"), view: hostTotalValueLabel, isHighlighted: true))
 		
 		return $0
@@ -248,6 +255,10 @@ public class RU_Bookings_Detail_ViewController : RU_ViewController {
 	private lazy var hostCleaningSectionRowStackView:RU_Section_Row_StackView = createRow(icon: "sparkles", title: String(key: "bookings.details.price.cleaning"), view: hostCleaningValueLabel)
 	private lazy var hostCleaningValueLabel:RU_Label = .init()
 	private lazy var hostFeesValueLabel:RU_Label = .init()
+    private lazy var hostCostsCleaningSectionRowStackView:RU_Section_Row_StackView = createRow(icon: "sparkles", title: String(key: "bookings.details.price.costs.cleaning"), view: hostCostsCleaningValueLabel)
+    private lazy var hostCostsCleaningValueLabel:RU_Label = .init()
+    private lazy var hostCostsCompensationSectionRowStackView:RU_Section_Row_StackView = createRow(icon: "hand.wave", title: String(key: "bookings.details.price.costs.compensation"), view: hostCostsCompensationValueLabel)
+    private lazy var hostCostsCompensationValueLabel:RU_Label = .init()
 	private lazy var hostTotalValueLabel:RU_Label = .init()
 	
 	public override func loadView() {

@@ -25,14 +25,7 @@ public class RU_Home_ViewController: RU_ViewController {
 			
 			if [currentBooking,nextBooking].allSatisfy({ $0 == nil }) {
 				
-				let placeholderView = contentView.showPlaceholder(.Empty)
-				
-				let addButton:RU_Button = .init(String(key: "bookings.create.button")) { _ in
-					
-					UI.MainController.present(RU_NavigationController(rootViewController: RU_Bookings_Edit_ViewController()), animated: true)
-				}
-				addButton.image = UIImage(systemName: "plus.circle")
-				placeholderView.contentStackView.addArrangedSubview(addButton)
+				contentView.showPlaceholder(.Empty)
 			}
 		}
 	}

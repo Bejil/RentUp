@@ -129,9 +129,27 @@ public class RU_Bookings_ViewController: RU_ViewController {
 			make.top.equalTo(segmentedControl.snp.bottom).inset(UI.Margins)
 		}
 		
-		let addButton:RU_Button = .init(String(key: "bookings.create.button")) { _ in
+		let addButton:RU_Button = .init(String(key: "bookings.create.button")) { button in
 			
-			UI.MainController.present(RU_NavigationController(rootViewController: RU_Bookings_Edit_ViewController()), animated: true)
+            button?.isLoading = true
+            
+            RU_Classified.getAll { error, classifieds in
+                
+                button?.isLoading = false
+                
+                if let error {
+                    
+                    RU_Alert_ViewController.present(error)
+                }
+                else if classifieds?.isEmpty ?? true {
+                    
+                    RU_Alert_ViewController.present(RU_Error(String(key: "bookings.create.noClassifieds")))
+                }
+                else {
+                    
+                    UI.MainController.present(RU_NavigationController(rootViewController: RU_Bookings_Edit_ViewController()), animated: true)
+                }
+            }
 		}
 		addButton.image = UIImage(systemName: "plus.circle")
 		
@@ -323,3 +341,4 @@ extension RU_Bookings_ViewController: UITableViewDelegate, UITableViewDataSource
 		return cell?.trailingSwipeActionsConfiguration
 	}
 }
+

@@ -15,6 +15,11 @@ public class RU_Classifieds_Edit_ViewController : RU_ViewController {
 		didSet {
 			
 			nameRow.textField.text = classified?.name
+            
+            if let value = classified?.fees {
+                
+                feesRow.textField.text = "\(value)"
+            }
 			
 			if let value = classified?.configuration.capacity {
 				
@@ -59,10 +64,27 @@ public class RU_Classifieds_Edit_ViewController : RU_ViewController {
 			self?.classified?.name = self?.nameRow.textField.text
 			self?.updateSaveButton()
 			
-		}), for: .editingDidEnd)
+		}), for: .editingChanged)
 		return $0
 		
 	}(RU_Section_TextFieldRow_StackView())
+    private lazy var feesRow:RU_Section_TextFieldRow_StackView = {
+        
+        $0.image = UIImage(systemName: "eurosign")
+        $0.title = String(key: "settings.classified.fees")
+        $0.textField.placeholder = String(key: "section.textField.placeholder")
+        $0.suffix = String(key: "settings.platform.value.amount")
+        $0.textField.addAction(.init(handler: { [weak self] _ in
+            
+            if let value = self?.feesRow.textField.text {
+                
+                self?.classified?.fees = Int(value)
+            }
+            
+        }), for: .editingChanged)
+        return $0
+        
+    }(RU_Section_TextFieldRow_StackView())
 	private lazy var capacityRow:RU_Section_StepperRow_StackView = {
 		
 		$0.image = UIImage(systemName: "person.2.fill")
@@ -214,12 +236,13 @@ public class RU_Classifieds_Edit_ViewController : RU_ViewController {
 		generalSectionStackView.title = String(key: "settings.classified.general.section.title")
 		generalSectionStackView.subtitle = String(key: "settings.classified.general.section.subtitle")
 		generalSectionStackView.addArrangedSubview(nameRow)
-		generalSectionStackView.addArrangedSubview(capacityRow)
+        generalSectionStackView.addArrangedSubview(feesRow)
 		contentStackView.addArrangedSubview(generalSectionStackView)
 		
 		let configurationSectionStackView:RU_Section_StackView = .init()
 		configurationSectionStackView.title = String(key: "settings.classified.configuration.section.title")
 		configurationSectionStackView.subtitle = String(key: "settings.classified.configuration.section.subtitle")
+        configurationSectionStackView.addArrangedSubview(capacityRow)
 		configurationSectionStackView.addArrangedSubview(doubleBedsRow)
 		configurationSectionStackView.addArrangedSubview(singleBedsRow)
 		configurationSectionStackView.addArrangedSubview(babiesBedsRow)

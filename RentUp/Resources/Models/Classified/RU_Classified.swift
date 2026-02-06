@@ -51,6 +51,7 @@ public class RU_Classified : Codable, Equatable {
 	public var creationDate:Date = .init()
 	public var modificationDate:Date = .init()
 	public var name:String?
+    public var fees:Int?
 	public var configuration:Configuration = .init()
 	public var tarification:[Tarification] = .init()
 }
