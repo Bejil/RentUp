@@ -98,7 +98,7 @@ public class RU_Bookings_ViewController: RU_ViewController {
 		
 		updateFilterNavigationItem()
 		
-		navigationItem.rightBarButtonItem = .init(title: String(key: "bookings.calendar.button"), primaryAction: .init(handler: { [weak self] _ in
+		navigationItem.leftBarButtonItem = .init(title: String(key: "bookings.calendar.button"), primaryAction: .init(handler: { [weak self] _ in
 			
 			let calendarViewController = RU_Bookings_Calendar_ViewController()
 			calendarViewController.bookings = self?.bookings
@@ -271,7 +271,7 @@ public class RU_Bookings_ViewController: RU_ViewController {
 					buttonTitle = String(key: "bookings.filter.button")
 				}
 				
-				self?.navigationItem.leftBarButtonItem = .init(title: buttonTitle, menu: .init(title: String(key: "bookings.filter.menu.title"), children: children))
+				self?.navigationItem.rightBarButtonItem = .init(title: buttonTitle, menu: .init(title: String(key: "bookings.filter.menu.title"), children: children))
 			}
 		}
 	}

@@ -171,16 +171,16 @@ public class RU_Booking_Card_Section_StackView : RU_Section_StackView {
         super.init(frame: frame)
         
         isHidden = true
-        layer.cornerRadius = UI.CornerRadius
-        clipsToBounds = false
-        layer.shadowColor = UIColor.black.cgColor
-        layer.shadowOffset = CGSize(width: 0, height: 4)
-        layer.shadowRadius = UI.CornerRadius
-        layer.shadowOpacity = 0.1
-        backgroundColor = Colors.Background.View
-        isLayoutMarginsRelativeArrangement = true
-        layoutMargins = .init(horizontal: inset)
-        layoutMargins.top = inset
+//        layer.cornerRadius = UI.CornerRadius
+//        clipsToBounds = false
+//        layer.shadowColor = UIColor.black.cgColor
+//        layer.shadowOffset = CGSize(width: 0, height: 4)
+//        layer.shadowRadius = UI.CornerRadius
+//        layer.shadowOpacity = 0.1
+//        backgroundColor = Colors.Background.View
+//        isLayoutMarginsRelativeArrangement = true
+//        layoutMargins = .init(horizontal: inset)
+//        layoutMargins.top = inset
         
         accessoryView = platformLabel
         
@@ -198,12 +198,10 @@ public class RU_Booking_Card_Section_StackView : RU_Section_StackView {
             viewController.booking = self?.booking
             UI.MainController.present(RU_NavigationController(rootViewController: viewController), animated: true)
         }
-        button.type = .navigation
+        button.titleFont = Fonts.Content.Button.Title.withSize(Fonts.Size)
         button.image = UIImage(systemName: "arrowtriangle.right.square")?.applyingSymbolConfiguration(.init(scale: .small))
         button.configuration?.imagePadding = UI.Margins/2
         button.configuration?.imagePlacement = .trailing
-        button.configuration?.titleAlignment = .trailing
-        button.contentHorizontalAlignment = .trailing
         
         let buttonView:UIView = .init()
         buttonView.addSubview(button)

@@ -36,6 +36,26 @@
 
 //MARK: - Reporting
 "reporting.title" = "Vos statistiques";
+"reporting.section.occupancy" = "Occupation";
+"reporting.section.occupancy.subtitle" = "Il s'agit du nombre de jours occupés de vos biens sur le nombre de jours total";
+"reporting.section.profitability" = "Rentabilité";
+"reporting.section.profitability.subtitle" = "Il s'agit de la rentabilité de vos locations par rapport à vos charges";
+"reporting.occupancy.currentMonth" = "Mois en cours";
+"reporting.occupancy.total" = "TOTAL";
+"reporting.profitability.currentMonth" = "Mois en cours";
+"reporting.profitability.total" = "TOTAL";
+"reporting.value.placeholder" = "n/c";
+"reporting.details.button" = "Plus de détails";
+"reporting.filter.button" = "Filtrer";
+"reporting.filter.menu.title" = "Filtrer par";
+"reporting.filter.platform" = "Plateformes";
+"reporting.filter.classified" = "Biens";
+"reporting.filter.reset" = "Réinitialiser";
+"reporting.filter.active" = "Filtré par : ";
+"reporting.detail.occupation.title" = "Occupation";
+"reporting.detail.legend.actual" = "Occupation actuelle";
+"reporting.detail.legend.forecast" = "Occupation prévisionnelle";
+"reporting.detail.total" = "TOTAL";
 
 //MARK: - Classifieds
 "classifieds.title" = "Vos biens";
@@ -202,6 +222,8 @@
 "settings.classified.general.section.subtitle" = "Identifiez votre bien";
 "settings.classified.name" = "Nom du bien";
 "settings.classified.name.placeholder" = "Nom de votre bien";
+"settings.classified..fees.tip.title" = "Calcul de vos charges";
+"settings.classified..fees.tip.content" = "Il s'agit des différents postes qui composent les dépenses fixes de votre bien: Prêt immobilier, Assurance habitation, Taxe foncière par mois, Charges de copropriété, Électricité, Gaz, Eau, Internet...";
 "settings.classified.fees" = "Charges";
 "settings.classified.capacity" = "Capacité max";
 "settings.classified.capacity.placeholder" = "Nombre de personnes max";
