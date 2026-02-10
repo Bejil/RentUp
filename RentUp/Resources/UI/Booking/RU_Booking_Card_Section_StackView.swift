@@ -205,7 +205,7 @@ public class RU_Booking_Card_Section_StackView : RU_Section_StackView {
         
         let buttonView:UIView = .init()
         buttonView.addSubview(button)
-        button.snp.remakeConstraints { make in
+        button.snp.makeConstraints { make in
             make.top.equalToSuperview().inset(UI.Margins)
             make.right.bottom.left.equalToSuperview()
         }

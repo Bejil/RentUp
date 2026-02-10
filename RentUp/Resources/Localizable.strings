@@ -55,7 +55,6 @@
 "reporting.detail.occupation.title" = "Occupation";
 "reporting.detail.legend.actual" = "Occupation actuelle";
 "reporting.detail.legend.forecast" = "Occupation prévisionnelle";
-"reporting.detail.total" = "TOTAL";
 
 //MARK: - Classifieds
 "classifieds.title" = "Vos biens";

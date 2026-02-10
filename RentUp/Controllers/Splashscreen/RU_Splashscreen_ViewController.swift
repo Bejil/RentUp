@@ -22,23 +22,28 @@ public class RU_Splashscreen_ViewController : RU_ViewController {
 	
 		RU_Alert_ViewController.presentLoading { [weak self] alertController in
 			
-			RU_Platform.setUp { [weak self] error in
+				RU_Platform.setUp { [weak self] error in
 				
-				alertController?.close { [weak self] in
-					
-					if let error {
+					alertController?.close { [weak self] in
 						
-						RU_Alert_ViewController.present(error, handler: { [weak self] in
+						if let error {
+						
+							RU_Alert_ViewController.present(error, handler: { [weak self] in
 							
-							self?.setUpPlatforms()
-						})
-					}
-					else {
-						
-						self?.completion?()
+								self?.setUpPlatforms()
+							})
+						}
+						else {
+							
+                            self?.completion?()
+                            
+                            #warning("Used to import data")
+//                            RU_SeedReservations.seedReservationsIfNeeded {
+//								self?.completion?()
+//							}
+						}
 					}
 				}
-			}
 		}
 	}
 }

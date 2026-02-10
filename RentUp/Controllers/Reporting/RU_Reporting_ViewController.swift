@@ -42,13 +42,12 @@ public class RU_Reporting_ViewController : RU_ViewController {
                 let currentMonthEnd = calendar.date(byAdding: .day, value: currentMonthDays, to: currentMonthStart) ?? now
                 
                 let pastBookings = filteredBookings.filter { $0.dates.end < now }
-                let firstPastStart = pastBookings.map(\.dates.start).min() ?? currentMonthStart
-                let periodEnd = currentMonthEnd
-                let totalPeriodDays = max(1, calendar.dateComponents([.day], from: firstPastStart, to: periodEnd).day ?? 1)
+                let firstStart = filteredBookings.map(\.dates.start).min() ?? currentMonthStart
+                let lastEnd = filteredBookings.map(\.dates.end).max() ?? now
                 
                 var monthCount = 0
-                var m = firstPastStart
-                while m < periodEnd {
+                var m = firstStart
+                while m < currentMonthEnd {
                     monthCount += 1
                     m = calendar.date(byAdding: .month, value: 1, to: m) ?? m
                 }
@@ -76,15 +75,23 @@ public class RU_Reporting_ViewController : RU_ViewController {
                 for b in filteredBookings { currentMonthAllNights += nightsInMonth(b, monthStart: currentMonthStart, monthEnd: currentMonthEnd) }
                 let occupancyCurrentMonthForecast = currentMonthDays > 0 ? Double(currentMonthAllNights) / Double(currentMonthDays) * 100 : 0
                 
-                // Occupation actuelle totale
-                var totalPastNights = 0
-                for b in pastBookings { totalPastNights += daysInPeriod(b, periodStart: firstPastStart, periodEnd: periodEnd) }
-                let occupancyTotalActual = Double(totalPastNights) / Double(totalPeriodDays) * 100
+                // Occupations totales : période commune [plus ancienne résa → plus lointaine résa]
+                let totalPeriodDays = max(1, calendar.dateComponents([.day], from: firstStart, to: lastEnd).day ?? 0)
                 
-                // Occupation prévisionnelle totale
+                // Occupation actuelle totale : nuitées réservées passées / nuitées totales sur [firstStart → lastEnd]
+                let actualCutoff = min(now, lastEnd)
+                var totalPastNights = 0
+                for b in filteredBookings {
+                    totalPastNights += daysInPeriod(b, periodStart: firstStart, periodEnd: actualCutoff)
+                }
+                let occupancyTotalActual = totalPeriodDays > 0 ? Double(totalPastNights) / Double(totalPeriodDays) * 100 : 0
+                
+                // Occupation prévisionnelle totale : toutes les nuitées réservées / nuitées totales sur [firstStart → lastEnd]
                 var totalAllNights = 0
-                for b in filteredBookings { totalAllNights += daysInPeriod(b, periodStart: firstPastStart, periodEnd: periodEnd) }
-                let occupancyTotalForecast = Double(totalAllNights) / Double(totalPeriodDays) * 100
+                for b in filteredBookings {
+                    totalAllNights += daysInPeriod(b, periodStart: firstStart, periodEnd: lastEnd)
+                }
+                let occupancyTotalForecast = totalPeriodDays > 0 ? Double(totalAllNights) / Double(totalPeriodDays) * 100 : 0
                 
                 // Charges mois en cours : une fois par classified
                 var classifiedFeesCurrentMonth: [String: Int] = [:]
@@ -94,10 +101,11 @@ public class RU_Reporting_ViewController : RU_ViewController {
                 }
                 let currentMonthCharges = Double(classifiedFeesCurrentMonth.values.reduce(0, +))
                 
-                // Charges totales = somme des fees des classifieds concernés * nb de mois
+                // Charges totales = somme des fees des classifieds concernés * nb de mois (période jusqu'à fin du mois en cours)
+                let periodEndCharges = currentMonthEnd
                 var classifiedFeesInPeriod: [String: Int] = [:]
                 for b in filteredBookings {
-                    if daysInPeriod(b, periodStart: firstPastStart, periodEnd: periodEnd) <= 0 { continue }
+                    if daysInPeriod(b, periodStart: firstStart, periodEnd: periodEndCharges) <= 0 { continue }
                     if let c = b.classified { classifiedFeesInPeriod[c.id] = c.fees ?? 0 }
                 }
                 let totalCharges = Double(classifiedFeesInPeriod.values.reduce(0, +)) * Double(monthCount) // charges × nb mois

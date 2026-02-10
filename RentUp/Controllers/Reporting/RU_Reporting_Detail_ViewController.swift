@@ -7,133 +7,65 @@
 
 import UIKit
 import SnapKit
+import SwiftUI
+import Charts
 
-private final class RU_OccupancyLineChartView: UIView {
+// MARK: - Données et vue Swift Charts
+
+private enum OccupancySeries: String, CaseIterable, Plottable {
+    case actual = "Actuelle"
+    case forecast = "Prévisionnelle"
+}
+
+private struct OccupancySeriesPoint: Identifiable {
+    let id = UUID()
+    let month: Date
+    let value: Double
+    let series: OccupancySeries
+}
+
+private struct OccupancyChartView: View {
+    let data: [OccupancySeriesPoint]
     
-    static let monthWidth: CGFloat = 5 * UI.Margins
-    static let chartHeight: CGFloat = 13 * UI.Margins
-    private static let leftInset: CGFloat = 2 * UI.Margins
-    private static let bottomInset: CGFloat = 2.5 * UI.Margins
-    private static let topInset: CGFloat = UI.Margins
-    var actualValues: [Double?] = [] { didSet { setNeedsDisplay() } }
-    var forecastValues: [Double?] = [] { didSet { setNeedsDisplay() } }
-    var monthDates: [Date] = [] { didSet { setNeedsDisplay() } }
-    var effectiveMonthWidth: CGFloat = 0 { didSet { setNeedsDisplay() } }
+    private var primaryColor: Color { Color(uiColor: Colors.Primary) }
+    private var secondaryColor: Color { Color(uiColor: Colors.Secondary) }
     
-    private static func smoothPath(through points: [CGPoint]) -> UIBezierPath {
-        
-        let path = UIBezierPath()
-        guard points.count >= 2 else {
-            if let p = points.first { path.move(to: p) }
-            return path
+    var body: some View {
+        Chart(data) { point in
+            LineMark(
+                x: .value("Mois", point.month),
+                y: .value("%", point.value)
+            )
+            .foregroundStyle(by: .value("Série", point.series))
+            .symbol(by: .value("Série", point.series))
+            .interpolationMethod(.linear)
         }
-        path.move(to: points[0])
-        let n = points.count
-        for i in 0..<(n - 1) {
-            let p0 = points[max(0, i - 1)]
-            let p1 = points[i]
-            let p2 = points[i + 1]
-            let p3 = points[min(n - 1, i + 2)]
-            let tension: CGFloat = 1/6
-            let c1 = CGPoint(x: p1.x + (p2.x - p0.x) * tension, y: p1.y + (p2.y - p0.y) * tension)
-            let c2 = CGPoint(x: p2.x - (p3.x - p1.x) * tension, y: p2.y - (p3.y - p1.y) * tension)
-            path.addCurve(to: p2, controlPoint1: c1, controlPoint2: c2)
-        }
-        return path
-    }
-    
-    override func draw(_ rect: CGRect) {
-        guard !monthDates.isEmpty else { return }
-        let plotLeft = Self.leftInset
-        let plotBottom = rect.height - Self.bottomInset
-        let plotTop = Self.topInset
-        let plotHeight = plotBottom - plotTop
-        let count = monthDates.count
-        let monthW = effectiveMonthWidth > 0 ? effectiveMonthWidth : Self.monthWidth
-        let plotWidth = CGFloat(count) * monthW
-        
-        let yAxisLabelAttributes: [NSAttributedString.Key: Any] = [
-            .font: Fonts.Content.Text.Regular.withSize(Fonts.Size - 2),
-            .foregroundColor: Colors.Content.Text
-        ]
-        
-        for pct in [0, 25, 50, 75, 100] {
-            let y = plotBottom - (CGFloat(pct) / 100) * plotHeight
-            let path = UIBezierPath()
-            path.move(to: CGPoint(x: plotLeft, y: y))
-            path.addLine(to: CGPoint(x: plotLeft + plotWidth, y: y))
-            Colors.Content.Text.withAlphaComponent(0.15).setStroke()
-            path.lineWidth = 1
-            path.stroke()
-            let label = "\(pct)%"
-            (label as NSString).draw(at: CGPoint(x: 0, y: y - 6), withAttributes: yAxisLabelAttributes)
-        }
-        
-        for i in 0..<count {
-            let x = plotLeft + (CGFloat(i) + 0.5) * monthW
-            let path = UIBezierPath()
-            path.move(to: CGPoint(x: x, y: plotTop))
-            path.addLine(to: CGPoint(x: x, y: plotBottom))
-            Colors.Content.Text.withAlphaComponent(0.08).setStroke()
-            path.lineWidth = 1
-            path.stroke()
-            
-            let dateformatter:DateFormatter = .init()
-            dateformatter.dateFormat = "MMM yy"
-            
-            let label = dateformatter.string(from: monthDates[i])
-            let size = (label as NSString).size(withAttributes: yAxisLabelAttributes)
-            (label as NSString).draw(at: CGPoint(x: x - size.width / 2, y: plotBottom + 4), withAttributes: yAxisLabelAttributes)
-        }
-        
-        func pointFor(value: Double, index: Int) -> CGPoint {
-            let x = plotLeft + (CGFloat(index) + 0.5) * monthW
-            let y = plotBottom - (CGFloat(value) / 100) * plotHeight
-            return CGPoint(x: x, y: y)
-        }
-        
-        let actualPoints = actualValues.enumerated().compactMap { idx, v -> CGPoint? in
-            guard let v = v else { return nil }
-            return pointFor(value: v, index: idx)
-        }
-        if actualPoints.count >= 2 {
-            let path = Self.smoothPath(through: actualPoints)
-            Colors.Primary.setStroke()
-            path.lineWidth = 2
-            path.lineCapStyle = .round
-            path.lineJoinStyle = .round
-            path.stroke()
-            for p in actualPoints {
-                let circle = UIBezierPath(ovalIn: CGRect(x: p.x - 3, y: p.y - 3, width: 6, height: 6))
-                Colors.Primary.setFill()
-                circle.fill()
-                Colors.Primary.setStroke()
-                circle.lineWidth = 1
-                circle.stroke()
+        .chartYScale(domain: 0 ... 100)
+        .chartForegroundStyleScale([
+            OccupancySeries.actual: primaryColor,
+            OccupancySeries.forecast: secondaryColor
+        ])
+        .chartSymbolScale([
+            OccupancySeries.actual: Circle(),
+            OccupancySeries.forecast: Circle()
+        ])
+        .chartXAxis {
+            AxisMarks(values: .stride(by: .month)) { _ in
+                AxisGridLine()
+                AxisValueLabel(format: .dateTime.month(.abbreviated).year(.twoDigits))
             }
         }
-        
-        let forecastPoints = forecastValues.enumerated().compactMap { idx, v -> CGPoint? in
-            guard let v = v else { return nil }
-            return pointFor(value: v, index: idx)
-        }
-        if forecastPoints.count >= 2 {
-            let path = Self.smoothPath(through: forecastPoints)
-            Colors.Secondary.setStroke()
-            path.lineWidth = 2
-            path.lineCapStyle = .round
-            path.lineJoinStyle = .round
-            path.stroke()
-            for p in forecastPoints {
-                let r = CGRect(x: p.x - 3, y: p.y - 3, width: 6, height: 6)
-                let square = UIBezierPath(rect: r)
-                Colors.Secondary.setFill()
-                square.fill()
-                Colors.Secondary.setStroke()
-                square.lineWidth = 1
-                square.stroke()
+        .chartYAxis {
+            AxisMarks(position: .leading, values: .stride(by: 25)) { value in
+                AxisGridLine()
+                if let n = value.as(Double.self) {
+                    AxisValueLabel("\(Int(n))%")
+                }
             }
         }
+        .chartLegend(spacing: UI.Margins)
+        .padding(.top, UI.Margins)
+        .padding(.trailing, UI.Margins/3)
     }
 }
 
@@ -158,18 +90,10 @@ public class RU_Reporting_Detail_ViewController : RU_ViewController {
                 contentView.showPlaceholder(.Empty)
             }
             
-            updateChartView()
-            tableView.reloadData()
+            updateUI()
         }
     }
     private var monthes:[Date]?
-    private lazy var chartScrollView:UIScrollView = {
-        
-        $0.addSubview(occupancyChartView)
-        return $0
-        
-    }(UIScrollView())
-    private lazy var occupancyChartView:RU_OccupancyLineChartView = .init()
     private var currentFilterName:String? {
         
         didSet {
@@ -179,13 +103,34 @@ public class RU_Reporting_Detail_ViewController : RU_ViewController {
     }
     private lazy var tableView:RU_TableView = {
         
-        $0.isHeightDynamic = true
         $0.register(RU_Reporting_TableViewCell.self, forCellReuseIdentifier: RU_Reporting_TableViewCell.identifier)
         $0.delegate = self
         $0.dataSource = self
         return $0
         
     }(RU_TableView(frame: .zero, style: .plain))
+    private lazy var chartHostingController: UIHostingController<OccupancyChartView> = .init(rootView: OccupancyChartView(data: .init()))
+    private lazy var chartScrollView:UIScrollView = {
+        
+        $0.showsHorizontalScrollIndicator = false
+        $0.showsVerticalScrollIndicator = false
+        $0.backgroundColor = .clear
+        
+        $0.addSubview(chartHostingController.view)
+        chartHostingController.view.snp.makeConstraints { make in
+            make.top.bottom.leading.equalToSuperview()
+            make.height.equalToSuperview()
+            self.chartHostingWidthConstraint = make.width.equalTo(0).constraint
+        }
+        addChild(chartHostingController)
+        chartHostingController.didMove(toParent: self)
+        
+        return $0
+        
+    }(UIScrollView())
+    private var chartHostingWidthConstraint: Constraint?
+    private static let chartMonthWidth: CGFloat = 5 * UI.Margins
+    private static let chartScrollThreshold = 4
     
     public override func loadView() {
         
@@ -193,25 +138,6 @@ public class RU_Reporting_Detail_ViewController : RU_ViewController {
         
         updateFilterNavigationItem()
         navigationItem.title = String(key: "reporting.detail.occupation.title")
-        
-        let contentScrollView:RU_ScrollView = .init()
-        contentScrollView.isCentered = false
-        
-        let contentStackView:RU_StackView = .init()
-        contentStackView.axis = .vertical
-        contentStackView.spacing = 2*UI.Margins
-        contentStackView.isLayoutMarginsRelativeArrangement = true
-        contentStackView.layoutMargins = .init(UI.Margins)
-        contentScrollView.addSubview(contentStackView)
-        contentStackView.snp.makeConstraints { make in
-            make.top.bottom.left.equalToSuperview()
-            make.right.width.equalToSuperview()
-        }
-        
-        contentView.addSubview(contentScrollView)
-        contentScrollView.snp.makeConstraints { make in
-            make.edges.equalToSuperview()
-        }
         
         let chartContainerView = UIView()
         chartContainerView.backgroundColor = Colors.Background.View
@@ -221,62 +147,25 @@ public class RU_Reporting_Detail_ViewController : RU_ViewController {
         chartContainerView.layer.shadowOpacity = 0.08
         chartContainerView.layer.shadowRadius = UI.Margins
         chartContainerView.snp.makeConstraints { make in
-            make.height.equalTo(RU_OccupancyLineChartView.chartHeight + UI.Margins)
+            make.height.equalTo(15 * UI.Margins)
         }
-        contentStackView.addArrangedSubview(chartContainerView)
-        
         chartContainerView.addSubview(chartScrollView)
         chartScrollView.snp.makeConstraints { make in
             make.edges.equalToSuperview().inset(UI.Margins)
         }
+        view.addSubview(chartContainerView)
         
-        let legendStackView = RU_StackView()
-        legendStackView.axis = .vertical
-        legendStackView.spacing = UI.Margins/5
-        legendStackView.isLayoutMarginsRelativeArrangement = true
-        legendStackView.layoutMargins = .init(horizontal: UI.Margins)
+        view.addSubview(tableView)
         
-        let actualLineView = UIView()
-        actualLineView.backgroundColor = Colors.Primary
-        actualLineView.layer.cornerRadius = UI.CornerRadius/5
-        actualLineView.snp.makeConstraints { make in
-            make.width.equalTo(UI.Margins)
-            make.height.equalTo(UI.Margins/2)
+        chartContainerView.snp.makeConstraints { make in
+            make.top.right.left.equalTo(view.safeAreaLayoutGuide).inset(UI.Margins)
+            make.bottom.equalTo(tableView.snp.top).offset(-UI.Margins)
         }
-        let actualLegendLabel = RU_Label()
-        actualLegendLabel.text = String(key: "reporting.detail.legend.actual")
-        actualLegendLabel.font = Fonts.Content.Text.Regular.withSize(Fonts.Size - 1)
-        let actualLegendRow = RU_StackView(arrangedSubviews: [actualLineView, actualLegendLabel])
-        actualLegendRow.axis = .horizontal
-        actualLegendRow.spacing = UI.Margins / 2
-        actualLegendRow.alignment = .center
         
-        let forecastLineView = UIView()
-        forecastLineView.backgroundColor = Colors.Secondary
-        forecastLineView.layer.cornerRadius = UI.CornerRadius/5
-        forecastLineView.snp.makeConstraints { make in
-            make.width.equalTo(UI.Margins)
-            make.height.equalTo(UI.Margins/2)
+        tableView.snp.makeConstraints { make in
+            make.bottom.right.left.equalTo(view.safeAreaLayoutGuide).inset(UI.Margins)
+            make.top.equalTo(chartContainerView.snp.bottom).inset(UI.Margins)
         }
-        let forecastLegendLabel = RU_Label()
-        forecastLegendLabel.text = String(key: "reporting.detail.legend.forecast")
-        forecastLegendLabel.font = Fonts.Content.Text.Regular.withSize(Fonts.Size - 1)
-        let forecastLegendRow = RU_StackView(arrangedSubviews: [forecastLineView, forecastLegendLabel])
-        forecastLegendRow.axis = .horizontal
-        forecastLegendRow.spacing = UI.Margins / 2
-        forecastLegendRow.alignment = .center
-        
-        legendStackView.addArrangedSubview(actualLegendRow)
-        legendStackView.addArrangedSubview(forecastLegendRow)
-        contentStackView.addArrangedSubview(legendStackView)
-        
-        contentStackView.addArrangedSubview(tableView)
-        
-        let totalSection:RU_Section_Row_StackView = .init()
-        totalSection.title = String(key: "reporting.detail.total")
-        totalSection.image = UIImage(systemName: "eurosign")
-        totalSection.isHighlighted = true
-        bottomButtonsStackView.addArrangedSubview(totalSection)
         
         NotificationCenter.add(.updateBookings) { [weak self] _ in
             
@@ -284,26 +173,21 @@ public class RU_Reporting_Detail_ViewController : RU_ViewController {
         }
     }
     
-    public override func viewDidLayoutSubviews() {
-        
-        super.viewDidLayoutSubviews()
-        
-        let count = occupancyChartView.monthDates.count
-        let minWidth = chartScrollView.bounds.width
-        let rawWidth = CGFloat(count) * RU_OccupancyLineChartView.monthWidth
-        let contentWidth = max(rawWidth, minWidth)
-        let effectiveMonthWidth = contentWidth / CGFloat(count)
-        
-        occupancyChartView.effectiveMonthWidth = effectiveMonthWidth
-        occupancyChartView.frame = CGRect(x: 0, y: 0, width: contentWidth, height: RU_OccupancyLineChartView.chartHeight)
-        chartScrollView.contentSize = CGSize(width: contentWidth, height: 0)
-    }
-    
     public override func viewWillAppear(_ animated: Bool) {
         
         super.viewWillAppear(animated)
         
         updateData()
+    }
+    
+    public override func viewDidLayoutSubviews() {
+        
+        super.viewDidLayoutSubviews()
+        
+        let count = monthes?.count ?? 0
+        let contentWidth: CGFloat = count > Self.chartScrollThreshold ? CGFloat(count) * Self.chartMonthWidth : chartScrollView.bounds.width
+        chartHostingWidthConstraint?.update(offset: contentWidth)
+        chartScrollView.contentSize = CGSize(width: contentWidth, height: chartScrollView.bounds.height)
     }
     
     private func updateFilterNavigationItem() {
@@ -390,11 +274,13 @@ public class RU_Reporting_Detail_ViewController : RU_ViewController {
         }
     }
     
-    private func updateChartView() {
+    private func updateUI() {
         
         if let filteredBookings, !filteredBookings.isEmpty {
-            
+                
             monthes = .init()
+            var actualValues:[Double] = .init()
+            var forecastValues:[Double] = .init()
             
             let calendar = Calendar.current
             let now = Date()
@@ -411,10 +297,7 @@ public class RU_Reporting_Detail_ViewController : RU_ViewController {
                 monthes?.append(monthStart)
                 monthStart = calendar.date(byAdding: .month, value: 1, to: monthStart) ?? monthStart
             }
-            
             let pastBookings = filteredBookings.filter { $0.dates.end < now }
-            var actualValues: [Double?] = []
-            var forecastValues: [Double?] = []
             
             monthes?.forEach({ month in
                
@@ -438,9 +321,22 @@ public class RU_Reporting_Detail_ViewController : RU_ViewController {
                 forecastValues.append(forecastValue)
             })
             
-            occupancyChartView.actualValues = actualValues
-            occupancyChartView.forecastValues = forecastValues
-            occupancyChartView.monthDates = monthes ?? []
+            let months = monthes ?? []
+            var chartData: [OccupancySeriesPoint] = []
+            for (index, month) in months.enumerated() {
+                let actual = index < actualValues.count ? actualValues[index] : 0
+                let forecast = index < forecastValues.count ? forecastValues[index] : 0
+                chartData.append(OccupancySeriesPoint(month: month, value: actual, series: .actual))
+                chartData.append(OccupancySeriesPoint(month: month, value: forecast, series: .forecast))
+            }
+            chartHostingController.rootView = OccupancyChartView(data: chartData)
+            
+            tableView.reloadData()
+            
+            if let idx = monthes?.firstIndex(where: { calendar.isDate($0, equalTo: currentMonthStart, toGranularity: .month) }), idx < (monthes?.count ?? 0) {
+                
+                tableView.selectRow(at: IndexPath(row: idx, section: 0), animated: false, scrollPosition: .middle)
+            }
         }
     }
 }
@@ -491,10 +387,5 @@ extension RU_Reporting_Detail_ViewController: UITableViewDelegate, UITableViewDa
         }
         
         return cell
-    }
-    
-    public func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
-        
-        tableView.deselectRow(at: indexPath, animated: true)
     }
 }
