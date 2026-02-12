@@ -9,7 +9,7 @@ import UIKit
 
 public class RU_ScrollView: UIScrollView {
 	
-	public var isCentered:Bool = true {
+	public var isCentered:Bool = false {
 		
 		didSet {
 			

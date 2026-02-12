@@ -142,7 +142,7 @@ public class RU_Classifieds_Edit_Platform_ViewController : RU_ViewController {
 		super.loadView()
 		
 		let contentScrollView:RU_ScrollView = .init()
-		contentScrollView.isCentered = false
+        view.addSubview(contentScrollView)
 		
 		let contentStackView:RU_StackView = .init()
 		contentStackView.axis = .vertical
@@ -151,13 +151,7 @@ public class RU_Classifieds_Edit_Platform_ViewController : RU_ViewController {
 		contentStackView.layoutMargins = .init(UI.Margins)
 		contentScrollView.addSubview(contentStackView)
 		contentStackView.snp.makeConstraints { make in
-			make.top.bottom.left.equalToSuperview()
-			make.right.width.equalToSuperview()
-		}
-		
-		contentView.addSubview(contentScrollView)
-		contentScrollView.snp.makeConstraints { make in
-			make.edges.equalToSuperview()
+            make.edges.width.equalToSuperview()
 		}
 		
 		let tipStackView:RU_Tip_StackView = .init()
@@ -188,7 +182,24 @@ public class RU_Classifieds_Edit_Platform_ViewController : RU_ViewController {
 		offersSectionStackView.addArrangedSubview(offerMonthTextFieldRowStack)
 		contentStackView.addArrangedSubview(offersSectionStackView)
 		
-		bottomButtonsStackView.addArrangedSubview(saveButton)
+        let bottomButtonsVisualEffectView:UIVisualEffectView = .init(effect: UIBlurEffect(style: .light))
+        bottomButtonsVisualEffectView.contentView.addSubview(saveButton)
+        saveButton.snp.makeConstraints { make in
+            make.edges.equalTo(bottomButtonsVisualEffectView.safeAreaLayoutGuide).inset(UI.Margins)
+        }
+        bottomButtonsVisualEffectView.contentView.addLine(position: .top)
+        view.addSubview(bottomButtonsVisualEffectView)
+        
+        contentScrollView.snp.makeConstraints { make in
+            make.top.right.left.equalToSuperview()
+            make.bottom.equalTo(bottomButtonsVisualEffectView.snp.top).offset(-UI.Margins)
+        }
+        
+        bottomButtonsVisualEffectView.snp.makeConstraints { make in
+            make.bottom.equalToSuperview().inset(UI.Margins)
+            make.right.left.equalToSuperview()
+            make.top.equalTo(contentScrollView.snp.bottom).inset(UI.Margins)
+        }
 	}
 	
 	private func updateSaveButton() {

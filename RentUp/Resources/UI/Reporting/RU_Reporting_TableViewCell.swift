@@ -14,12 +14,42 @@ public class RU_Reporting_TableViewCell : RU_TableViewCell {
         
         return "reportingTableViewCellIdentifier"
     }
-    public lazy var keyLabel:RU_Label = .init()
-    public lazy var valueLabel:RU_Label = {
+    public var date:Date? {
+        
+        didSet {
+            
+            if let date {
+                
+                let dateFormatter = DateFormatter()
+                dateFormatter.dateFormat = "MMMM yyyy"
+                label.text = dateFormatter.string(from: date)
+            }
+        }
+    }
+    private lazy var label:RU_Label = .init()
+    public var actualValue:Double? {
+        
+        didSet {
+            
+            actualValueLabel.text = String(format: "%.0f%%", actualValue ?? 0)
+        }
+    }
+    private lazy var actualValueLabel:RU_Label = {
         
         $0.font = Fonts.Content.Title.H4
-        $0.setContentHuggingPriority(.required, for: .horizontal)
-        $0.setContentCompressionResistancePriority(.required, for: .horizontal)
+        return $0
+        
+    }(RU_Label())
+    public var forecastValue:Double? {
+        
+        didSet {
+            
+            forecastValueLabel.text = String(format: "%.0f%%", forecastValue ?? 0)
+        }
+    }
+    private lazy var forecastValueLabel:RU_Label = {
+        
+        $0.font = Fonts.Content.Text.Regular
         return $0
         
     }(RU_Label())
@@ -28,10 +58,17 @@ public class RU_Reporting_TableViewCell : RU_TableViewCell {
         
         super.init(style: style, reuseIdentifier: reuseIdentifier)
         
-        let stackView:RU_StackView = .init(arrangedSubviews: [keyLabel,valueLabel])
+        let imageView:UIImageView = .init(image: UIImage(systemName: "arrow.right"))
+        imageView.contentMode = .scaleAspectFit
+        imageView.tintColor = Colors.Primary
+        imageView.snp.makeConstraints { make in
+            make.size.equalTo(UI.Margins)
+        }
+        
+        let stackView:RU_StackView = .init(arrangedSubviews: [label,.init(),actualValueLabel,imageView,forecastValueLabel])
         stackView.axis = .horizontal
         stackView.alignment = .center
-        stackView.spacing = UI.Margins
+        stackView.spacing = UI.Margins/2
         contentView.addSubview(stackView)
         stackView.snp.makeConstraints { (make) in
             make.edges.equalToSuperview().inset(UI.Margins)

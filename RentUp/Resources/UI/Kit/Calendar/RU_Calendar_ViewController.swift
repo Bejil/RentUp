@@ -17,6 +17,11 @@ public class RU_Calendar_ViewController: RU_ViewController {
 		didSet {
 			updateCalendar()
 			updateDatesLabel()
+            
+            if let startDate {
+                
+                calendarView.scroll(toMonthContaining: startDate, scrollPosition: .centered, animated: true)
+            }
 		}
 	}
 	
@@ -49,8 +54,7 @@ public class RU_Calendar_ViewController: RU_ViewController {
 	
 	private lazy var datesLabel: RU_Label = {
 		
-		$0.font = Fonts.Content.Title.H3
-		$0.textColor = Colors.Primary
+		$0.font = Fonts.Content.Title.H4
 		$0.textAlignment = .center
 		$0.numberOfLines = 0
 		return $0
@@ -87,34 +91,41 @@ public class RU_Calendar_ViewController: RU_ViewController {
 		isModal = true
 		title = String(key: "bookings.calendar.title")
 		
-		contentView.addSubview(datesLabel)
-		datesLabel.snp.makeConstraints { make in
-			make.top.left.right.equalToSuperview().inset(UI.Margins)
-		}
-		
-		contentView.addSubview(calendarView)
-		calendarView.snp.makeConstraints { make in
-			make.top.equalTo(datesLabel.snp.bottom).offset(UI.Margins)
-			make.left.right.bottom.equalToSuperview().inset(UI.Margins)
-		}
+		view.addSubview(datesLabel)
+		view.addSubview(calendarView)
 		
 		calendarView.daySelectionHandler = { [weak self] day in
 			self?.handleDaySelection(day)
 		}
 		
-		bottomButtonsStackView.addArrangedSubview(validateButton)
-		
 		updateDatesLabel()
-	}
-	
-	public override func viewDidAppear(_ animated: Bool) {
-		
-		super.viewDidAppear(animated)
-		
-		// Scroller vers la date de début sélectionnée ou vers aujourd'hui
-		let targetDate = startDate ?? Date()
-		
-		calendarView.scroll(toMonthContaining: targetDate, scrollPosition: .centered, animated: false)
+        
+        let bottomButtonsVisualEffectView:UIVisualEffectView = .init(effect: UIBlurEffect(style: .light))
+        bottomButtonsVisualEffectView.contentView.addSubview(validateButton)
+        validateButton.snp.makeConstraints { make in
+            make.edges.equalTo(bottomButtonsVisualEffectView.safeAreaLayoutGuide).inset(UI.Margins)
+        }
+        bottomButtonsVisualEffectView.contentView.addLine(position: .top)
+        view.addSubview(bottomButtonsVisualEffectView)
+        
+        datesLabel.snp.makeConstraints { make in
+            make.top.right.left.equalTo(view.safeAreaLayoutGuide).inset(UI.Margins)
+            make.bottom.equalTo(calendarView.snp.top).offset(-UI.Margins)
+        }
+        
+        calendarView.snp.makeConstraints { make in
+            make.right.left.equalTo(view.safeAreaLayoutGuide).inset(UI.Margins)
+            make.top.equalTo(calendarView.snp.top).inset(UI.Margins)
+            make.bottom.equalTo(bottomButtonsVisualEffectView.snp.top).offset(-UI.Margins)
+        }
+        
+        bottomButtonsVisualEffectView.snp.makeConstraints { make in
+            make.bottom.equalToSuperview().inset(UI.Margins)
+            make.right.left.equalToSuperview()
+            make.top.equalTo(calendarView.snp.bottom).inset(UI.Margins)
+        }
+        
+        calendarView.scroll(toMonthContaining: Date(), scrollPosition: .centered, animated: true)
 	}
 	
 	// MARK: - Selection
@@ -561,18 +572,19 @@ private final class DayView: UIView, CalendarItemViewRepresentable {
 				}
 				bar.layer.maskedCorners = corners
 				
+				// Le trait commence/finit à la moitié du jour (centre du jour)
 				let container = UIView()
 				container.addSubview(bar)
 				bar.snp.makeConstraints { make in
 					if booking.isStartDate && !booking.isEndDate {
-						make.left.equalToSuperview().offset(6)
+						make.left.equalTo(container.snp.centerX)
 						make.right.equalToSuperview()
 					} else if booking.isEndDate && !booking.isStartDate {
 						make.left.equalToSuperview()
-						make.right.equalToSuperview().offset(-6)
+						make.right.equalTo(container.snp.centerX)
 					} else if booking.isStartDate && booking.isEndDate {
-						make.left.equalToSuperview().offset(6)
-						make.right.equalToSuperview().offset(-6)
+						make.centerX.equalToSuperview()
+						make.width.equalTo(container.snp.width).multipliedBy(0.08)
 					} else {
 						make.left.right.equalToSuperview()
 					}

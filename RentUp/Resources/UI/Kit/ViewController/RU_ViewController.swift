@@ -25,55 +25,6 @@ public class RU_ViewController: UIViewController {
 			}
 		}
 	}
-	public lazy var containerStackView:RU_StackView = {
-		
-		$0.axis = .vertical
-		$0.spacing = UI.Margins
-		return $0
-		
-	}(RU_StackView(arrangedSubviews: [contentView,bottomButtonsVisualEffectView]))
-	public lazy var contentView:UIView = .init()
-	private lazy var bottomButtonsVisualEffectView:UIVisualEffectView = { view in
-		
-		view.isHidden = true
-		view.contentView.addSubview(bottomButtonsStackView)
-		bottomButtonsStackView.snp.makeConstraints { make in
-			make.edges.equalTo(view.safeAreaLayoutGuide).inset(UI.Margins)
-		}
-		view.contentView.addLine(position: .top)
-		return view
-		
-	}(UIVisualEffectView(effect: UIBlurEffect(style: .light)))
-	public lazy var bottomButtonsStackView:RU_StackView = {
-		
-		$0.axis = .horizontal
-		$0.alignment = .center
-		$0.spacing = UI.Margins
-		$0.didUpdate = { [weak self] in
-			
-			if let self {
-				
-				self.bottomButtonsVisualEffectView.isHidden = self.bottomButtonsStackView.arrangedSubviews.isEmpty
-				
-				self.containerStackView.snp.remakeConstraints { make in
-					
-					make.top.right.left.equalTo(self.view.safeAreaLayoutGuide)
-					
-					if self.bottomButtonsVisualEffectView.isHidden {
-						
-						make.bottom.equalTo(self.view.safeAreaLayoutGuide)
-					}
-					else {
-						
-						make.bottom.equalToSuperview()
-					}
-				}
-			}
-		}
-		
-		return $0
-		
-	}(RU_StackView())
 	
 	public override func loadView() {
 		
@@ -103,11 +54,6 @@ public class RU_ViewController: UIViewController {
 		}
 		tapGestureRecognizer.cancelsTouchesInView = false
 		view.addGestureRecognizer(tapGestureRecognizer)
-		
-		view.addSubview(containerStackView)
-		containerStackView.snp.makeConstraints { make in
-			make.edges.equalTo(view.safeAreaLayoutGuide)
-		}
 	}
 	
 	public override func viewWillDisappear(_ animated: Bool) {

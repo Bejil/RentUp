@@ -35,23 +35,18 @@ public class RU_Bookings_Calendar_ViewController: RU_ViewController {
 		super.loadView()
 		
 		isModal = true
-		title = String(key: "bookings.calendar.overview.title")
+        navigationItem.title = String(key: "bookings.calendar.overview.title")
 		
-		contentView.addSubview(calendarView)
+		view.addSubview(calendarView)
 		calendarView.snp.makeConstraints { make in
-			make.edges.equalToSuperview().inset(UI.Margins)
+            make.edges.equalToSuperview()
 		}
 		
 		calendarView.daySelectionHandler = { [weak self] day in
 			self?.handleDaySelection(day)
 		}
-	}
-	
-	public override func viewDidAppear(_ animated: Bool) {
-		
-		super.viewDidAppear(animated)
-		
-		calendarView.scroll(toMonthContaining: Date(), scrollPosition: .centered, animated: false)
+        
+        calendarView.scroll(toMonthContaining: Date(), scrollPosition: .centered, animated: true)
 	}
 	
 	// MARK: - Selection
@@ -376,19 +371,19 @@ private final class BookingDayView: UIView, CalendarItemViewRepresentable {
 				}
 				bar.layer.maskedCorners = corners
 				
-				// Container pour gérer les marges
+				// Container : le trait commence/finit à la moitié du jour (centre du jour)
 				let container = UIView()
 				container.addSubview(bar)
 				bar.snp.makeConstraints { make in
 					if booking.isStartDate && !booking.isEndDate {
-						make.left.equalToSuperview().offset(6)
+						make.left.equalTo(container.snp.centerX)
 						make.right.equalToSuperview()
 					} else if booking.isEndDate && !booking.isStartDate {
 						make.left.equalToSuperview()
-						make.right.equalToSuperview().offset(-6)
+						make.right.equalTo(container.snp.centerX)
 					} else if booking.isStartDate && booking.isEndDate {
-						make.left.equalToSuperview().offset(6)
-						make.right.equalToSuperview().offset(-6)
+						make.centerX.equalToSuperview()
+						make.width.equalTo(container.snp.width).multipliedBy(0.08)
 					} else {
 						make.left.right.equalToSuperview()
 					}

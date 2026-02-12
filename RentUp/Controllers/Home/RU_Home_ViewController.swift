@@ -14,7 +14,7 @@ public class RU_Home_ViewController: RU_ViewController {
 		
 		didSet {
 			
-			contentView.dismissPlaceholder()
+			view.dismissPlaceholder()
 			
 			let currentBooking = bookings?.first { $0.status == .current }
 			let upcomingBookings = bookings?.filter { $0.status == .upcoming }.sorted { $0.dates.start < $1.dates.start }
@@ -25,7 +25,7 @@ public class RU_Home_ViewController: RU_ViewController {
 			
 			if [currentBooking,nextBooking].allSatisfy({ $0 == nil }) {
 				
-				contentView.showPlaceholder(.Empty)
+                view.showPlaceholder(.Empty)
 			}
 		}
 	}
@@ -41,6 +41,13 @@ public class RU_Home_ViewController: RU_ViewController {
 		return $0
 		
 	}(RU_Booking_Card_Section_StackView())
+	private lazy var promoTipStackView: RU_Tip_StackView = {
+        
+		$0.icon = UIImage(systemName: "tag.fill")
+        $0.title = String(key: "home.tip.promo.title")
+		return $0
+        
+	}(RU_Tip_StackView())
 
 	public override init(nibName nibNameOrNil: String?, bundle nibBundleOrNil: Bundle?) {
 		
@@ -60,27 +67,22 @@ public class RU_Home_ViewController: RU_ViewController {
 		
 		navigationItem.title = String(key: "home.title")
 		
-		let contentScrollView:RU_ScrollView = .init()
-		contentScrollView.isCentered = false
-		
-		let contentStackView:RU_StackView = .init()
-		contentStackView.axis = .vertical
-		contentStackView.spacing = 2*UI.Margins
-		contentStackView.isLayoutMarginsRelativeArrangement = true
-		contentStackView.layoutMargins = .init(UI.Margins)
-		contentScrollView.addSubview(contentStackView)
-		contentStackView.snp.makeConstraints { make in
-			make.top.bottom.left.equalToSuperview()
-			make.right.width.equalToSuperview()
-		}
-		
-		contentView.addSubview(contentScrollView)
-		contentScrollView.snp.makeConstraints { make in
-			make.edges.equalToSuperview()
-		}
-		
-		contentStackView.addArrangedSubview(currentBookingSectionStackView)
-		contentStackView.addArrangedSubview(nextBookingSectionStackView)
+        let contentScrollView:RU_ScrollView = .init()
+        view.addSubview(contentScrollView)
+        contentScrollView.snp.makeConstraints { make in
+            make.edges.equalToSuperview()
+        }
+        
+        updatePromoTip()
+        let contentStackView: RU_StackView = .init(arrangedSubviews: [promoTipStackView, currentBookingSectionStackView, nextBookingSectionStackView])
+        contentStackView.axis = .vertical
+        contentStackView.spacing = 2 * UI.Margins
+        contentStackView.isLayoutMarginsRelativeArrangement = true
+        contentStackView.layoutMargins = .init(UI.Margins)
+        contentScrollView.addSubview(contentStackView)
+        contentStackView.snp.makeConstraints { make in
+            make.edges.width.equalToSuperview()
+        }
 		
 		NotificationCenter.add(.updateBookings) { [weak self] _ in
 			
@@ -93,21 +95,56 @@ public class RU_Home_ViewController: RU_ViewController {
 		super.viewWillAppear(animated)
 		
 		updateBookings()
+		updatePromoTip()
+	}
+	
+	private func updatePromoTip() {
+        
+		promoTipStackView.reset()
+        
+		if let opportunity = RU_UpcomingHoliday.nextOpportunity(withinDays: 60) {
+            
+			promoTipStackView.isHidden = false
+			promoTipStackView.add(String(key: "home.tip.promo.message"))
+			
+            let formatter = DateFormatter()
+			formatter.locale = Locale(identifier: "fr_FR")
+			formatter.dateStyle = .long
+			
+            let startString = formatter.string(from: opportunity.startDate)
+			let endString = formatter.string(from: opportunity.endDate)
+			let dateRangeText: String
+			
+            if Calendar.current.isDate(opportunity.startDate, inSameDayAs: opportunity.endDate) {
+                
+				dateRangeText = startString
+			}
+            else {
+                
+				dateRangeText = String(format: String(key: "home.tip.promo.dates.range"), startString, endString)
+			}
+            
+			promoTipStackView.add(dateRangeText + ":\n" + opportunity.name)
+		}
+        else {
+            
+			promoTipStackView.isHidden = true
+		}
 	}
 	
 	private func updateBookings() {
 		
-		contentView.showPlaceholder(.Loading)
+        view.showPlaceholder(.Loading)
 			
 		RU_Booking.getAll { [weak self] error, bookings in
 			
-			self?.contentView.dismissPlaceholder()
+			self?.view.dismissPlaceholder()
 				
 			if let error {
 				
-				self?.contentView.showPlaceholder(.Error, error) { [weak self] _ in
+				self?.view.showPlaceholder(.Error, error) { [weak self] _ in
 					
-					self?.contentView.dismissPlaceholder()
+					self?.view.dismissPlaceholder()
 					
 					self?.updateBookings()
 				}

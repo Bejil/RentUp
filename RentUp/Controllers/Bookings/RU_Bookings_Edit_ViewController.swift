@@ -361,7 +361,7 @@ public class RU_Bookings_Edit_ViewController : RU_ViewController {
 		title = String(key: booking == nil ? "bookings.create.title.new" : "bookings.create.title.update")
 		
 		let contentScrollView:RU_ScrollView = .init()
-		contentScrollView.isCentered = false
+        view.addSubview(contentScrollView)
 		
 		let contentStackView:RU_StackView = .init()
 		contentStackView.axis = .vertical
@@ -370,13 +370,7 @@ public class RU_Bookings_Edit_ViewController : RU_ViewController {
 		contentStackView.layoutMargins = .init(UI.Margins)
 		contentScrollView.addSubview(contentStackView)
 		contentStackView.snp.makeConstraints { make in
-			make.top.bottom.left.equalToSuperview()
-			make.right.width.equalToSuperview()
-		}
-		
-		contentView.addSubview(contentScrollView)
-		contentScrollView.snp.makeConstraints { make in
-			make.edges.equalToSuperview()
+            make.edges.width.equalToSuperview()
 		}
 		
 		let classifiedSectionTitleStackView:RU_Section_StackView = .init()
@@ -434,7 +428,24 @@ public class RU_Bookings_Edit_ViewController : RU_ViewController {
 		
 		contentStackView.addArrangedSubview(deleteButton)
 		
-		bottomButtonsStackView.addArrangedSubview(saveButton)
+        let bottomButtonsVisualEffectView:UIVisualEffectView = .init(effect: UIBlurEffect(style: .light))
+        bottomButtonsVisualEffectView.contentView.addSubview(saveButton)
+        saveButton.snp.makeConstraints { make in
+            make.edges.equalTo(bottomButtonsVisualEffectView.safeAreaLayoutGuide).inset(UI.Margins)
+        }
+        bottomButtonsVisualEffectView.contentView.addLine(position: .top)
+        view.addSubview(bottomButtonsVisualEffectView)
+        
+        contentScrollView.snp.makeConstraints { make in
+            make.top.right.left.equalToSuperview()
+            make.bottom.equalTo(bottomButtonsVisualEffectView.snp.top).offset(-UI.Margins)
+        }
+        
+        bottomButtonsVisualEffectView.snp.makeConstraints { make in
+            make.right.left.equalTo(view.safeAreaLayoutGuide)
+            make.bottom.equalToSuperview().inset(UI.Margins)
+            make.top.equalTo(contentScrollView.snp.bottom).inset(UI.Margins)
+        }
 		
 		getClassifieds()
 	}

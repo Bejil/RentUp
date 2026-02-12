@@ -115,20 +115,6 @@ public class RU_Bookings_ViewController: RU_ViewController {
 			UI.MainController.present(RU_NavigationController(rootViewController: calendarViewController), animated: true)
 		}))
 		
-		contentView.addSubview(segmentedControl)
-		contentView.addSubview(bookingsTableView)
-		
-		segmentedControl.snp.makeConstraints { make in
-			make.top.right.left.equalToSuperview().inset(UI.Margins)
-			make.bottom.equalTo(bookingsTableView.snp.top).inset(-UI.Margins)
-		}
-		
-		bookingsTableView.snp.makeConstraints { make in
-			make.right.left.equalToSuperview().inset(UI.Margins)
-			make.bottom.equalToSuperview()
-			make.top.equalTo(segmentedControl.snp.bottom).inset(UI.Margins)
-		}
-		
 		let addButton:RU_Button = .init(String(key: "bookings.create.button")) { button in
 			
             button?.isLoading = true
@@ -168,7 +154,33 @@ public class RU_Bookings_ViewController: RU_ViewController {
 		bottomStackView.spacing = UI.Margins
 		bottomStackView.alignment = .center
 		
-		bottomButtonsStackView.addArrangedSubview(bottomStackView)
+        let bottomButtonsVisualEffectView:UIVisualEffectView = .init(effect: UIBlurEffect(style: .light))
+        bottomButtonsVisualEffectView.contentView.addSubview(bottomStackView)
+        bottomStackView.snp.makeConstraints { make in
+            make.edges.equalTo(bottomButtonsVisualEffectView.contentView.safeAreaLayoutGuide).inset(UI.Margins)
+        }
+        bottomButtonsVisualEffectView.contentView.addLine(position: .top)
+        
+        view.addSubview(segmentedControl)
+        view.addSubview(bookingsTableView)
+        view.addSubview(bottomButtonsVisualEffectView)
+        
+        segmentedControl.snp.makeConstraints { make in
+            make.top.right.left.equalTo(view.safeAreaLayoutGuide).inset(UI.Margins)
+            make.bottom.equalTo(bookingsTableView.snp.top).offset(-UI.Margins)
+        }
+        
+        bookingsTableView.snp.makeConstraints { make in
+            make.top.equalTo(segmentedControl.snp.bottom).inset(UI.Margins)
+            make.right.left.equalTo(view.safeAreaLayoutGuide).inset(UI.Margins)
+            make.bottom.equalTo(bottomButtonsVisualEffectView.snp.top).offset(-UI.Margins)
+        }
+        
+        bottomButtonsVisualEffectView.snp.makeConstraints { make in
+            make.bottom.equalToSuperview().inset(UI.Margins)
+            make.right.left.equalToSuperview()
+            make.top.equalTo(bookingsTableView.snp.bottom).inset(UI.Margins)
+        }
 		
 		NotificationCenter.add(.updateBookings) { [weak self] _ in
 			

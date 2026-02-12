@@ -136,7 +136,7 @@ public class RU_Settings_Platform_ViewController: RU_ViewController {
 		super.loadView()
 		
 		let contentScrollView:RU_ScrollView = .init()
-		contentScrollView.isCentered = false
+        view.addSubview(contentScrollView)
 		
 		let contentStackView:RU_StackView = .init()
 		contentStackView.axis = .vertical
@@ -145,16 +145,10 @@ public class RU_Settings_Platform_ViewController: RU_ViewController {
 		contentStackView.layoutMargins = .init(UI.Margins)
 		contentScrollView.addSubview(contentStackView)
 		contentStackView.snp.makeConstraints { make in
-			make.top.bottom.left.equalToSuperview()
-			make.right.width.equalToSuperview()
+            make.edges.width.equalToSuperview()
 		}
 		
-		contentView.addSubview(contentScrollView)
-		contentScrollView.snp.makeConstraints { make in
-			make.edges.equalToSuperview()
-		}
-		
-		let commissionFeesSectionTitleStackView:RU_Section_StackView = .init()
+        let commissionFeesSectionTitleStackView:RU_Section_StackView = .init()
 		commissionFeesSectionTitleStackView.title = String(key: "settings.platform.commissionFees.section.title")
 		commissionFeesSectionTitleStackView.subtitle = String(key: "settings.platform.commissionFees.section.subtitle")
 		commissionFeesSectionTitleStackView.addArrangedSubview(commissionTouristTaxRow)
@@ -211,7 +205,25 @@ public class RU_Settings_Platform_ViewController: RU_ViewController {
 			}
 		}
 		addButton.image = UIImage(systemName: "square.and.arrow.down")
-		bottomButtonsStackView.addArrangedSubview(addButton)
+		
+        let bottomButtonsVisualEffectView:UIVisualEffectView = .init(effect: UIBlurEffect(style: .light))
+        bottomButtonsVisualEffectView.contentView.addSubview(addButton)
+        addButton.snp.makeConstraints { make in
+            make.edges.equalTo(bottomButtonsVisualEffectView.safeAreaLayoutGuide).inset(UI.Margins)
+        }
+        bottomButtonsVisualEffectView.contentView.addLine(position: .top)
+        view.addSubview(bottomButtonsVisualEffectView)
+        
+        contentScrollView.snp.makeConstraints { make in
+            make.top.right.left.equalToSuperview()
+            make.bottom.equalTo(bottomButtonsVisualEffectView.snp.top).offset(-UI.Margins)
+        }
+        
+        bottomButtonsVisualEffectView.snp.makeConstraints { make in
+            make.bottom.equalToSuperview().inset(UI.Margins)
+            make.right.left.equalToSuperview()
+            make.top.equalTo(contentScrollView.snp.bottom).inset(UI.Margins)
+        }
 	}
 	
 	private func createTextFieldRow(icon: String, title: String, textField:RU_Section_TextField, value: RU_Platform.Value?) -> RU_StackView {

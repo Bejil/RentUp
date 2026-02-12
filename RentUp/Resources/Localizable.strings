@@ -36,6 +36,13 @@
 
 //MARK: - Reporting
 "reporting.title" = "Vos statistiques";
+"reporting.section.main" = "Général";
+"reporting.section.main.subtitle" = "Quelques informations générales sur vos réservations";
+"reporting.main.totalNights" = "Nombre de nuités total";
+"reporting.main.averageNights" = "Nombre de nuités moyen";
+"reporting.main.averageGuests" = "Nombre de personnes moyen";
+"reporting.main.mostUsedPlatform" = "Plateforme la plus utilisée";
+"reporting.main.mostProfitablePlatform" = "Plateforme la plus rentable";
 "reporting.section.occupancy" = "Occupation";
 "reporting.section.occupancy.subtitle" = "Il s'agit du nombre de jours occupés de vos biens sur le nombre de jours total";
 "reporting.section.profitability" = "Rentabilité";
@@ -53,8 +60,7 @@
 "reporting.filter.reset" = "Réinitialiser";
 "reporting.filter.active" = "Filtré par : ";
 "reporting.detail.occupation.title" = "Occupation";
-"reporting.detail.legend.actual" = "Occupation actuelle";
-"reporting.detail.legend.forecast" = "Occupation prévisionnelle";
+"reporting.detail.profitability.title" = "Rentabilité";
 
 //MARK: - Classifieds
 "classifieds.title" = "Vos biens";
@@ -82,17 +88,36 @@
 "home.currentMonth.forecastYield" = "Rendement prévisionnel";
 "home.currentMonth.estimatedRevenue" = "Revenu net estimé";
 //Current Booking
-"home.currentBooking.section.title" = "Réservation en cours";
+"home.currentBooking.section.title" = "En cours";
 "home.currentBooking.departure" = "Départ dans";
 "home.currentBooking.none" = "Aucune réservation en cours";
 //Next Booking
-"home.nextBooking.section.title" = "Prochaine réservation";
+"home.nextBooking.section.title" = "À venir";
 "home.nextBooking.arrival" = "Arrivée dans";
 "home.nextBooking.none" = "Aucune réservation à venir";
 //Common Booking
 "home.booking.nights" = "Nombre de nuitées";
 "home.days" = "%i jours";
 "home.details.button" = "Plus de détails";
+"home.tip.promo.title" = "Idée promotion";
+"home.tip.promo.message" = "Un week-end prolongé ou des vacances approchent : pensez à créer une promotion pour remplir vos créneaux.";
+"home.tip.promo.dates.range" = "Du %@ au %@";
+"home.tip.promo.holiday.jourAn" = "Jour de l'an";
+"home.tip.promo.holiday.1ermai" = "1er mai";
+"home.tip.promo.holiday.8mai" = "8 mai";
+"home.tip.promo.holiday.14juillet" = "14 juillet";
+"home.tip.promo.holiday.15aout" = "15 août";
+"home.tip.promo.holiday.toussaint" = "Toussaint";
+"home.tip.promo.holiday.11novembre" = "11 novembre";
+"home.tip.promo.holiday.noel" = "Noël";
+"home.tip.promo.holiday.paques" = "Lundi de Pâques";
+"home.tip.promo.holiday.ascension" = "Ascension";
+"home.tip.promo.holiday.pentecote" = "Lundi de Pentecôte";
+"home.tip.promo.vacances.hiver" = "Vacances d'hiver (zones A, B, C)";
+"home.tip.promo.vacances.printemps" = "Vacances de printemps (zones A, B, C)";
+"home.tip.promo.vacances.ete" = "Vacances d'été (zones A, B, C)";
+"home.tip.promo.vacances.toussaint" = "Vacances de la Toussaint (zones A, B, C)";
+"home.tip.promo.vacances.noel" = "Vacances de Noël (zones A, B, C)";
 
 //MARK: - Bookings
 "bookings.title" = "Vos réservations";

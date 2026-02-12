@@ -39,7 +39,6 @@ public class RU_Settings_ViewController: RU_ViewController {
 		navigationItem.title = String(key: "settings.title")
 		
 		let contentScrollView:RU_ScrollView = .init()
-		contentScrollView.isCentered = false
 		
 		let contentStackView:RU_StackView = .init()
 		contentStackView.axis = .vertical
@@ -48,11 +47,10 @@ public class RU_Settings_ViewController: RU_ViewController {
 		contentStackView.layoutMargins = .init(UI.Margins)
 		contentScrollView.addSubview(contentStackView)
 		contentStackView.snp.makeConstraints { make in
-			make.top.bottom.left.equalToSuperview()
-			make.right.width.equalToSuperview()
+            make.edges.width.equalToSuperview()
 		}
 		
-		contentView.addSubview(contentScrollView)
+        view.addSubview(contentScrollView)
 		contentScrollView.snp.makeConstraints { make in
 			make.edges.equalToSuperview()
 		}

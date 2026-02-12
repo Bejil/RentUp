@@ -57,17 +57,32 @@ public class RU_Classifieds_ViewController : RU_ViewController {
 		
 		navigationItem.title = String(key: "classifieds.title")
 		
-		contentView.addSubview(tableView)
-		tableView.snp.makeConstraints { make in
-			make.edges.equalToSuperview().inset(UI.Margins)
-		}
+        view.addSubview(tableView)
 		
 		let addButton:RU_Button = .init(String(key: "classifieds.create.button")) { _ in
 			
 			UI.MainController.present(RU_NavigationController(rootViewController: RU_Classifieds_Edit_ViewController()), animated: true)
 		}
 		addButton.image = UIImage(systemName: "plus.circle")
-		bottomButtonsStackView.addArrangedSubview(addButton)
+        
+        let bottomButtonsVisualEffectView:UIVisualEffectView = .init(effect: UIBlurEffect(style: .light))
+        bottomButtonsVisualEffectView.contentView.addSubview(addButton)
+        addButton.snp.makeConstraints { make in
+            make.edges.equalTo(bottomButtonsVisualEffectView.safeAreaLayoutGuide).inset(UI.Margins)
+        }
+        bottomButtonsVisualEffectView.contentView.addLine(position: .top)
+        view.addSubview(bottomButtonsVisualEffectView)
+        
+        tableView.snp.makeConstraints { make in
+            make.top.right.left.equalToSuperview()
+            make.bottom.equalTo(bottomButtonsVisualEffectView.snp.top).offset(-UI.Margins)
+        }
+        
+        bottomButtonsVisualEffectView.snp.makeConstraints { make in
+            make.bottom.equalToSuperview().inset(UI.Margins)
+            make.right.left.equalToSuperview()
+            make.top.equalTo(tableView.snp.bottom).inset(UI.Margins)
+        }
 		
 		NotificationCenter.add(.updateClassifieds, { [weak self] _ in
 			
