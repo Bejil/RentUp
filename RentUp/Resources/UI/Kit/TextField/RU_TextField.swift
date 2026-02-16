@@ -34,13 +34,10 @@ public class RU_TextField : UITextField {
 		
 		delegate = self
 		tintColor = Colors.TextField.TintColor
-		layer.borderWidth = 1.0
-		layer.borderColor = Colors.Content.Text.withAlphaComponent(0.5).cgColor
 		textColor = Colors.Content.Text
 		font = Fonts.Content.Text.Regular
-		layer.cornerRadius = UI.CornerRadius
 		snp.makeConstraints { make in
-			make.height.equalTo(layer.cornerRadius*2)
+            make.height.equalTo(2*UI.Margins)
 		}
 		
 		let doneButton:RU_Button = .init(String(key: "textfield.done.button")) { [weak self] _ in

@@ -25,6 +25,7 @@ public class RU_Button : UIButton {
 		case tinted
 		case transparent
 		case bordered
+        case inverted
 	}
 	
 	// MARK: - Properties
@@ -278,8 +279,14 @@ public class RU_Button : UIButton {
 			configuration?.baseBackgroundColor = .clear
 			configuration?.baseForegroundColor = colors.text
 			gradientBackgroundLayer.isHidden = true
+		case .inverted:
+			configuration = .filled()
+			configuration?.baseBackgroundColor = .clear
+			configuration?.baseForegroundColor = colors.text
+			gradientBackgroundLayer.colors = [colors.background.cgColor, colors.background.withAlphaComponent(0.8).cgColor]
+			gradientBackgroundLayer.isHidden = false
 		}
-		
+
 		// Configuration du corner radius
 		configuration?.background.cornerRadius = (4*UI.Margins)/2.5
 		
@@ -396,6 +403,14 @@ public class RU_Button : UIButton {
 				text: textColor,
 				borderLight: baseColor.withAlphaComponent(0.8),
 				borderDark: baseColor.withAlphaComponent(1.2)
+			)
+
+		case .inverted:
+			return ButtonColors(
+				background: textColor,
+				text: baseColor,
+				borderLight: textColor.withAlphaComponent(0.8),
+				borderDark: textColor.withAlphaComponent(1.2)
 			)
 		}
 	}

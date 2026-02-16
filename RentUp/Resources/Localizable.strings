@@ -121,12 +121,12 @@
 
 //MARK: - Bookings
 "bookings.title" = "Vos réservations";
-"bookings.status.all" = "Toutes";
 "bookings.status.current" = "En cours";
 "bookings.status.upcoming" = "À venir";
 "bookings.status.past" = "Passée";
 "bookings.filter.button" = "Filtrer";
 "bookings.filter.menu.title" = "Filtrer par";
+"bookings.filter.status" = "Statut";
 "bookings.filter.platform" = "Plateformes";
 "bookings.filter.classified" = "Biens";
 "bookings.filter.reset" = "Réinitialiser";
@@ -317,3 +317,11 @@
 
 //MARK: - TextView
 "textview.done.button" = "Valider";
+
+//MARK: - Onboarding
+"onboarding.welcome.title" = "Bienvenue !";
+"onboarding.welcome.message" = "RentUp vous aide à centraliser vos biens et réservations (Airbnb, Booking, etc.) en un seul endroit. Ajoutez votre premier bien pour commencer.";
+"onboarding.welcome.button.start" = "Commencer";
+"onboarding.success.title" = "C'est parti !";
+"onboarding.success.message" = "Votre premier bien est enregistré. Vous pouvez maintenant gérer vos réservations.";
+"onboarding.success.button.done" = "Terminer";

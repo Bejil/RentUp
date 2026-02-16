@@ -8,49 +8,38 @@
 import UIKit
 
 public class RU_ScrollView: UIScrollView {
-	
-	public var isCentered:Bool = false {
-		
+
+	public var isCentered: Bool = false {
 		didSet {
-			
-			updateContentInset()
+			if isCentered {
+				contentInsetAdjustmentBehavior = .never
+			} else {
+				contentInsetAdjustmentBehavior = .automatic
+			}
+			setNeedsLayout()
 		}
 	}
-	
-	public override var bounds: CGRect {
-		
-		didSet {
-			
-			updateContentInset()
-		}
+
+	public override func layoutSubviews() {
+		super.layoutSubviews()
+		updateContentInset()
 	}
-	
-	public override var contentSize: CGSize {
-		
-		didSet {
-			
-			updateContentInset()
-		}
-	}
-	
+
 	private func updateContentInset() {
-		
-		if isCentered {
-			
-			var top = CGFloat(0)
-			var left = CGFloat(0)
-			
-			if contentSize.width < bounds.width {
-				
-				left = (bounds.width - contentSize.width) / 2
-			}
-			
-			if contentSize.height < bounds.height {
-				
-				top = (bounds.height - contentSize.height) / 2
-			}
-			
-			contentInset = UIEdgeInsets(top: top, left: left, bottom: top, right: left)
+		guard isCentered else {
+			contentInset = .zero
+			return
 		}
+		let safe = safeAreaInsets
+		let visibleWidth = bounds.width - safe.left - safe.right
+		let visibleHeight = bounds.height - safe.top - safe.bottom
+		let left = contentSize.width < visibleWidth ? (visibleWidth - contentSize.width) / 2 : 0
+		let top = contentSize.height < visibleHeight ? (visibleHeight - contentSize.height) / 2 : 0
+		contentInset = UIEdgeInsets(
+			top: safe.top + top,
+			left: safe.left + left,
+			bottom: safe.bottom + top,
+			right: safe.right + left
+		)
 	}
 }

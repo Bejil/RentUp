@@ -227,10 +227,10 @@ public struct Fonts {
 		
 		public struct Title {
 			
-			public static let H1:UIFont = UIFont(name: Name.Bold, size: Fonts.Size+30)!
-			public static let H2:UIFont = UIFont(name: Name.Bold, size: Fonts.Size+11)!
-			public static let H3:UIFont = UIFont(name: Name.Bold, size: Fonts.Size+8)!
-			public static let H4:UIFont = UIFont(name: Name.Bold, size: Fonts.Size+5)!
+			public static let H1:UIFont = UIFont(name: Name.Black, size: Fonts.Size+30)!
+			public static let H2:UIFont = UIFont(name: Name.Black, size: Fonts.Size+11)!
+			public static let H3:UIFont = UIFont(name: Name.Black, size: Fonts.Size+8)!
+			public static let H4:UIFont = UIFont(name: Name.Black, size: Fonts.Size+5)!
 		}
 	}
 }

@@ -10,11 +10,11 @@ import SnapKit
 
 public class RU_Classifieds_Edit_ViewController : RU_ViewController {
 	
-	public var classified:RU_Classified? = .init() {
+	public var classified:RU_Classified? {
 		
 		didSet {
-			
-			nameRow.textField.text = classified?.name
+            
+            nameRow.textField.text = classified?.name
             
             if let value = classified?.fees {
                 
@@ -211,7 +211,14 @@ public class RU_Classifieds_Edit_ViewController : RU_ViewController {
 		super.loadView()
 		
 		isModal = true
-		title = String(key: classified == nil ? "settings.classified.title.create" : "settings.classified.title.update")
+        
+        title = String(key: "settings.classified.title.update")
+        
+        if classified == nil {
+        
+            classified = .init()
+            title = String(key: "settings.classified.title.create")
+        }
 		
 		let contentScrollView:RU_ScrollView = .init()
         view.addSubview(contentScrollView)

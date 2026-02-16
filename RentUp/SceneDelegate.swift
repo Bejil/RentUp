@@ -23,9 +23,21 @@ public class SceneDelegate: UIResponder, UIWindowSceneDelegate {
 		window?.backgroundColor = Colors.Background.Application
 		
 		let viewController:RU_Splashscreen_ViewController = .init()
-		viewController.completion = { [weak self] in
+		viewController.completion = { [weak self] state in
 			
-			self?.window?.rootViewController = RU_TabBarController()
+            if state {
+                
+                self?.setTabBarControllerAsRootViewController()
+            }
+            else {
+                
+                let controller:RU_Onboarding_Welcome_ViewController = .init()
+                controller.completion = { [weak self] in
+                    
+                    self?.setTabBarControllerAsRootViewController()
+                }
+                self?.window?.rootViewController = controller
+            }
 		}
 		window?.rootViewController = viewController
 		window?.makeKeyAndVisible()
@@ -60,5 +72,15 @@ public class SceneDelegate: UIResponder, UIWindowSceneDelegate {
 		// Use this method to save data, release shared resources, and store enough scene-specific state information
 		// to restore the scene back to its current state.
 	}
+    
+    private func setTabBarControllerAsRootViewController() {
+        
+        window?.rootViewController = RU_TabBarController()
+        
+        if let window {
+            
+            UIView.transition(with: window, duration: 0.5, options: .transitionCrossDissolve, animations: {}, completion:nil)
+        }
+    }
 }
 

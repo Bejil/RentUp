@@ -49,18 +49,7 @@ public class RU_Bookings_ViewController: RU_ViewController {
 			updateFilterNavigationItem()
 		}
 	}
-	private lazy var segmentedControl:RU_SegmentedControl = {
-		
-		$0.selectedSegmentIndex = 0
-		$0.addAction(.init(handler: { [weak self] _ in
-			
-			self?.updateData()
-			
-		}), for: .valueChanged)
-		return $0
-		
-	}(RU_SegmentedControl(items: [String(key: "bookings.status.all"), String(key: "bookings.status.current"), String(key: "bookings.status.upcoming"), String(key: "bookings.status.past")]))
-	private lazy var bookingsTableView:RU_TableView = {
+    private lazy var bookingsTableView:RU_TableView = {
 		
 		$0.register(RU_Booking_TableViewCell.self, forCellReuseIdentifier: RU_Booking_TableViewCell.identifier)
 		$0.delegate = self
@@ -161,18 +150,11 @@ public class RU_Bookings_ViewController: RU_ViewController {
         }
         bottomButtonsVisualEffectView.contentView.addLine(position: .top)
         
-        view.addSubview(segmentedControl)
         view.addSubview(bookingsTableView)
         view.addSubview(bottomButtonsVisualEffectView)
         
-        segmentedControl.snp.makeConstraints { make in
-            make.top.right.left.equalTo(view.safeAreaLayoutGuide).inset(UI.Margins)
-            make.bottom.equalTo(bookingsTableView.snp.top).offset(-UI.Margins)
-        }
-        
         bookingsTableView.snp.makeConstraints { make in
-            make.top.equalTo(segmentedControl.snp.bottom).inset(UI.Margins)
-            make.right.left.equalTo(view.safeAreaLayoutGuide).inset(UI.Margins)
+            make.top.right.left.equalToSuperview()
             make.bottom.equalTo(bottomButtonsVisualEffectView.snp.top).offset(-UI.Margins)
         }
         
@@ -211,18 +193,9 @@ public class RU_Bookings_ViewController: RU_ViewController {
 					self?.updateData()
 				}
 			}
-			else if let self, let bookings {
+			else {
 				
-				switch self.segmentedControl.selectedSegmentIndex {
-				case 1:
-					self.bookings = bookings.filter({ $0.status == .current })
-				case 2:
-					self.bookings = bookings.filter({ $0.status == .upcoming })
-				case 3:
-					self.bookings = bookings.filter({ $0.status == .past })
-				default:
-					self.bookings = bookings
-				}
+				self?.bookings = bookings
 			}
 		}
 	}
@@ -232,11 +205,26 @@ public class RU_Bookings_ViewController: RU_ViewController {
 		var children:[UIMenuElement] = .init()
 		
 		children.append(UIAction(title: String(key: "bookings.filter.reset"), image: UIImage(systemName: "arrow.counterclockwise"), attributes: .destructive, handler: { [weak self] _ in
-			
+
 			self?.currentFilterName = nil
 			self?.filteredBookings = self?.bookings
 		}))
-		
+
+		children.append(UIMenu(title: String(key: "bookings.filter.status"), children: [
+			UIAction(title: String(key: "bookings.status.current"), handler: { [weak self] _ in
+				self?.currentFilterName = String(key: "bookings.status.current")
+				self?.filteredBookings = self?.bookings?.filter { $0.status == .current }
+			}),
+			UIAction(title: String(key: "bookings.status.upcoming"), handler: { [weak self] _ in
+				self?.currentFilterName = String(key: "bookings.status.upcoming")
+				self?.filteredBookings = self?.bookings?.filter { $0.status == .upcoming }
+			}),
+			UIAction(title: String(key: "bookings.status.past"), handler: { [weak self] _ in
+				self?.currentFilterName = String(key: "bookings.status.past")
+				self?.filteredBookings = self?.bookings?.filter { $0.status == .past }
+			})
+		]))
+
 		if let platforms = RU_Platform.all, !platforms.isEmpty {
 			
 			children.append(UIMenu(title: String(key: "bookings.filter.platform"), children: platforms.compactMap({ platform in

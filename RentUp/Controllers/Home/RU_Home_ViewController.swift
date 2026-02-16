@@ -102,7 +102,7 @@ public class RU_Home_ViewController: RU_ViewController {
         
 		promoTipStackView.reset()
         
-		if let opportunity = RU_UpcomingHoliday.nextOpportunity(withinDays: 60) {
+		if let opportunity = Date().nextUpcomingHolidayOpportunity(withinDays: 60) {
             
 			promoTipStackView.isHidden = false
 			promoTipStackView.add(String(key: "home.tip.promo.message"))
@@ -124,7 +124,9 @@ public class RU_Home_ViewController: RU_ViewController {
 				dateRangeText = String(format: String(key: "home.tip.promo.dates.range"), startString, endString)
 			}
             
-			promoTipStackView.add(dateRangeText + ":\n" + opportunity.name)
+            let label:RU_Label = .init(dateRangeText + ":\n" + String(key: opportunity.name))
+            label.set(font: Fonts.Content.Text.Bold, string: dateRangeText + ":")
+			promoTipStackView.add(label)
 		}
         else {
             
