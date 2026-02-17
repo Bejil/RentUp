@@ -59,13 +59,75 @@ public class RU_Bookings_ViewController: RU_ViewController {
 	}(RU_TableView(frame: .zero, style: .plain))
 	private lazy var totalValueLabel:RU_Label = {
 		
-		$0.font = Fonts.Content.Title.H4
-		$0.textAlignment = .center
-		$0.setContentHuggingPriority(.required, for: .horizontal)
-		$0.setContentCompressionResistancePriority(.required, for: .horizontal)
+		$0.font = Fonts.Content.Title.H2
+		$0.textAlignment = .right
 		return $0
 		
 	}(RU_Label())
+    private lazy var bottomStackView:RU_StackView = {
+        
+        $0.layer.shadowOffset = .zero
+        $0.layer.shadowOpacity = 0.05
+        $0.layer.shadowRadius = UI.CornerRadius
+        $0.layer.shadowColor = Colors.Content.Text.cgColor
+        $0.axis = .horizontal
+        $0.spacing = UI.Margins
+        $0.alignment = .center
+        
+        let visualEffectView:UIVisualEffectView = .init(effect: UIGlassEffect(style: .regular))
+        visualEffectView.layer.cornerRadius = UI.CornerRadius
+        $0.addArrangedSubview(visualEffectView)
+        
+        let totalLabel:RU_Label = .init(String(key: "bookings.total.label"))
+        totalLabel.font = Fonts.Content.Text.Bold.withSize(Fonts.Size-1)
+        totalLabel.textAlignment = .left
+        totalLabel.setContentHuggingPriority(.required, for: .horizontal)
+        totalLabel.setContentCompressionResistancePriority(.required, for: .horizontal)
+        
+        let totalStackView:RU_StackView = .init(arrangedSubviews: [totalLabel,totalValueLabel])
+        totalStackView.axis = .horizontal
+        totalStackView.alignment = .center
+        totalStackView.spacing = UI.Margins/2
+        visualEffectView.contentView.addSubview(totalStackView)
+        totalStackView.snp.makeConstraints { make in
+            make.edges.equalToSuperview().inset(UI.Margins)
+        }
+        
+        $0.addArrangedSubview(addButton)
+        
+        return $0
+        
+    }(RU_StackView())
+    private lazy var addButton:RU_Button = {
+        
+        $0.image = UIImage(systemName: "plus")
+        $0.snp.removeConstraints()
+        $0.setContentHuggingPriority(.required, for: .horizontal)
+        $0.setContentCompressionResistancePriority(.required, for: .horizontal)
+        return $0
+        
+    }(RU_Button() { button in
+        
+        button?.isLoading = true
+        
+        RU_Classified.getAll { error, classifieds in
+            
+            button?.isLoading = false
+            
+            if let error {
+                
+                RU_Alert_ViewController.present(error)
+            }
+            else if classifieds?.isEmpty ?? true {
+                
+                RU_Alert_ViewController.present(RU_Error(String(key: "bookings.create.noClassifieds")))
+            }
+            else {
+                
+                UI.MainController.present(RU_NavigationController(rootViewController: RU_Bookings_Edit_ViewController()), animated: true)
+            }
+        }
+    })
 	
 	public override init(nibName nibNameOrNil: String?, bundle nibBundleOrNil: Bundle?) {
 		
@@ -104,64 +166,16 @@ public class RU_Bookings_ViewController: RU_ViewController {
 			UI.MainController.present(RU_NavigationController(rootViewController: calendarViewController), animated: true)
 		}))
 		
-		let addButton:RU_Button = .init(String(key: "bookings.create.button")) { button in
-			
-            button?.isLoading = true
-            
-            RU_Classified.getAll { error, classifieds in
-                
-                button?.isLoading = false
-                
-                if let error {
-                    
-                    RU_Alert_ViewController.present(error)
-                }
-                else if classifieds?.isEmpty ?? true {
-                    
-                    RU_Alert_ViewController.present(RU_Error(String(key: "bookings.create.noClassifieds")))
-                }
-                else {
-                    
-                    UI.MainController.present(RU_NavigationController(rootViewController: RU_Bookings_Edit_ViewController()), animated: true)
-                }
-            }
-		}
-		addButton.image = UIImage(systemName: "plus.circle")
-		
-		let totalLabel:RU_Label = .init(String(key: "bookings.total.label"))
-		totalLabel.font = Fonts.Content.Text.Regular.withSize(Fonts.Size-2)
-		totalLabel.textAlignment = .center
-		totalLabel.setContentHuggingPriority(.required, for: .horizontal)
-		totalLabel.setContentCompressionResistancePriority(.required, for: .horizontal)
-		
-		let totalStackView:RU_StackView = .init(arrangedSubviews: [totalLabel,totalValueLabel])
-		totalStackView.axis = .vertical
-		totalStackView.spacing = UI.Margins/5
-		
-		let bottomStackView:RU_StackView = .init(arrangedSubviews: [totalStackView,addButton])
-		bottomStackView.axis = .horizontal
-		bottomStackView.spacing = UI.Margins
-		bottomStackView.alignment = .center
-		
-        let bottomButtonsVisualEffectView:UIVisualEffectView = .init(effect: UIBlurEffect(style: .light))
-        bottomButtonsVisualEffectView.contentView.addSubview(bottomStackView)
-        bottomStackView.snp.makeConstraints { make in
-            make.edges.equalTo(bottomButtonsVisualEffectView.contentView.safeAreaLayoutGuide).inset(UI.Margins)
-        }
-        bottomButtonsVisualEffectView.contentView.addLine(position: .top)
-        
-        view.addSubview(bookingsTableView)
-        view.addSubview(bottomButtonsVisualEffectView)
+		view.addSubview(bookingsTableView)
+        view.addSubview(bottomStackView)
         
         bookingsTableView.snp.makeConstraints { make in
-            make.top.right.left.equalToSuperview()
-            make.bottom.equalTo(bottomButtonsVisualEffectView.snp.top).offset(-UI.Margins)
+            make.edges.equalToSuperview()
         }
         
-        bottomButtonsVisualEffectView.snp.makeConstraints { make in
-            make.bottom.equalToSuperview().inset(UI.Margins)
-            make.right.left.equalToSuperview()
-            make.top.equalTo(bookingsTableView.snp.bottom).inset(UI.Margins)
+        bottomStackView.snp.makeConstraints { make in
+            make.bottom.equalTo(view.safeAreaLayoutGuide).inset(UI.Margins)
+            make.right.left.equalTo(view.safeAreaLayoutGuide).inset(1.5*UI.Margins)
         }
 		
 		NotificationCenter.add(.updateBookings) { [weak self] _ in
@@ -176,6 +190,18 @@ public class RU_Bookings_ViewController: RU_ViewController {
 		
 		updateData()
 	}
+    
+    public override func viewDidLayoutSubviews() {
+        
+        super.viewDidLayoutSubviews()
+        
+        addButton.configuration?.background.cornerRadius = bottomStackView.frame.size.height/2
+        addButton.snp.remakeConstraints { make in
+            make.size.equalTo(bottomStackView.frame.size.height)
+        }
+        bookingsTableView.contentInset.bottom = bottomStackView.frame.size.height + (2*UI.Margins)
+        bookingsTableView.verticalScrollIndicatorInsets.bottom = bookingsTableView.contentInset.bottom
+    }
 	
 	private func updateData() {
 		

@@ -126,3 +126,17 @@ extension RU_Booking {
 		}
 	}
 }
+
+extension [RU_Booking] {
+    
+    public var current:RU_Booking? {
+
+        return first { $0.status == .current }
+    }
+    
+    public var next:RU_Booking? {
+
+        let upcoming = filter { $0.status == .upcoming }.sorted { $0.dates.start < $1.dates.start }
+        return upcoming.first
+    }
+}

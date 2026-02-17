@@ -46,7 +46,7 @@ public class RU_Bookings_Calendar_ViewController: RU_ViewController {
 			self?.handleDaySelection(day)
 		}
         
-        calendarView.scroll(toMonthContaining: Date(), scrollPosition: .centered, animated: true)
+        calendarView.scroll(toMonthContaining: Date(), scrollPosition: .centered, animated: false)
 	}
 	
 	// MARK: - Selection

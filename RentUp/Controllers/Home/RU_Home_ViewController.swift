@@ -74,7 +74,8 @@ public class RU_Home_ViewController: RU_ViewController {
         }
         
         updatePromoTip()
-        let contentStackView: RU_StackView = .init(arrangedSubviews: [promoTipStackView, currentBookingSectionStackView, nextBookingSectionStackView])
+        
+        let contentStackView: RU_StackView = .init(arrangedSubviews: [promoTipStackView, currentBookingSectionStackView/*, nextBookingSectionStackView*/])
         contentStackView.axis = .vertical
         contentStackView.spacing = 2 * UI.Margins
         contentStackView.isLayoutMarginsRelativeArrangement = true

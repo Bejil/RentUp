@@ -49,7 +49,7 @@ public class RU_ViewController: UIViewController {
 		
 		super.loadView()
 		
-		view.backgroundColor = Colors.Background.View
+        view.backgroundColor = Colors.Background.View
         
         let tapGestureRecognizer:UITapGestureRecognizer = .init { [weak self] sender in
 			

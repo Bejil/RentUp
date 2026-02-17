@@ -130,6 +130,57 @@ public class RU_Settings_Platform_ViewController: RU_ViewController {
 		return $0
 		
 	}(RU_Section_TextFieldRow_StackView())
+    private lazy var contentScrollView:RU_ScrollView = .init()
+    private lazy var saveButton:RU_Button = {
+        
+        $0.image = UIImage(systemName: "square.and.arrow.down")
+        return $0
+        
+    }(RU_Button(String(key: "settings.platform.save.button")) { [weak self] button in
+        
+        guard let self else { return }
+        
+        button?.isLoading = true
+        
+        if let amount = Double(commissionTouristTaxRow.textField.text ?? "") {
+            platform?.commission.touristTax?.amount = amount
+        }
+        
+        if let amount = Double(commissionHostRow.textField.text ?? "") {
+            platform?.commission.host?.amount = amount
+        }
+        
+        if let amount = Double(commissionTravelerRow.textField.text ?? "") {
+            platform?.commission.traveler?.amount = amount
+        }
+        
+        if let amount = Double(commissionPlatformRow.textField.text ?? "") {
+            platform?.commission.platform?.amount = amount
+        }
+        
+        if let amount = Double(commissionBankRow.textField.text ?? "") {
+            platform?.commission.bank?.amount = amount
+        }
+        
+        if let amount = Double(commissionVatRow.textField.text ?? "") {
+            platform?.commission.vat?.amount = amount
+        }
+        
+        platform?.save { error in
+            
+            button?.isLoading = false
+            
+            if let error {
+                
+                RU_Alert_ViewController.present(error)
+            }
+            else {
+                
+                NotificationCenter.post(.updatePlatforms)
+                self.navigationController?.popViewController(animated: true)
+            }
+        }
+    })
 	
 	public override func loadView() {
 		
@@ -159,72 +210,28 @@ public class RU_Settings_Platform_ViewController: RU_ViewController {
 		commissionFeesSectionTitleStackView.addArrangedSubview(commissionVatRow)
 		contentStackView.addArrangedSubview(commissionFeesSectionTitleStackView)
 		
-		let addButton:RU_Button = .init(String(key: "settings.platform.save.button")) { [weak self] button in
-			
-			guard let self else { return }
-			
-			button?.isLoading = true
-			
-			if let amount = Double(commissionTouristTaxRow.textField.text ?? "") {
-				platform?.commission.touristTax?.amount = amount
-			}
-			
-			if let amount = Double(commissionHostRow.textField.text ?? "") {
-				platform?.commission.host?.amount = amount
-			}
-			
-			if let amount = Double(commissionTravelerRow.textField.text ?? "") {
-				platform?.commission.traveler?.amount = amount
-			}
-			
-			if let amount = Double(commissionPlatformRow.textField.text ?? "") {
-				platform?.commission.platform?.amount = amount
-			}
-			
-			if let amount = Double(commissionBankRow.textField.text ?? "") {
-				platform?.commission.bank?.amount = amount
-			}
-			
-			if let amount = Double(commissionVatRow.textField.text ?? "") {
-				platform?.commission.vat?.amount = amount
-			}
-			
-			platform?.save { error in
-				
-				button?.isLoading = false
-				
-				if let error {
-					
-					RU_Alert_ViewController.present(error)
-				}
-				else {
-					
-					NotificationCenter.post(.updatePlatforms)
-					self.navigationController?.popViewController(animated: true)
-				}
-			}
-		}
-		addButton.image = UIImage(systemName: "square.and.arrow.down")
-		
-        let bottomButtonsVisualEffectView:UIVisualEffectView = .init(effect: UIBlurEffect(style: .light))
-        bottomButtonsVisualEffectView.contentView.addSubview(addButton)
-        addButton.snp.makeConstraints { make in
-            make.edges.equalTo(bottomButtonsVisualEffectView.safeAreaLayoutGuide).inset(UI.Margins)
-        }
-        bottomButtonsVisualEffectView.contentView.addLine(position: .top)
-        view.addSubview(bottomButtonsVisualEffectView)
-        
+        view.addSubview(contentScrollView)
         contentScrollView.snp.makeConstraints { make in
-            make.top.right.left.equalToSuperview()
-            make.bottom.equalTo(bottomButtonsVisualEffectView.snp.top).offset(-UI.Margins)
+            make.edges.equalToSuperview()
         }
         
-        bottomButtonsVisualEffectView.snp.makeConstraints { make in
-            make.bottom.equalToSuperview().inset(UI.Margins)
-            make.right.left.equalToSuperview()
-            make.top.equalTo(contentScrollView.snp.bottom).inset(UI.Margins)
+        view.addSubview(saveButton)
+        saveButton.snp.makeConstraints { make in
+            make.bottom.equalTo(view.safeAreaLayoutGuide).inset(UI.Margins)
+            make.left.right.equalTo(view.safeAreaLayoutGuide).inset(1.5 * UI.Margins)
         }
-	}
+    }
+    
+    public override func viewDidLayoutSubviews() {
+
+        super.viewDidLayoutSubviews()
+        
+        view.layoutIfNeeded()
+        
+        let bottomInset = saveButton.bounds.height + 2 * UI.Margins
+        contentScrollView.contentInset.bottom = bottomInset
+        contentScrollView.verticalScrollIndicatorInsets.bottom = bottomInset
+    }
 	
 	private func createTextFieldRow(icon: String, title: String, textField:RU_Section_TextField, value: RU_Platform.Value?) -> RU_StackView {
 		

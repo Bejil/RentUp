@@ -9,43 +9,50 @@ import Foundation
 
 extension UserDefaults {
 
-	public enum Keys : String, CaseIterable {
-		
+	public static let appGroupSuiteName = "group.com.michaelblin.RentUp"
+
+	/// Stockage unique : uniquement la suite App Group (jamais .standard).
+	public static var suite: UserDefaults? {
+		UserDefaults(suiteName: appGroupSuiteName)
+	}
+
+	public enum Keys: String, CaseIterable {
+
 		case vibrationsEnabled = "vibrationsEnabled"
 		case soundsEnabled = "soundsEnabled"
-		
 		case platforms = "platforms"
 		case bookings = "bookings"
 		case classifieds = "classifieds"
 	}
-	
-	public static func set(_ value:Any?, _ key:UserDefaults.Keys) {
-		
-		let standardUserDefaults = UserDefaults.standard
-		standardUserDefaults.set(value, forKey: key.rawValue)
-		standardUserDefaults.synchronize()
+
+	public static func set(_ value: Any?, _ key: Keys) {
+
+		guard let store = suite else { return }
+		store.set(value, forKey: key.rawValue)
+		store.synchronize()
 	}
-	
-	public static func get(_ key:UserDefaults.Keys) -> Any? {
-		
-		let standardUserDefaults = UserDefaults.standard
-		return standardUserDefaults.value(forKey: key.rawValue)
+
+	public static func get(_ key: Keys) -> Any? {
+
+		suite?.value(forKey: key.rawValue)
 	}
-	
-	public static func delete(_ key:UserDefaults.Keys) {
-		
-		let standardUserDefaults = UserDefaults.standard
-		standardUserDefaults.removeObject(forKey: key.rawValue)
-		standardUserDefaults.synchronize()
+
+	public static func delete(_ key: Keys) {
+
+		guard let store = suite else { return }
+		store.removeObject(forKey: key.rawValue)
+		store.synchronize()
 	}
-	
+
 	public static func reset() {
-		
-		Keys.allCases.forEach({ delete($0) })
+
+		guard let store = suite else { return }
+		Keys.allCases.forEach { store.removeObject(forKey: $0.rawValue) }
+		store.synchronize()
 	}
-	
+
 	public func resetAll() {
-		
+
 		let domain = Bundle.main.bundleIdentifier
 		let standardUserDefaults = UserDefaults.standard
 		standardUserDefaults.removePersistentDomain(forName: domain!)

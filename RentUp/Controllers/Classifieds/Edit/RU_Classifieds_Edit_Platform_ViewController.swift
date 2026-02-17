@@ -136,13 +136,11 @@ public class RU_Classifieds_Edit_Platform_ViewController : RU_ViewController {
 		
 		self?.dismiss(self?.completion)
 	})
+    private lazy var contentScrollView:RU_ScrollView = .init()
 	
 	public override func loadView() {
 		
 		super.loadView()
-		
-		let contentScrollView:RU_ScrollView = .init()
-        view.addSubview(contentScrollView)
 		
 		let contentStackView:RU_StackView = .init()
 		contentStackView.axis = .vertical
@@ -182,25 +180,28 @@ public class RU_Classifieds_Edit_Platform_ViewController : RU_ViewController {
 		offersSectionStackView.addArrangedSubview(offerMonthTextFieldRowStack)
 		contentStackView.addArrangedSubview(offersSectionStackView)
 		
-        let bottomButtonsVisualEffectView:UIVisualEffectView = .init(effect: UIBlurEffect(style: .light))
-        bottomButtonsVisualEffectView.contentView.addSubview(saveButton)
-        saveButton.snp.makeConstraints { make in
-            make.edges.equalTo(bottomButtonsVisualEffectView.safeAreaLayoutGuide).inset(UI.Margins)
-        }
-        bottomButtonsVisualEffectView.contentView.addLine(position: .top)
-        view.addSubview(bottomButtonsVisualEffectView)
-        
+        view.addSubview(contentScrollView)
         contentScrollView.snp.makeConstraints { make in
-            make.top.right.left.equalToSuperview()
-            make.bottom.equalTo(bottomButtonsVisualEffectView.snp.top).offset(-UI.Margins)
+            make.edges.equalToSuperview()
         }
         
-        bottomButtonsVisualEffectView.snp.makeConstraints { make in
-            make.bottom.equalToSuperview().inset(UI.Margins)
-            make.right.left.equalToSuperview()
-            make.top.equalTo(contentScrollView.snp.bottom).inset(UI.Margins)
+        view.addSubview(saveButton)
+        saveButton.snp.makeConstraints { make in
+            make.bottom.equalTo(view.safeAreaLayoutGuide).inset(UI.Margins)
+            make.left.right.equalTo(view.safeAreaLayoutGuide).inset(1.5 * UI.Margins)
         }
 	}
+    
+    public override func viewDidLayoutSubviews() {
+
+        super.viewDidLayoutSubviews()
+        
+        view.layoutIfNeeded()
+        
+        let bottomInset = saveButton.bounds.height + 2 * UI.Margins
+        contentScrollView.contentInset.bottom = bottomInset
+        contentScrollView.verticalScrollIndicatorInsets.bottom = bottomInset
+    }
 	
 	private func updateSaveButton() {
 		

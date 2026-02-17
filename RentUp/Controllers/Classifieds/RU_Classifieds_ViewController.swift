@@ -38,6 +38,15 @@ public class RU_Classifieds_ViewController : RU_ViewController {
 		return $0
 		
 	}(RU_TableView(frame: .zero, style: .plain))
+    private lazy var addButton:RU_Button = {
+        
+        $0.image = UIImage(systemName: "plus.circle")
+        return $0
+        
+    }(RU_Button(String(key: "classifieds.create.button")) { _ in
+        
+        UI.MainController.present(RU_NavigationController(rootViewController: RU_Classifieds_Edit_ViewController()), animated: true)
+    })
 	
 	public override init(nibName nibNameOrNil: String?, bundle nibBundleOrNil: Bundle?) {
 		
@@ -58,30 +67,14 @@ public class RU_Classifieds_ViewController : RU_ViewController {
 		navigationItem.title = String(key: "classifieds.title")
 		
         view.addSubview(tableView)
-		
-		let addButton:RU_Button = .init(String(key: "classifieds.create.button")) { _ in
-			
-			UI.MainController.present(RU_NavigationController(rootViewController: RU_Classifieds_Edit_ViewController()), animated: true)
-		}
-		addButton.image = UIImage(systemName: "plus.circle")
-        
-        let bottomButtonsVisualEffectView:UIVisualEffectView = .init(effect: UIBlurEffect(style: .light))
-        bottomButtonsVisualEffectView.contentView.addSubview(addButton)
-        addButton.snp.makeConstraints { make in
-            make.edges.equalTo(bottomButtonsVisualEffectView.safeAreaLayoutGuide).inset(UI.Margins)
-        }
-        bottomButtonsVisualEffectView.contentView.addLine(position: .top)
-        view.addSubview(bottomButtonsVisualEffectView)
-        
         tableView.snp.makeConstraints { make in
-            make.top.right.left.equalToSuperview()
-            make.bottom.equalTo(bottomButtonsVisualEffectView.snp.top).offset(-UI.Margins)
+            make.edges.equalToSuperview()
         }
         
-        bottomButtonsVisualEffectView.snp.makeConstraints { make in
-            make.bottom.equalToSuperview().inset(UI.Margins)
-            make.right.left.equalToSuperview()
-            make.top.equalTo(tableView.snp.bottom).inset(UI.Margins)
+        view.addSubview(addButton)
+        addButton.snp.makeConstraints { make in
+            make.bottom.equalTo(view.safeAreaLayoutGuide).inset(UI.Margins)
+            make.left.right.equalTo(view.safeAreaLayoutGuide).inset(1.5 * UI.Margins)
         }
 		
 		NotificationCenter.add(.updateClassifieds, { [weak self] _ in
@@ -91,6 +84,17 @@ public class RU_Classifieds_ViewController : RU_ViewController {
 		
 		updateClassifieds()
 	}
+    
+    public override func viewDidLayoutSubviews() {
+
+        super.viewDidLayoutSubviews()
+        
+        view.layoutIfNeeded()
+        
+        let bottomInset = addButton.bounds.height + 2 * UI.Margins
+        tableView.contentInset.bottom = bottomInset
+        tableView.verticalScrollIndicatorInsets.bottom = bottomInset
+    }
 	
 	private func updateClassifieds() {
 		

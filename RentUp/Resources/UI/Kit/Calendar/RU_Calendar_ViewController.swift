@@ -20,7 +20,7 @@ public class RU_Calendar_ViewController: RU_ViewController {
             
             if let startDate {
                 
-                calendarView.scroll(toMonthContaining: startDate, scrollPosition: .centered, animated: true)
+                calendarView.scroll(toMonthContaining: startDate, scrollPosition: .centered, animated: false)
             }
 		}
 	}
@@ -125,7 +125,7 @@ public class RU_Calendar_ViewController: RU_ViewController {
             make.top.equalTo(calendarView.snp.bottom).inset(UI.Margins)
         }
         
-        calendarView.scroll(toMonthContaining: Date(), scrollPosition: .centered, animated: true)
+        calendarView.scroll(toMonthContaining: Date(), scrollPosition: .centered, animated: false)
 	}
 	
 	// MARK: - Selection

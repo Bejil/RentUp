@@ -196,8 +196,8 @@ public class RU_Button : UIButton {
 		borderGradientLayer.frame = CGRect(origin: .zero, size: frame.size)
 		
 		// Mettre à jour les corner radius
-		gradientBackgroundLayer.cornerRadius = (4*UI.Margins)/2.5
-		borderGradientLayer.cornerRadius = (4*UI.Margins)/2.5
+        gradientBackgroundLayer.cornerRadius = configuration?.background.cornerRadius ?? (4*UI.Margins)/2.5
+		borderGradientLayer.cornerRadius = configuration?.background.cornerRadius ??  (4*UI.Margins)/2.5
 		
 		// Créer le chemin de la bordure
 		borderShapeLayer.path = UIBezierPath(roundedRect: bounds.insetBy(dx: 1.5, dy: 1.5), cornerRadius: 1.5*UI.Margins).cgPath
@@ -260,7 +260,7 @@ public class RU_Button : UIButton {
 			configuration?.baseBackgroundColor = .clear // Fond transparent car on utilise le dégradé
 			configuration?.baseForegroundColor = colors.text
 			// Dégradé inversé pour le fond
-			gradientBackgroundLayer.colors = [colors.background.cgColor, colors.background.withAlphaComponent(0.8).cgColor]
+			gradientBackgroundLayer.colors = [colors.background.cgColor, colors.background.cgColor]
 			gradientBackgroundLayer.isHidden = false
 		case .tinted:
 			configuration = .tinted()

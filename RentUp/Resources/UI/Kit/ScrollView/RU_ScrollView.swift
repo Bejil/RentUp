@@ -26,10 +26,7 @@ public class RU_ScrollView: UIScrollView {
 	}
 
 	private func updateContentInset() {
-		guard isCentered else {
-			contentInset = .zero
-			return
-		}
+		guard isCentered else { return }
 		let safe = safeAreaInsets
 		let visibleWidth = bounds.width - safe.left - safe.right
 		let visibleHeight = bounds.height - safe.top - safe.bottom
