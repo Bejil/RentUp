@@ -103,7 +103,7 @@ public class RU_Settings_ViewController: RU_ViewController {
 	
 	private func reset() {
 		
-		UserDefaults.standard.resetAll()
+		UserDefaults.reset()
 		
 		RU_Alert_ViewController.presentLoading { [weak self] alertController in
 			

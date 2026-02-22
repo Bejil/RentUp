@@ -60,12 +60,14 @@
 			membershipExceptions = (
 				Resources/Error/RU_Error.swift,
 				Resources/Extensions/Models/Booking/RU_Booking_Extension.swift,
+				Resources/Extensions/Models/Platform/RU_Platform_Extension.swift,
 				Resources/Extensions/String/String_Extension.swift,
 				Resources/Extensions/UserDefaults/UserDefaults_Extension.swift,
-				Resources/Models/Booking/RU_Booking_Status.swift,
+				Resources/Localizable.strings,
 				Resources/Models/Booking/RU_Booking.swift,
 				Resources/Models/Classified/RU_Classified.swift,
 				Resources/Models/Platform/RU_Platform.swift,
+				Resources/UI/Colors.xcassets,
 			);
 			target = 7A0825382F4334C800E46CBB /* BookingsWidgetExtension */;
 		};
@@ -311,6 +313,7 @@
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "APP_EXTENSION DEBUG $(inherited)";
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;

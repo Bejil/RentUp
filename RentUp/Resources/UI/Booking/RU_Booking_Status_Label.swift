@@ -34,7 +34,7 @@ public class RU_Booking_Status_Label : RU_Label {
 				let days = calendar.dateComponents([.day], from: today, to: endDay).day ?? 0
 				text = "\(booking.status.text) ➜ \(days) j"
 				
-			case .past:
+			default:
 				text = booking.status.text
 			}
 		}

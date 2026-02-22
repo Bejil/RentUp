@@ -16,6 +16,7 @@ public class RU_Booking_TableViewCell : RU_TableViewCell {
 	}
 	public var deleteHandler:((RU_Booking?)->Void)?
 	public var editHandler:((RU_Booking?)->Void)?
+    public var cancelHandler:((RU_Booking?,Bool)->Void)?
 	public var booking:RU_Booking? {
 		
 		didSet {
@@ -64,18 +65,35 @@ public class RU_Booking_TableViewCell : RU_TableViewCell {
 	public var menu:UIMenu? {
 		
 		get{
+            
+            var actions:[UIAction] = .init()
+            
+            if booking?.status == .cancelled {
+                
+                actions.append(UIAction(title: String(key: "bookings.cell.approve.button"), image: UIImage(systemName: "checkmark"), handler: { [weak self] _ in
+                    
+                    self?.cancelHandler?(self?.booking,false)
+                }))
+            }
+            else {
+                
+                actions.append(UIAction(title: String(key: "bookings.cell.cancel.button"), image: UIImage(systemName: "xmark"), handler: { [weak self] _ in
+                    
+                    self?.cancelHandler?(self?.booking,true)
+                }))
+            }
+            
+            actions.append(UIAction(title: String(key: "bookings.cell.edit.button"), image: UIImage(systemName: "slider.horizontal.3"), handler: { [weak self] _ in
+                
+                self?.editHandler?(self?.booking)
+            }))
+            
+            actions.append(UIAction(title: String(key: "bookings.cell.delete.button"), image: UIImage(systemName: "trash"), attributes: .destructive, handler: { [weak self] _ in
+                
+                self?.deleteHandler?(self?.booking)
+            }))
 			
-			return .init(children: [
-				
-				UIAction(title: String(key: "bookings.cell.edit.button"), image: UIImage(systemName: "slider.horizontal.3"), handler: { [weak self] _ in
-					
-					self?.editHandler?(self?.booking)
-				}),
-				UIAction(title: String(key: "bookings.cell.delete.button"), image: UIImage(systemName: "trash"), attributes: .destructive, handler: { [weak self] _ in
-					
-					self?.deleteHandler?(self?.booking)
-				})
-			])
+			return .init(children: actions)
 		}
 	}
 	public var trailingSwipeActionsConfiguration:UISwipeActionsConfiguration {
@@ -101,6 +119,29 @@ public class RU_Booking_TableViewCell : RU_TableViewCell {
 			editContextualAction.image = UIImage(systemName: "slider.horizontal.3")
 			editContextualAction.backgroundColor = Colors.Primary
 			actionsArray.append(editContextualAction)
+            
+            if booking?.status == .cancelled {
+                
+                let approveContextualAction:UIContextualAction = .init(style: .destructive, title: String(key: "bookings.cell.approve.button")) { [weak self] _, _, completion in
+                    
+                    self?.cancelHandler?(self?.booking, false)
+                    completion(true)
+                }
+                approveContextualAction.image = UIImage(systemName: "checkmark")
+                approveContextualAction.backgroundColor = Colors.Primary
+                actionsArray.append(approveContextualAction)
+            }
+            else {
+                
+                let cancelContextualAction:UIContextualAction = .init(style: .destructive, title: String(key: "bookings.cell.cancel.button")) { [weak self] _, _, completion in
+                    
+                    self?.cancelHandler?(self?.booking, true)
+                    completion(true)
+                }
+                cancelContextualAction.image = UIImage(systemName: "xmark")
+                cancelContextualAction.backgroundColor = Colors.Button.Delete.Background
+                actionsArray.append(cancelContextualAction)
+            }
 			
 			let actionsConfiguration:UISwipeActionsConfiguration = .init(actions: actionsArray)
 			actionsConfiguration.performsFirstActionWithFullSwipe = true

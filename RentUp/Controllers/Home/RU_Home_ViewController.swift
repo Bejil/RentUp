@@ -16,14 +16,10 @@ public class RU_Home_ViewController: RU_ViewController {
 			
 			view.dismissPlaceholder()
 			
-			let currentBooking = bookings?.first { $0.status == .current }
-			let upcomingBookings = bookings?.filter { $0.status == .upcoming }.sorted { $0.dates.start < $1.dates.start }
-			let nextBooking = upcomingBookings?.first
+            currentBookingSectionStackView.booking = bookings?.current
+            nextBookingSectionStackView.booking = bookings?.next
 			
-			currentBookingSectionStackView.booking = currentBooking
-			nextBookingSectionStackView.booking = nextBooking
-			
-			if [currentBooking,nextBooking].allSatisfy({ $0 == nil }) {
+            if currentBookingSectionStackView.isHidden && nextBookingSectionStackView.isHidden {
 				
                 view.showPlaceholder(.Empty)
 			}
@@ -73,16 +69,15 @@ public class RU_Home_ViewController: RU_ViewController {
             make.edges.equalToSuperview()
         }
         
-        updatePromoTip()
-        
-        let contentStackView: RU_StackView = .init(arrangedSubviews: [promoTipStackView, currentBookingSectionStackView/*, nextBookingSectionStackView*/])
+        let contentStackView: RU_StackView = .init(arrangedSubviews: [promoTipStackView, currentBookingSectionStackView, nextBookingSectionStackView])
         contentStackView.axis = .vertical
         contentStackView.spacing = 2 * UI.Margins
         contentStackView.isLayoutMarginsRelativeArrangement = true
         contentStackView.layoutMargins = .init(UI.Margins)
         contentScrollView.addSubview(contentStackView)
         contentStackView.snp.makeConstraints { make in
-            make.edges.width.equalToSuperview()
+            make.leading.trailing.top.bottom.equalToSuperview()
+            make.width.equalTo(contentScrollView.snp.width)
         }
 		
 		NotificationCenter.add(.updateBookings) { [weak self] _ in

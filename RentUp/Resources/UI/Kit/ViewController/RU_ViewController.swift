@@ -17,18 +17,21 @@ public class RU_ViewController: UIViewController {
             navigationItem.leftBarButtonItem = nil
             closeButton.isHidden = true
             
-            if let navigationController, navigationController.viewControllers.count < 2 {
+            if isModal && navigationController?.viewControllers.count ?? 0 < 2 {
                 
-                navigationItem.leftBarButtonItem = .init(image: UIImage(systemName: "xmark"), primaryAction: .init(handler: { [weak self] _ in
+                if navigationController != nil {
                     
-                    RU_Feedback.shared.make(.Off)
+                    navigationItem.leftBarButtonItem = .init(image: UIImage(systemName: "xmark"), primaryAction: .init(handler: { [weak self] _ in
+                        
+                        RU_Feedback.shared.make(.Off)
+                        
+                        self?.close()
+                    }))
+                }
+                else {
                     
-                    self?.close()
-                }))
-            }
-            else {
-                
-                closeButton.isHidden = false
+                    closeButton.isHidden = false
+                }
             }
 		}
 	}

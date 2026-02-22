@@ -8,20 +8,28 @@
 import UIKit
 
 extension RU_Booking {
-	
-	public var status:RU_Booking_Status {
-		
+
+	public var status:Status {
+
+		let calendar = Calendar.current
 		let now = Date()
-		
-		if dates.end < now {
-			
+		let today = calendar.startOfDay(for: now)
+		let startDay = calendar.startOfDay(for: dates.start)
+		let endDay = calendar.startOfDay(for: dates.end)
+
+		if isCancelled {
+
+			return .cancelled
+		}
+		if endDay < today {
+
 			return .past
 		}
-		else if dates.start <= now && dates.end >= now {
-			
+		if startDay <= today && endDay >= today {
+
 			return .current
 		}
-		
+
 		return .upcoming
 	}
 	public var canSave:Bool {
@@ -138,5 +146,22 @@ extension [RU_Booking] {
 
         let upcoming = filter { $0.status == .upcoming }.sorted { $0.dates.start < $1.dates.start }
         return upcoming.first
+    }
+}
+
+extension RU_Booking.Status {
+    
+    public var text: String {
+        
+        switch self {
+        case .past:
+            return String(key: "booking.status.past.name")
+        case .current:
+            return String(key: "booking.status.current.name")
+        case .upcoming:
+            return String(key: "booking.status.upcoming.name")
+        case .cancelled:
+            return String(key: "booking.status.cancelled.name")
+        }
     }
 }

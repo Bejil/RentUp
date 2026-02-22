@@ -50,12 +50,4 @@ extension UserDefaults {
 		Keys.allCases.forEach { store.removeObject(forKey: $0.rawValue) }
 		store.synchronize()
 	}
-
-	public func resetAll() {
-
-		let domain = Bundle.main.bundleIdentifier
-		let standardUserDefaults = UserDefaults.standard
-		standardUserDefaults.removePersistentDomain(forName: domain!)
-		standardUserDefaults.synchronize()
-	}
 }

@@ -13,7 +13,7 @@ public struct UI {
 		
 		return UIApplication.shared.topMostViewController()!
 	}
-	
+    
 	public static let Margins:CGFloat = 15.0
 	public static let CornerRadius:CGFloat = 18.0
 }
@@ -173,6 +173,12 @@ public struct Colors {
 				public static let Background:UIColor = UIColor(named: "BookingStatusUpcomingBackground")!
 				public static let Text:UIColor = UIColor(named: "BookingStatusUpcomingText")!
 			}
+            
+            public struct Cancelled {
+                
+                public static let Background:UIColor = UIColor(named: "BookingStatusCancelledBackground")!
+                public static let Text:UIColor = UIColor(named: "BookingStatusCancelledText")!
+            }
 		}
 	}
 }

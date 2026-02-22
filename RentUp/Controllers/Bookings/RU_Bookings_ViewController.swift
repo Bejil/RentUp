@@ -29,7 +29,7 @@ public class RU_Bookings_ViewController: RU_ViewController {
 				
 				DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) { [weak self] in
 					
-					self?.bookingsTableView.scrollToRow(at: IndexPath(row: index, section: 0), at: .top, animated: false)
+					self?.bookingsTableView.scrollToRow(at: IndexPath(row: index, section: 0), at: .middle, animated: false)
 				}
 			}
 			
@@ -38,7 +38,7 @@ public class RU_Bookings_ViewController: RU_ViewController {
 				bookingsTableView.showPlaceholder(.Empty)
 			}
 			
-			let total = filteredBookings?.compactMap { $0.platform?.calculatePrice(for: $0)?.hostTotal }.reduce(0, +) ?? 0
+            let total = filteredBookings?.filter({ $0.status != .cancelled }).compactMap { $0.platform?.calculatePrice(for: $0)?.hostTotal }.reduce(0, +) ?? 0
 			totalValueLabel.text = String(format: "%.2f €", total)
 		}
 	}
@@ -326,6 +326,28 @@ extension RU_Bookings_ViewController: UITableViewDelegate, UITableViewDataSource
 			viewController.booking = booking
 			self?.navigationController?.pushViewController(viewController, animated: true)
 		}
+        cell.cancelHandler = { [weak self] booking, state in
+            
+            booking?.isCancelled = state
+            
+            RU_Alert_ViewController.presentLoading { [weak self] alertController in
+              
+                booking?.save { [weak self] error in
+                    
+                    alertController?.close { [weak self] in
+                        
+                        if let error {
+                            
+                            RU_Alert_ViewController.present(error)
+                        }
+                        else {
+                            
+                            self?.updateData()
+                        }
+                    }
+                }
+            }
+        }
 		return cell
 	}
 	

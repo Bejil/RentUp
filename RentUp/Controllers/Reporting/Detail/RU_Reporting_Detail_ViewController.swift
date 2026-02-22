@@ -48,19 +48,6 @@ public class RU_Reporting_Detail_ViewController : RU_ViewController {
         $0.register(RU_Reporting_TableViewCell.self, forCellReuseIdentifier: RU_Reporting_TableViewCell.identifier)
         $0.delegate = self
         $0.dataSource = self
-        
-        let chartContainerView = UIView()
-        chartContainerView.backgroundColor = Colors.Background.View
-        chartContainerView.layer.cornerRadius = UI.CornerRadius
-        chartContainerView.layer.shadowColor = UIColor.black.cgColor
-        chartContainerView.layer.shadowOffset = CGSize(width: 0, height: 4)
-        chartContainerView.layer.shadowOpacity = 0.08
-        chartContainerView.layer.shadowRadius = UI.Margins
-        chartContainerView.snp.makeConstraints { make in
-            make.height.equalTo(15 * UI.Margins)
-        }
-        
-        $0.headerView = chartContainerView
         return $0
         
     }(RU_TableView(frame: .zero, style: .plain))

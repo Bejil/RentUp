@@ -8,6 +8,14 @@
 import Foundation
 
 public class RU_Booking : Codable, Equatable {
+    
+    public enum Status : Codable {
+        
+        case past
+        case current
+        case upcoming
+        case cancelled
+    }
 	
 	public static func == (lhs: RU_Booking, rhs: RU_Booking) -> Bool {
 		
@@ -43,4 +51,5 @@ public class RU_Booking : Codable, Equatable {
 	public var beds:RU_Classified.Configuration.Beds = .init()
 	public var comment:String?
     public var costs:Costs = .init()
+    public var isCancelled:Bool = false
 }

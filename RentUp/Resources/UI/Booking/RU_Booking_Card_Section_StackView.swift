@@ -90,14 +90,14 @@ public class RU_Booking_Card_Section_StackView : RU_Section_StackView {
 					
 					layoutMargins.bottom = inset
 					
-					commentView.isHidden = false
+					commentTipStackView.isHidden = false
 					commentTipStackView.add(comment)
 				}
 				else {
 					
 					layoutMargins.bottom = inset/2
 					
-					commentView.isHidden = true
+                    commentTipStackView.isHidden = true
 				}
 			}
 		}
@@ -126,16 +126,6 @@ public class RU_Booking_Card_Section_StackView : RU_Section_StackView {
 	private lazy var singleBedsSectionRowStackView:RU_Section_Row_StackView = createRow(icon: "bed.double", title: String(key: "bookings.details.configuration.beds.single"), view: singleBedsValueLabel)
 	private lazy var babyBedsValueLabel:RU_Label = .init()
 	private lazy var babyBedsSectionRowStackView:RU_Section_Row_StackView = createRow(icon: "stroller", title: String(key: "bookings.details.configuration.beds.baby"), view: babyBedsValueLabel)
-	private lazy var commentView:UIView = {
-		
-		$0.addSubview(commentTipStackView)
-		commentTipStackView.snp.makeConstraints { make in
-			make.top.equalToSuperview().inset(UI.Margins/2)
-			make.right.bottom.left.equalToSuperview()
-		}
-		return $0
-		
-	}(UIView())
 	private lazy var commentTipStackView:RU_Tip_StackView = {
 		
 		$0.isMinimized = true
@@ -167,7 +157,24 @@ public class RU_Booking_Card_Section_StackView : RU_Section_StackView {
         addArrangedSubview(doubleBedsSectionRowStackView)
         addArrangedSubview(singleBedsSectionRowStackView)
         addArrangedSubview(babyBedsSectionRowStackView)
-        addArrangedSubview(commentView)
+        
+        let separator1 = UIView()
+        separator1.backgroundColor = .clear
+        addArrangedSubview(separator1)
+        separator1.snp.makeConstraints { make in
+            make.height.equalTo(UI.Margins / 2)
+        }
+        setCustomSpacing(UI.Margins / 2, after: separator1)
+        
+        addArrangedSubview(commentTipStackView)
+        
+        let separator2 = UIView()
+        separator2.backgroundColor = .clear
+        addArrangedSubview(separator2)
+        separator2.snp.makeConstraints { make in
+            make.height.equalTo(UI.Margins / 2)
+        }
+        setCustomSpacing(UI.Margins / 2, after: separator2)
         
         let button:RU_Button = .init(String(key: "home.details.button")) { [weak self] _ in
             
@@ -179,16 +186,7 @@ public class RU_Booking_Card_Section_StackView : RU_Section_StackView {
         button.image = UIImage(systemName: "arrowtriangle.right.square")?.applyingSymbolConfiguration(.init(scale: .small))
         button.configuration?.imagePadding = UI.Margins/2
         button.configuration?.imagePlacement = .trailing
-        
-        let buttonView:UIView = .init()
-        buttonView.addSubview(button)
-        button.snp.makeConstraints { make in
-            make.top.bottom.equalToSuperview().inset(UI.Margins)
-            make.right.left.equalToSuperview()
-        }
-        addArrangedSubview(buttonView)
-        
-        classifiedSectionRowStackView.isHidden = true
+        addArrangedSubview(button)
     }
 	
 	@MainActor required init(coder: NSCoder) {

@@ -48,8 +48,10 @@
 "reporting.section.profitability" = "Rentabilité";
 "reporting.section.profitability.subtitle" = "Il s'agit de la rentabilité de vos locations par rapport à vos charges";
 "reporting.occupancy.currentMonth" = "Mois en cours";
+"reporting.occupancy.previousMonth" = "Mois précédent";
 "reporting.occupancy.total" = "TOTAL";
 "reporting.profitability.currentMonth" = "Mois en cours";
+"reporting.profitability.previousMonth" = "Mois précédent";
 "reporting.profitability.total" = "TOTAL";
 "reporting.value.placeholder" = "n/c";
 "reporting.details.button" = "Plus de détails";
@@ -180,10 +182,13 @@
 "booking.status.past.name" = "Passée";
 "booking.status.current.name" = "En cours";
 "booking.status.upcoming.name" = "À venir";
+"booking.status.cancelled.name" = "Annulée";
 //Cell
 "bookings.cell.dates.format" = "Du %@ au %@";
 "bookings.cell.edit.button" = "Modifier";
 "bookings.cell.delete.button" = "Supprimer";
+"bookings.cell.approve.button" = "Confirmer";
+"bookings.cell.cancel.button" = "Annuler";
 //Delete alert
 "bookings.delete.alert.title" = "Attention";
 "bookings.delete.alert.content" = "Voulez-vous vraiment supprimer cette réservation ?";

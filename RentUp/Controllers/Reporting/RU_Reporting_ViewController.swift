@@ -14,8 +14,7 @@ public class RU_Reporting_ViewController : RU_ViewController {
         
         didSet {
             
-            let sortedBookings = bookings?.sorted { $0.dates.start > $1.dates.start }
-            filteredBookings = sortedBookings
+            filteredBookings = bookings
         }
     }
     private var filteredBookings:[RU_Booking]? {
@@ -27,7 +26,8 @@ public class RU_Reporting_ViewController : RU_ViewController {
             if filteredBookings?.isEmpty ?? true {
                 
                 view.showPlaceholder(.Empty)
-                [occupationCurrentMonthLabel, occupationTotalLabel, profitabilityCurrentMonthLabel, profitabilityTotalLabel, totalNightsLabel, averageNightsLabel, averageGuestsLabel].forEach { $0.text = String(key: "reporting.value.placeholder") }
+                
+                [occupationCurrentMonthLabel, occupationPreviousMonthLabel, occupationTotalLabel, profitabilityCurrentMonthLabel, profitabilityPreviousMonthLabel, profitabilityTotalLabel, totalNightsLabel, averageNightsLabel, averageGuestsLabel].forEach { $0.text = String(key: "reporting.value.placeholder") }
                 mostUsedPlatformLabel.platform = nil
                 mostUsedPlatformLabel.text = String(key: "reporting.value.placeholder")
                 mostProfitablePlatformLabel.platform = nil
@@ -35,148 +35,161 @@ public class RU_Reporting_ViewController : RU_ViewController {
             }
             else {
                 
-                guard let filteredBookings, !filteredBookings.isEmpty else { return }
-                
+                [occupationCurrentMonthLabel, occupationPreviousMonthLabel, occupationTotalLabel, profitabilityCurrentMonthLabel, profitabilityPreviousMonthLabel, profitabilityTotalLabel, totalNightsLabel, averageNightsLabel, averageGuestsLabel].forEach { $0.text = String(key: "reporting.value.placeholder") }
+                mostUsedPlatformLabel.platform = nil
+                mostUsedPlatformLabel.text = String(key: "reporting.value.placeholder")
+                mostProfitablePlatformLabel.platform = nil
+                mostProfitablePlatformLabel.text = String(key: "reporting.value.placeholder")
+            }
+            
+            guard let list = filteredBookings?.filter({ $0.status != .cancelled }), !list.isEmpty else { return }
+            
+            let listCopy = list
+            DispatchQueue.global(qos: .userInitiated).async { [weak self] in
+                guard let self else { return }
                 let calendar = Calendar.current
                 let now = Date()
-                
                 let currentMonthStart = calendar.date(from: calendar.dateComponents([.year, .month], from: now)) ?? now
                 let currentMonthRange = calendar.range(of: .day, in: .month, for: now)
                 let currentMonthDays = currentMonthRange?.count ?? 30
                 let currentMonthEnd = calendar.date(byAdding: .day, value: currentMonthDays, to: currentMonthStart) ?? now
-                
-                let pastBookings = filteredBookings.filter { $0.dates.end < now }
-                let firstPastStart = pastBookings.map(\.dates.start).min() ?? currentMonthStart
+                let previousMonthStart = calendar.date(byAdding: .month, value: -1, to: currentMonthStart) ?? currentMonthStart
+                let previousMonthRange = calendar.range(of: .day, in: .month, for: previousMonthStart)
+                let previousMonthDays = previousMonthRange?.count ?? 30
+                let previousMonthEnd = calendar.date(byAdding: .day, value: previousMonthDays, to: previousMonthStart) ?? previousMonthStart
+                let pastBookings = listCopy.filter { $0.dates.end < now }
+                let rawFirst = pastBookings.map(\.dates.start).min() ?? currentMonthStart
+                let maxStart = calendar.date(byAdding: .month, value: -60, to: currentMonthEnd) ?? rawFirst
+                let firstPastStart = rawFirst < maxStart ? maxStart : rawFirst
                 let periodEnd = currentMonthEnd
                 let totalPeriodDays = max(1, calendar.dateComponents([.day], from: firstPastStart, to: periodEnd).day ?? 1)
-                
-                var monthCount = 0
-                var m = firstPastStart
-                while m < periodEnd {
-                    monthCount += 1
-                    m = calendar.date(byAdding: .month, value: 1, to: m) ?? m
-                }
-                if monthCount == 0 { monthCount = 1 }
-                
-                func nightsInMonth(_ booking: RU_Booking, monthStart: Date, monthEnd: Date) -> Int {
-                    let start = max(booking.dates.start, monthStart)
-                    let end = min(booking.dates.end, monthEnd)
+                func nightsInMonth(_ b: RU_Booking, monthStart: Date, monthEnd: Date) -> Int {
+                    let start = max(b.dates.start, monthStart), end = min(b.dates.end, monthEnd)
                     return max(0, calendar.dateComponents([.day], from: start, to: end).day ?? 0)
                 }
-                
-                func daysInPeriod(_ booking: RU_Booking, periodStart: Date, periodEnd: Date) -> Int {
-                    let start = max(booking.dates.start, periodStart)
-                    let end = min(booking.dates.end, periodEnd)
+                func daysInPeriod(_ b: RU_Booking, periodStart: Date, periodEnd: Date) -> Int {
+                    let start = max(b.dates.start, periodStart), end = min(b.dates.end, periodEnd)
                     return max(0, calendar.dateComponents([.day], from: start, to: end).day ?? 0)
                 }
-                
-                // Occupation actuelle mois en cours
                 var currentMonthPastNights = 0
                 for b in pastBookings { currentMonthPastNights += nightsInMonth(b, monthStart: currentMonthStart, monthEnd: currentMonthEnd) }
-                let occupancyCurrentMonthActual = currentMonthDays > 0 ? Double(currentMonthPastNights) / Double(currentMonthDays) * 100 : 0
-                
-                // Occupation prévisionnelle mois en cours
+                let occCurrActual = currentMonthDays > 0 ? Double(currentMonthPastNights) / Double(currentMonthDays) * 100 : 0
                 var currentMonthAllNights = 0
-                for b in filteredBookings { currentMonthAllNights += nightsInMonth(b, monthStart: currentMonthStart, monthEnd: currentMonthEnd) }
-                let occupancyCurrentMonthForecast = currentMonthDays > 0 ? Double(currentMonthAllNights) / Double(currentMonthDays) * 100 : 0
-                
-                // Occupation actuelle totale
+                for b in listCopy { currentMonthAllNights += nightsInMonth(b, monthStart: currentMonthStart, monthEnd: currentMonthEnd) }
+                let occCurrForecast = currentMonthDays > 0 ? Double(currentMonthAllNights) / Double(currentMonthDays) * 100 : 0
+                var previousMonthPastNights = 0
+                for b in pastBookings { previousMonthPastNights += nightsInMonth(b, monthStart: previousMonthStart, monthEnd: previousMonthEnd) }
+                let occPrevActual = previousMonthDays > 0 ? Double(previousMonthPastNights) / Double(previousMonthDays) * 100 : 0
+                var previousMonthAllNights = 0
+                for b in listCopy { previousMonthAllNights += nightsInMonth(b, monthStart: previousMonthStart, monthEnd: previousMonthEnd) }
+                let occPrevForecast = previousMonthDays > 0 ? Double(previousMonthAllNights) / Double(previousMonthDays) * 100 : 0
                 var totalPastNights = 0
                 for b in pastBookings { totalPastNights += daysInPeriod(b, periodStart: firstPastStart, periodEnd: periodEnd) }
-                let occupancyTotalActual = Double(totalPastNights) / Double(totalPeriodDays) * 100
-                
-                // Occupation prévisionnelle totale
+                let occTotActual = Double(totalPastNights) / Double(totalPeriodDays) * 100
                 var totalAllNights = 0
-                for b in filteredBookings { totalAllNights += daysInPeriod(b, periodStart: firstPastStart, periodEnd: periodEnd) }
-                let occupancyTotalForecast = Double(totalAllNights) / Double(totalPeriodDays) * 100
-                
-                // Charges mois en cours : une fois par classified
-                var classifiedFeesCurrentMonth: [String: Int] = [:]
-                for b in filteredBookings {
+                for b in listCopy { totalAllNights += daysInPeriod(b, periodStart: firstPastStart, periodEnd: periodEnd) }
+                let occTotForecast = Double(totalAllNights) / Double(totalPeriodDays) * 100
+                var classifiedFees: [String: Int] = [:]
+                for b in listCopy {
                     if nightsInMonth(b, monthStart: currentMonthStart, monthEnd: currentMonthEnd) <= 0 { continue }
-                    if let c = b.classified { classifiedFeesCurrentMonth[c.id] = c.fees ?? 0 }
+                    if let c = b.classified { classifiedFees[c.id] = c.fees ?? 0 }
                 }
-                let currentMonthCharges = Double(classifiedFeesCurrentMonth.values.reduce(0, +))
-                
-                // Période commune pour les totaux : plus ancienne résa → aujourd'hui (même dénominateur pour actuel et prévisionnel → rendement actuel ≤ prévisionnel)
+                let currentMonthCharges = Double(classifiedFees.values.reduce(0, +))
                 let periodStart = firstPastStart
-                let periodStartMonth = calendar.date(from: calendar.dateComponents([.year, .month], from: periodStart)) ?? periodStart
-                
-                // Charges totales sur la période (une fois par classified par mois) : utilisées pour les deux totaux
+                var periodStartMonth = calendar.date(from: calendar.dateComponents([.year, .month], from: periodStart)) ?? periodStart
                 var totalCharges: Double = 0
-                m = periodStartMonth
-                while m < periodEnd {
-                    let monthRange = calendar.range(of: .day, in: .month, for: m)
-                    let daysInMonth = monthRange?.count ?? 30
-                    let monthEnd = calendar.date(byAdding: .day, value: daysInMonth, to: m) ?? m
-                    var feesThisMonth: [String: Int] = [:]
-                    for b in filteredBookings {
-                        if nightsInMonth(b, monthStart: m, monthEnd: monthEnd) <= 0 { continue }
-                        if let c = b.classified { feesThisMonth[c.id] = c.fees ?? 0 }
+                while periodStartMonth < periodEnd {
+                    autoreleasepool {
+                        let monthRange = calendar.range(of: .day, in: .month, for: periodStartMonth)
+                        let daysInMonth = monthRange?.count ?? 30
+                        let monthEnd = calendar.date(byAdding: .day, value: daysInMonth, to: periodStartMonth) ?? periodStartMonth
+                        var fees: [String: Int] = [:]
+                        for b in listCopy {
+                            if nightsInMonth(b, monthStart: periodStartMonth, monthEnd: monthEnd) <= 0 { continue }
+                            if let c = b.classified { fees[c.id] = c.fees ?? 0 }
+                        }
+                        totalCharges += Double(fees.values.reduce(0, +))
                     }
-                    totalCharges += Double(feesThisMonth.values.reduce(0, +))
-                    m = calendar.date(byAdding: .month, value: 1, to: m) ?? m
+                    periodStartMonth = calendar.date(byAdding: .month, value: 1, to: periodStartMonth) ?? periodStartMonth
                 }
-                
-                // Rentabilité actuelle mois en cours
-                var currentMonthPastRevenue: Double = 0
-                for b in pastBookings {
-                    if nightsInMonth(b, monthStart: currentMonthStart, monthEnd: currentMonthEnd) <= 0 { continue }
-                    if let calc = b.platform?.calculatePrice(for: b) { currentMonthPastRevenue += calc.hostTotal }
-                }
-                let profitabilityCurrentMonthActual = currentMonthCharges > 0 ? currentMonthPastRevenue / currentMonthCharges * 100 : (currentMonthPastRevenue > 0 ? 100 : 0)
-                
-                // Rentabilité prévisionnelle mois en cours
-                var currentMonthAllRevenue: Double = 0
-                for b in filteredBookings {
-                    if nightsInMonth(b, monthStart: currentMonthStart, monthEnd: currentMonthEnd) <= 0 { continue }
-                    if let calc = b.platform?.calculatePrice(for: b) { currentMonthAllRevenue += calc.hostTotal }
-                }
-                let profitabilityCurrentMonthForecast = currentMonthCharges > 0 ? currentMonthAllRevenue / currentMonthCharges * 100 : (currentMonthAllRevenue > 0 ? 100 : 0)
-                
-                // Rentabilité totale : même période (→ aujourd'hui) et mêmes charges pour les deux → actuel ≤ prévisionnel
-                var totalPastRevenue: Double = 0
-                for b in pastBookings {
-                    if let calc = b.platform?.calculatePrice(for: b) { totalPastRevenue += calc.hostTotal }
-                }
-                var totalAllRevenueInPeriod: Double = 0
-                for b in filteredBookings where daysInPeriod(b, periodStart: periodStart, periodEnd: periodEnd) > 0 {
-                    if let calc = b.platform?.calculatePrice(for: b) { totalAllRevenueInPeriod += calc.hostTotal }
-                }
-                let profitabilityTotalActual = totalCharges > 0 ? totalPastRevenue / totalCharges * 100 : (totalPastRevenue > 0 ? 100 : 0)
-                let profitabilityTotalForecast = totalCharges > 0 ? totalAllRevenueInPeriod / totalCharges * 100 : (totalAllRevenueInPeriod > 0 ? 100 : 0)
-                
-                occupationCurrentMonthLabel.text = String(format: "%.0f%% (→ %.0f%%)", occupancyCurrentMonthActual, occupancyCurrentMonthForecast)
-                occupationTotalLabel.text = String(format: "%.0f%% (→ %.0f%%)", occupancyTotalActual, occupancyTotalForecast)
-                profitabilityCurrentMonthLabel.text = String(format: "%.0f%% (→ %.0f%%)", profitabilityCurrentMonthActual, profitabilityCurrentMonthForecast)
-                profitabilityTotalLabel.text = String(format: "%.0f%% (→ %.0f%%)", profitabilityTotalActual, profitabilityTotalForecast)
-                
-                // Stats générales
-                func nights(_ b: RU_Booking) -> Int {
-                    max(0, calendar.dateComponents([.day], from: b.dates.start, to: b.dates.end).day ?? 0)
-                }
-                func guests(_ b: RU_Booking) -> Int {
-                    (b.travelers.adults ?? 0) + (b.travelers.children ?? 0) + (b.travelers.babies ?? 0)
-                }
-                let totalNights = filteredBookings.reduce(0) { $0 + nights($1) }
-                let bookingCount = filteredBookings.count
-                totalNightsLabel.text = "\(totalNights)"
-                averageNightsLabel.text = bookingCount > 0 ? String(format: "%.1f", Double(totalNights) / Double(bookingCount)) : String(key: "reporting.value.placeholder")
-                let totalGuests = filteredBookings.reduce(0) { $0 + guests($1) }
-                averageGuestsLabel.text = bookingCount > 0 ? String(format: "%.1f", Double(totalGuests) / Double(bookingCount)) : String(key: "reporting.value.placeholder")
-                var platformBookingCount: [String: Int] = [:]
-                var platformRevenue: [String: Double] = [:]
-                for b in filteredBookings {
-                    guard let p = b.platform else { continue }
-                    platformBookingCount[p.id, default: 0] += 1
-                    if let calc = p.calculatePrice(for: b) {
-                        platformRevenue[p.id, default: 0] += calc.hostTotal
+                var currMonthPastRev: Double = 0
+                autoreleasepool {
+                    for b in pastBookings {
+                        if nightsInMonth(b, monthStart: currentMonthStart, monthEnd: currentMonthEnd) <= 0 { continue }
+                        if let calc = b.platform?.calculatePrice(for: b) { currMonthPastRev += calc.hostTotal }
                     }
                 }
-                let mostUsed = platformBookingCount.max(by: { $0.value < $1.value })
-                mostUsedPlatformLabel.platform = mostUsed.flatMap { id in RU_Platform.all?.first(where: { $0.id == id.key }) }
-                let mostProfitable = platformRevenue.max(by: { $0.value < $1.value })
-                mostProfitablePlatformLabel.platform = mostProfitable.flatMap { id in RU_Platform.all?.first(where: { $0.id == id.key }) }
+                let profCurrActual = currentMonthCharges > 0 ? currMonthPastRev / currentMonthCharges * 100 : (currMonthPastRev > 0 ? 100 : 0)
+                var currMonthAllRev: Double = 0
+                autoreleasepool {
+                    for b in listCopy {
+                        if nightsInMonth(b, monthStart: currentMonthStart, monthEnd: currentMonthEnd) <= 0 { continue }
+                        if let calc = b.platform?.calculatePrice(for: b) { currMonthAllRev += calc.hostTotal }
+                    }
+                }
+                let profCurrForecast = currentMonthCharges > 0 ? currMonthAllRev / currentMonthCharges * 100 : (currMonthAllRev > 0 ? 100 : 0)
+                var previousMonthFees: [String: Int] = [:]
+                for b in listCopy {
+                    if nightsInMonth(b, monthStart: previousMonthStart, monthEnd: previousMonthEnd) <= 0 { continue }
+                    if let c = b.classified { previousMonthFees[c.id] = c.fees ?? 0 }
+                }
+                let previousMonthCharges = Double(previousMonthFees.values.reduce(0, +))
+                var prevMonthPastRev: Double = 0
+                for b in pastBookings {
+                    if nightsInMonth(b, monthStart: previousMonthStart, monthEnd: previousMonthEnd) <= 0 { continue }
+                    if let calc = b.platform?.calculatePrice(for: b) { prevMonthPastRev += calc.hostTotal }
+                }
+                let profPrevActual = previousMonthCharges > 0 ? prevMonthPastRev / previousMonthCharges * 100 : (prevMonthPastRev > 0 ? 100 : 0)
+                var prevMonthAllRev: Double = 0
+                for b in listCopy {
+                    if nightsInMonth(b, monthStart: previousMonthStart, monthEnd: previousMonthEnd) <= 0 { continue }
+                    if let calc = b.platform?.calculatePrice(for: b) { prevMonthAllRev += calc.hostTotal }
+                }
+                let profPrevForecast = previousMonthCharges > 0 ? prevMonthAllRev / previousMonthCharges * 100 : (prevMonthAllRev > 0 ? 100 : 0)
+                var totalPastRev: Double = 0
+                autoreleasepool {
+                    for b in pastBookings { if let calc = b.platform?.calculatePrice(for: b) { totalPastRev += calc.hostTotal } }
+                }
+                var totalAllRev: Double = 0
+                autoreleasepool {
+                    for b in listCopy where daysInPeriod(b, periodStart: periodStart, periodEnd: periodEnd) > 0 {
+                        if let calc = b.platform?.calculatePrice(for: b) { totalAllRev += calc.hostTotal }
+                    }
+                }
+                let profTotActual = totalCharges > 0 ? totalPastRev / totalCharges * 100 : (totalPastRev > 0 ? 100 : 0)
+                let profTotForecast = totalCharges > 0 ? totalAllRev / totalCharges * 100 : (totalAllRev > 0 ? 100 : 0)
+                func nights(_ b: RU_Booking) -> Int { max(0, calendar.dateComponents([.day], from: b.dates.start, to: b.dates.end).day ?? 0) }
+                func guests(_ b: RU_Booking) -> Int { (b.travelers.adults ?? 0) + (b.travelers.children ?? 0) + (b.travelers.babies ?? 0) }
+                let totalNights = listCopy.reduce(0) { $0 + nights($1) }
+                let count = listCopy.count
+                let avgNightsStr = count > 0 ? String(format: "%.1f", Double(totalNights) / Double(count)) : String(key: "reporting.value.placeholder")
+                let totalGuests = listCopy.reduce(0) { $0 + guests($1) }
+                let avgGuestsStr = count > 0 ? String(format: "%.1f", Double(totalGuests) / Double(count)) : String(key: "reporting.value.placeholder")
+                var platCount: [String: Int] = [:]
+                var platRev: [String: Double] = [:]
+                autoreleasepool {
+                    for b in listCopy {
+                        guard let p = b.platform else { continue }
+                        platCount[p.id, default: 0] += 1
+                        if let calc = p.calculatePrice(for: b) { platRev[p.id, default: 0] += calc.hostTotal }
+                    }
+                }
+                let mostUsedId = platCount.max(by: { $0.value < $1.value })?.key
+                let mostProfId = platRev.max(by: { $0.value < $1.value })?.key
+                DispatchQueue.main.async { [weak self] in
+                    guard let self else { return }
+                    self.occupationCurrentMonthLabel.text = String(format: "%.0f%% (→ %.0f%%)", occCurrActual, occCurrForecast)
+                    self.occupationPreviousMonthLabel.text = String(format: "%.0f%% (→ %.0f%%)", occPrevActual, occPrevForecast)
+                    self.occupationTotalLabel.text = String(format: "%.0f%% (→ %.0f%%)", occTotActual, occTotForecast)
+                    self.profitabilityCurrentMonthLabel.text = String(format: "%.0f%% (→ %.0f%%)", profCurrActual, profCurrForecast)
+                    self.profitabilityPreviousMonthLabel.text = String(format: "%.0f%% (→ %.0f%%)", profPrevActual, profPrevForecast)
+                    self.profitabilityTotalLabel.text = String(format: "%.0f%% (→ %.0f%%)", profTotActual, profTotForecast)
+                    self.totalNightsLabel.text = "\(totalNights)"
+                    self.averageNightsLabel.text = avgNightsStr
+                    self.averageGuestsLabel.text = avgGuestsStr
+                    self.mostUsedPlatformLabel.platform = mostUsedId.flatMap { id in RU_Platform.all?.first(where: { $0.id == id }) }
+                    self.mostProfitablePlatformLabel.platform = mostProfId.flatMap { id in RU_Platform.all?.first(where: { $0.id == id }) }
+                }
             }
         }
     }
@@ -188,8 +201,10 @@ public class RU_Reporting_ViewController : RU_ViewController {
         }
     }
     private lazy var occupationCurrentMonthLabel: RU_Label = .init()
+    private lazy var occupationPreviousMonthLabel: RU_Label = .init()
     private lazy var occupationTotalLabel: RU_Label = .init()
     private lazy var profitabilityCurrentMonthLabel: RU_Label = .init()
+    private lazy var profitabilityPreviousMonthLabel: RU_Label = .init()
     private lazy var profitabilityTotalLabel: RU_Label = .init()
     private lazy var totalNightsLabel: RU_Label = .init()
     private lazy var averageNightsLabel: RU_Label = .init()
@@ -217,6 +232,10 @@ public class RU_Reporting_ViewController : RU_ViewController {
 		navigationItem.title = String(key: "reporting.title")
         
         let contentScrollView:RU_ScrollView = .init()
+        view.addSubview(contentScrollView)
+        contentScrollView.snp.makeConstraints { make in
+            make.edges.equalToSuperview()
+        }
         
         let contentStackView:RU_StackView = .init()
         contentStackView.axis = .vertical
@@ -226,11 +245,6 @@ public class RU_Reporting_ViewController : RU_ViewController {
         contentScrollView.addSubview(contentStackView)
         contentStackView.snp.makeConstraints { make in
             make.edges.width.equalToSuperview()
-        }
-        
-        view.addSubview(contentScrollView)
-        contentScrollView.snp.makeConstraints { make in
-            make.edges.equalToSuperview()
         }
         
         let mainSectionStackView:RU_Section_StackView = .init()
@@ -249,11 +263,13 @@ public class RU_Reporting_ViewController : RU_ViewController {
         mostProfitablePlatformStackView.axis = .horizontal
         
         mainSectionStackView.addArrangedSubview(createRow(icon: "eurosign.circle.fill", title: String(key: "reporting.main.mostProfitablePlatform"), view: mostProfitablePlatformStackView, isHighlighted: true))
+        
         contentStackView.addArrangedSubview(mainSectionStackView)
         
         let occupationSectionStackView:RU_Section_StackView = .init()
         occupationSectionStackView.title = String(key: "reporting.section.occupancy")
         occupationSectionStackView.subtitle = String(key: "reporting.section.occupancy.subtitle")
+        occupationSectionStackView.addArrangedSubview(createRow(icon: "calendar.badge.clock", title: String(key: "reporting.occupancy.previousMonth"), view: occupationPreviousMonthLabel))
         occupationSectionStackView.addArrangedSubview(createRow(icon: "calendar", title: String(key: "reporting.occupancy.currentMonth"), view: occupationCurrentMonthLabel))
         occupationSectionStackView.addArrangedSubview(createRow(icon: "equal.circle.fill", title: String(key: "reporting.occupancy.total"), view: occupationTotalLabel, isHighlighted: true))
         
@@ -273,6 +289,7 @@ public class RU_Reporting_ViewController : RU_ViewController {
         let profitabilitySectionStackView:RU_Section_StackView = .init()
         profitabilitySectionStackView.title = String(key: "reporting.section.profitability")
         profitabilitySectionStackView.subtitle = String(key: "reporting.section.profitability.subtitle")
+        profitabilitySectionStackView.addArrangedSubview(createRow(icon: "eurosign.circle", title: String(key: "reporting.profitability.previousMonth"), view: profitabilityPreviousMonthLabel))
         profitabilitySectionStackView.addArrangedSubview(createRow(icon: "eurosign", title: String(key: "reporting.profitability.currentMonth"), view: profitabilityCurrentMonthLabel))
         profitabilitySectionStackView.addArrangedSubview(createRow(icon: "equal.circle.fill", title: String(key: "reporting.profitability.total"), view: profitabilityTotalLabel, isHighlighted: true))
         

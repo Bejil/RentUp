@@ -171,38 +171,36 @@ public class RU_Calendar_ViewController: RU_ViewController {
 		validateButton.isEnabled = startDate != nil && endDate != nil
 	}
 	
-	/// Vérifie si une date est déjà réservée par une autre réservation
+	/// Vérifie si une date est déjà réservée sur la *même annonce* (même classified).
+	/// Permet de créer une réservation sur les mêmes jours qu'une autre si elles n'ont pas la même classified.
 	private func isDateBooked(_ date: Date) -> Bool {
 		
 		let calendar = Calendar.current
 		let dayStart = calendar.startOfDay(for: date)
+		guard let currentClassifiedId = currentBooking?.classified?.id else { return false }
 		
 		return existingBookings?.contains(where: { booking in
-			// Exclure la réservation en cours d'édition
-			if let current = currentBooking, booking.id == current.id {
-				return false
-			}
+			if let current = currentBooking, booking.id == current.id { return false }
+			guard booking.classified?.id == currentClassifiedId else { return false }
 			let start = calendar.startOfDay(for: booking.dates.start)
 			let end = calendar.startOfDay(for: booking.dates.end)
 			return dayStart >= start && dayStart <= end
 		}) ?? false
 	}
 	
-	/// Vérifie s'il y a une réservation entre deux dates
+	/// Vérifie s'il y a une réservation sur la *même annonce* entre deux dates.
 	private func hasBookingBetween(_ start: Date, and end: Date) -> Bool {
 		
 		let calendar = Calendar.current
 		let rangeStart = calendar.startOfDay(for: start)
 		let rangeEnd = calendar.startOfDay(for: end)
+		guard let currentClassifiedId = currentBooking?.classified?.id else { return false }
 		
 		return existingBookings?.contains(where: { booking in
-			// Exclure la réservation en cours d'édition
-			if let current = currentBooking, booking.id == current.id {
-				return false
-			}
+			if let current = currentBooking, booking.id == current.id { return false }
+			guard booking.classified?.id == currentClassifiedId else { return false }
 			let bookingStart = calendar.startOfDay(for: booking.dates.start)
 			let bookingEnd = calendar.startOfDay(for: booking.dates.end)
-			// Vérifier si la réservation chevauche la plage
 			return bookingStart <= rangeEnd && bookingEnd >= rangeStart
 		}) ?? false
 	}
@@ -305,15 +303,16 @@ public class RU_Calendar_ViewController: RU_ViewController {
 			let dayStart = calendar.startOfDay(for: date)
 			let isDisabledByMinDate = self.minimumDate.map { date < calendar.startOfDay(for: $0) } ?? false
 			
-			// Trouver les réservations existantes pour ce jour (sauf la réservation en cours d'édition)
+			// Réservations existantes ce jour (sauf la réservation en cours) — pour l’affichage des barres
 			let bookingsForDay = self.existingBookings?.filter({ booking in
-				if let current = self.currentBooking, booking.id == current.id {
-					return false
-				}
+				if let current = self.currentBooking, booking.id == current.id { return false }
 				let start = calendar.startOfDay(for: booking.dates.start)
 				let end = calendar.startOfDay(for: booking.dates.end)
 				return dayStart >= start && dayStart <= end
 			}) ?? []
+			// Même annonce (même classified) : on désactive le jour uniquement en cas de conflit sur la même classified
+			let currentClassifiedId = self.currentBooking?.classified?.id
+			let bookingsSameClassified = bookingsForDay.filter { $0.classified?.id == currentClassifiedId }
 			
 			let existingBookingInfos: [ExistingBookingInfo] = bookingsForDay.map { booking in
 				ExistingBookingInfo(
@@ -323,7 +322,7 @@ public class RU_Calendar_ViewController: RU_ViewController {
 				)
 			}
 			
-			let isDisabled = isDisabledByMinDate || !bookingsForDay.isEmpty
+			let isDisabled = isDisabledByMinDate || !bookingsSameClassified.isEmpty
 			let isToday = calendar.isDateInToday(date)
 			
 			let isStartDate = self.startDate.map { calendar.isDate(date, inSameDayAs: $0) } ?? false
