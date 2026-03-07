@@ -37,22 +37,22 @@ public class RU_Tip_StackView: RU_StackView {
 			titleLabel.text = title
 		}
 	}
-	private lazy var iconTitleImageView:UIImageView = {
-		
+	private lazy var iconTitleImageView: UIImageView = {
+		$0.setContentHuggingPriority(.defaultHigh, for: .horizontal)
+		$0.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
 		$0.snp.makeConstraints { make in
-			make.size.equalTo(2*UI.Margins)
+			make.size.equalTo(2 * UI.Margins).priority(.high)
 		}
 		return $0
-		
 	}(createImageView())
-	private lazy var iconContentImageView:UIImageView = {
-		
+	private lazy var iconContentImageView: UIImageView = {
 		$0.isHidden = true
+		$0.setContentHuggingPriority(.defaultHigh, for: .horizontal)
+		$0.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
 		$0.snp.makeConstraints { make in
-			make.size.equalTo(1.25*UI.Margins)
+			make.size.equalTo(1.25 * UI.Margins).priority(.high)
 		}
 		return $0
-		
 	}(createImageView())
 	private lazy var titleLabel:RU_Label = {
 		
@@ -99,7 +99,7 @@ public class RU_Tip_StackView: RU_StackView {
 		addArrangedSubview(contentContainerStackView)
 		
 		contentStackView.snp.makeConstraints { make in
-			make.height.greaterThanOrEqualTo(iconContentImageView)
+            make.height.greaterThanOrEqualTo(iconContentImageView).priority(.high)
 		}
 	}
 	

@@ -237,8 +237,8 @@ public class RU_Classifieds_Edit_ViewController : RU_ViewController {
 		generalSectionStackView.addArrangedSubview(nameRow)
         
         let feesTipStackView:RU_Tip_StackView = .init()
-        feesTipStackView.title = String(key: "settings.classified..fees.tip.title")
-        feesTipStackView.add(String(key: "settings.classified..fees.tip.content"))
+        feesTipStackView.title = String(key: "settings.classified.fees.tip.title")
+        feesTipStackView.add(String(key: "settings.classified.fees.tip.content"))
         generalSectionStackView.addArrangedSubview(feesTipStackView)
         
         generalSectionStackView.addArrangedSubview(feesRow)
@@ -258,6 +258,8 @@ public class RU_Classifieds_Edit_ViewController : RU_ViewController {
 		tarificationSectionStackView.subtitle = String(key: "settings.classified.tarification.section.subtitle")
 		tarificationSectionStackView.addArrangedSubview(tarificationTableView)
 		contentStackView.addArrangedSubview(tarificationSectionStackView)
+        
+        contentStackView.addArrangedSubview(deleteButton)
 		
         view.addSubview(contentScrollView)
         contentScrollView.snp.makeConstraints { make in
@@ -315,6 +317,11 @@ extension RU_Classifieds_Edit_ViewController : UITableViewDelegate, UITableViewD
 			
 			details.append(String(format: String(key: "settings.classified.cleaning"), cleaning))
 		}
+        
+        if let travelersIncluded = tarification?.travelers.included, let travelersExtra = tarification?.travelers.extraPrice {
+            
+            details.append(String(format: String(key: "settings.classified.travelers"), travelersExtra, travelersIncluded))
+        }
 		
 		if let weekPercent = tarification?.offers.first(where: { $0.reductiontype == .week })?.percent {
 			
@@ -346,10 +353,5 @@ extension RU_Classifieds_Edit_ViewController : UITableViewDelegate, UITableViewD
 			self?.updateSaveButton()
 		}
 		navigationController?.pushViewController(viewController, animated: true)
-	}
-	
-	public func tableView(_ tableView: UITableView, accessoryButtonTappedForRowWith indexPath: IndexPath) {
-		
-		tableView.delegate?.tableView?(tableView, didSelectRowAt: indexPath)
 	}
 }

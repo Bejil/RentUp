@@ -130,19 +130,16 @@ public class RU_Bookings_Edit_ViewController : RU_ViewController {
 			}
 			else {
 				
-				let calendarViewController = RU_Calendar_ViewController()
-				calendarViewController.startDate = self?.booking?.dates.start
-				calendarViewController.endDate = self?.booking?.dates.end
-				calendarViewController.existingBookings = bookings
+				let calendarViewController = RU_Bookings_Edit_Calendar_ViewController()
+				calendarViewController.bookings = bookings
 				calendarViewController.currentBooking = self?.booking
 				calendarViewController.didSelectRange = { [weak self] startDate, endDate in
-					
 					self?.booking?.dates.start = startDate
 					self?.booking?.dates.end = endDate
 					self?.updateDatesButton()
 					self?.updateSaveButton()
+					self?.dismiss(animated: true)
 				}
-				
 				UI.MainController.present(RU_NavigationController(rootViewController: calendarViewController), animated: true)
 			}
 		}
@@ -263,6 +260,7 @@ public class RU_Bookings_Edit_ViewController : RU_ViewController {
 			if let value = self?.babyBedsRow.stepper.value {
 				
 				self?.booking?.beds.babies = Int(value)
+                self?.updateSaveButton()
 			}
 			
 		}), for: .valueChanged)
@@ -282,6 +280,7 @@ public class RU_Bookings_Edit_ViewController : RU_ViewController {
             if let value = self?.costsCleaningTextFieldRowStack.textField.text {
                 
                 self?.booking?.costs.cleaning = Int(value)
+                self?.updateSaveButton()
             }
             
         }), for: .editingChanged)
@@ -301,6 +300,7 @@ public class RU_Bookings_Edit_ViewController : RU_ViewController {
             if let value = self?.costsCompensationTextFieldRowStack.textField.text {
                 
                 self?.booking?.costs.compensation = Int(value)
+                self?.updateSaveButton()
             }
             
         }), for: .editingChanged)
@@ -347,9 +347,10 @@ public class RU_Bookings_Edit_ViewController : RU_ViewController {
 			}
 			else {
 				
-				NotificationCenter.post(.updateBookings)
-				
-				self?.dismiss()
+				self?.dismiss {
+                    
+                    NotificationCenter.post(.updateBookings)
+                }
 			}
 		}
 	})
@@ -558,8 +559,17 @@ public class RU_Bookings_Edit_ViewController : RU_ViewController {
 	}
 	
 	private func updateSaveButton() {
-		
+
 		saveButton.isEnabled = booking?.canSave ?? false
+        
+		if let booking, let calculation = booking.platform?.calculatePrice(for: booking) {
+            
+			saveButton.subtitle = String(format: String(key: "bookings.create.revenue"), calculation.hostTotal)
+		}
+        else {
+            
+			saveButton.subtitle = nil
+		}
 	}
 	
 	private func wouldExceedCapacity(adults: Int? = nil, children: Int? = nil, babies: Int? = nil) -> Bool {

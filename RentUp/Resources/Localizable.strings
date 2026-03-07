@@ -67,6 +67,13 @@
 //MARK: - Classifieds
 "classifieds.title" = "Vos biens";
 "classifieds.create.button" = "Nouveau bien";
+"classifieds.delete.button" = "Supprimer";
+"classifieds.error.getAll" = "Une erreur est survenue lors de la récuperation des biens";
+"classifieds.error.sav" = "Une erreur est survenue lors de la sauvegarde du bien";
+"classifieds.error.delete" = "Une erreur est survenue lors de la suppression du bien";
+"classifieds.delete.alert.title" = "Attention";
+"classifieds.delete.alert.content" = "Voulez-vous vraiment supprimer ce(s) bien(s) ? Cette action est irréversible.";
+"classifieds.delete.alert.button" = "Supprimer";
 
 //MARK: - Dashboard
 "home.title" = "Vos actualités";
@@ -136,6 +143,7 @@
 "bookings.calendar.button" = "Calendrier";
 "bookings.total.label" = "Revenu total:";
 "bookings.create.button" = "Ajouter";
+"bookings.delete.button" = "Supprimer";
 //Create
 "bookings.create.noClassifieds" = "Vous n'avez pas encore ajouté de biens. Veuillez en créer un pour pouvoir ajouter une réservation";
 "bookings.create.title.new" = "Nouvelle réservation";
@@ -150,8 +158,6 @@
 "bookings.create.dates.start" = "Arrivée";
 "bookings.create.dates.end" = "Départ";
 "bookings.create.dates.button" = "Sélectionner";
-"bookings.calendar.title" = "Sélection des dates";
-"bookings.calendar.placeholder" = "Sélectionnez une date d'arrivée";
 "bookings.calendar.validate" = "Valider";
 "bookings.calendar.overview.title" = "Calendrier";
 "bookings.create.travelers.section.title" = "Voyageurs";
@@ -172,6 +178,7 @@
 "bookings.create.configuration.section.costs.cleaning" = "Ménage";
 "bookings.create.configuration.section.costs.compensation" = "Compensation";
 "bookings.create.save.button" = "Enregistrer";
+"bookings.create.revenue" = "Revenu estimé: %.2f €";
 "bookings.create.delete.button" = "Supprimer";
 //Errors
 "bookings.error.getAll" = "Une erreur est survenue pendant la récupération des réservations";
@@ -191,9 +198,10 @@
 "bookings.cell.cancel.button" = "Annuler";
 //Delete alert
 "bookings.delete.alert.title" = "Attention";
-"bookings.delete.alert.content" = "Voulez-vous vraiment supprimer cette réservation ?";
+"bookings.delete.alert.content" = "Voulez-vous vraiment supprimer cette(ces) réservation(s) ?";
 "bookings.delete.alert.button" = "Supprimer";
 //Details
+"bookings.details.edit.button" = "Modifier";
 "bookings.details.title" = "Détails de la réservation";
 "bookings.details.dates.section.title" = "Séjour";
 "bookings.details.platform" = "Plateforme";
@@ -247,12 +255,13 @@
 //Classified
 "settings.classified.title.create" = "Ajouter un bien";
 "settings.classified.title.update" = "Modifier un bien";
+"settings.classified.edit.button" = "Modifier";
 "settings.classified.general.section.title" = "Informations générales";
 "settings.classified.general.section.subtitle" = "Identifiez votre bien";
 "settings.classified.name" = "Nom du bien";
 "settings.classified.name.placeholder" = "Nom de votre bien";
-"settings.classified..fees.tip.title" = "Calcul de vos charges";
-"settings.classified..fees.tip.content" = "Il s'agit des différents postes qui composent les dépenses fixes de votre bien: Prêt immobilier, Assurance habitation, Taxe foncière par mois, Charges de copropriété, Électricité, Gaz, Eau, Internet...";
+"settings.classified.fees.tip.title" = "Calcul de vos charges";
+"settings.classified.fees.tip.content" = "Il s'agit des différents postes qui composent les dépenses fixes de votre bien: Prêt immobilier, Assurance habitation, Taxe foncière par mois, Charges de copropriété, Électricité, Gaz, Eau, Internet...";
 "settings.classified.fees" = "Charges";
 "settings.classified.capacity" = "Capacité max";
 "settings.classified.capacity.placeholder" = "Nombre de personnes max";
@@ -266,6 +275,9 @@
 "settings.classified.platform.tarification.offer.month" = "Réduction mois";
 "settings.classified.platform.tarification.prices.section.title" = "Tarification";
 "settings.classified.platform.tarification.prices.section.subtitle" = "Définissez le prix par nuit et les frais de ménage";
+"settings.classified.platform.tarification.travelers.section.subtitle" = "Paramétrez les frais par voyageurs supplémentaires";
+"settings.classified.platform.tarification.travelers.included" = "Seuil de voyageurs";
+"settings.classified.platform.tarification.travelers.extra" = "Prix au delà";
 "settings.classified.platform.tarification.offers.section.title" = "Réductions";
 "settings.classified.platform.tarification.offers.section.subtitle" = "Appliquez des réductions pour les séjours longs";
 "settings.classified.platform.tarification.save.button" = "Enregistrer";
@@ -277,6 +289,7 @@
 "settings.classified.beds.baby" = "Lits bébé";
 "settings.classified.price" = "%i€ par nuit";
 "settings.classified.cleaning" = "Ménage: %i€";
+"settings.classified.travelers" = "%i€ > %i pers";
 "settings.classified.offer.week" = "-%i%% semaine";
 "settings.classified.offer.month" = "-%i%% mois";
 "settings.classified.save.button" = "Enregistrer";

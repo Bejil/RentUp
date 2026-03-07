@@ -320,7 +320,7 @@ public class RU_Alert_ViewController : UIViewController {
 		}
 	}
 	
-	@discardableResult public static func present(_ error:Error, handler:(()->Void)? = nil) -> RU_Alert_ViewController {
+	@discardableResult public static func present(_ error:Error, canDismiss:Bool = true, handler:(()->Void)? = nil) -> RU_Alert_ViewController {
 		
 		RU_Feedback.shared.make(.Error)
 		
@@ -337,7 +337,10 @@ public class RU_Alert_ViewController : UIViewController {
 				}
 			}
 		}
-		viewController.addDismissButton()
+        if canDismiss {
+            
+            viewController.addDismissButton()
+        }
 		viewController.present()
 		return viewController
 	}

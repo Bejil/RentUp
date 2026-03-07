@@ -130,27 +130,26 @@ extension RU_Platform {
 		
 		var totalNights = Double(pricePerNight * nights)
 		
-		// Appliquer les réductions selon la durée du séjour
-		var discountPercent: Double = 0
+		// Supplément par voyageur au-dessus de n (x € par voyageur supplémentaire par nuit) — avant réductions
+		let totalTravelers = (booking.travelers.adults ?? 0) + (booking.travelers.children ?? 0)
+        if let n = tarification.travelers.included, let x = tarification.travelers.extraPrice, totalTravelers > n {
+			let extraTravelers = totalTravelers - n
+			totalNights += Double(extraTravelers * x * nights)
+		}
 		
-		// Réduction au mois (28 nuits ou plus) - prioritaire sur la semaine
+		// Appliquer les réductions selon la durée du séjour (semaine / mois)
+		var discountPercent: Double = 0
 		if nights >= 28, let monthPercent = tarification.offers.first(where: { $0.reductiontype == .month })?.percent {
 			discountPercent = Double(monthPercent)
 		}
-		// Réduction à la semaine (7 nuits ou plus)
 		else if nights >= 7, let weekPercent = tarification.offers.first(where: { $0.reductiontype == .week })?.percent {
 			discountPercent = Double(weekPercent)
 		}
-		
-		// Calculer la réduction
 		let discount = totalNights * (discountPercent / 100)
 		totalNights = totalNights - discount
 		
 		let cleaning = Double(tarification.cleaning ?? 0)
 		let totalNightsCleaning = totalNights + cleaning
-		
-		// Nombre total de voyageurs (pour la taxe de séjour)
-		let totalTravelers = (booking.travelers.adults ?? 0) + (booking.travelers.children ?? 0)
 		
 		var travelerFees: Double = 0
 		var touristTax: Double = 0

@@ -17,8 +17,12 @@ public class RU_Classifieds_ViewController : RU_ViewController {
 			view.dismissPlaceholder()
 			
 			tableView.reloadData()
+            
+            let isEmpty = classifieds?.isEmpty == true
+            
+            navigationItem.rightBarButtonItem = isEmpty ? nil : editButtonItem
 			
-			if classifieds?.isEmpty == true {
+			if isEmpty {
 				
 				let placeholderView = view.showPlaceholder(.Empty)
 				let addButton:RU_Button = .init(String(key: "classifieds.create.button")) { _ in
@@ -32,6 +36,7 @@ public class RU_Classifieds_ViewController : RU_ViewController {
 	}
 	private lazy var tableView:RU_TableView = {
 		
+        $0.allowsMultipleSelectionDuringEditing = true
 		$0.register(RU_Classified_TableViewCell.self, forCellReuseIdentifier: RU_Classified_TableViewCell.identifier)
 		$0.delegate = self
 		$0.dataSource = self
@@ -46,6 +51,50 @@ public class RU_Classifieds_ViewController : RU_ViewController {
     }(RU_Button(String(key: "classifieds.create.button")) { _ in
         
         UI.MainController.present(RU_NavigationController(rootViewController: RU_Classifieds_Edit_ViewController()), animated: true)
+    })
+    private lazy var deleteButton:RU_Button = {
+        
+        $0.isHidden = true
+        $0.image = UIImage(systemName: "trash")
+        $0.type = .delete
+        return $0
+        
+    }(RU_Button(String(key: "classifieds.delete.button")) { [weak self] _ in
+        
+        let alertController:RU_Alert_ViewController = .init()
+        alertController.title = String(key: "classifieds.delete.alert.title")
+        alertController.add(String(key: "classifieds.delete.alert.content"))
+        let button = alertController.addButton(title: String(key: "classifieds.delete.alert.button")) { [weak self] button in
+            
+            button?.isLoading = true
+            
+            let dispatchGroup = DispatchGroup()
+            
+            self?.tableView.indexPathsForSelectedRows?.forEach({
+                
+                dispatchGroup.enter()
+                
+                self?.classifieds?[$0.row].delete { _ in
+                    
+                    dispatchGroup.leave()
+                }
+            })
+            
+            dispatchGroup.notify(queue: .main) { [weak self] in
+                
+                button?.isLoading = false
+                
+                alertController.close()
+                
+                self?.setEditing(false, animated: true)
+                
+                self?.updateClassifieds()
+            }
+        }
+        button.type = .delete
+        button.image = UIImage(systemName: "trash")
+        alertController.addCancelButton()
+        alertController.present()
     })
 	
 	public override init(nibName nibNameOrNil: String?, bundle nibBundleOrNil: Bundle?) {
@@ -71,8 +120,10 @@ public class RU_Classifieds_ViewController : RU_ViewController {
             make.edges.equalToSuperview()
         }
         
-        view.addSubview(addButton)
-        addButton.snp.makeConstraints { make in
+        let buttonsStackView:RU_StackView = .init(arrangedSubviews: [addButton,deleteButton])
+        buttonsStackView.axis = .vertical
+        view.addSubview(buttonsStackView)
+        buttonsStackView.snp.makeConstraints { make in
             make.bottom.equalTo(view.safeAreaLayoutGuide).inset(UI.Margins)
             make.left.right.equalTo(view.safeAreaLayoutGuide).inset(1.5 * UI.Margins)
         }
@@ -94,6 +145,23 @@ public class RU_Classifieds_ViewController : RU_ViewController {
         let bottomInset = addButton.bounds.height + 2 * UI.Margins
         tableView.contentInset.bottom = bottomInset
         tableView.verticalScrollIndicatorInsets.bottom = bottomInset
+    }
+    
+    public override func setEditing(_ editing: Bool, animated: Bool) {
+        
+        super.setEditing(editing, animated: animated)
+        
+        tableView.setEditing(editing, animated: animated)
+        updateSelection()
+        
+        UIView.animation {
+            
+            self.deleteButton.isHidden = !editing
+            self.deleteButton.alpha = self.deleteButton.isHidden ? 0 : 1
+            
+            self.addButton.isHidden = editing
+            self.addButton.alpha = self.addButton.isHidden ? 0 : 1
+        }
     }
 	
 	private func updateClassifieds() {
@@ -118,6 +186,11 @@ public class RU_Classifieds_ViewController : RU_ViewController {
 			}
 		}
 	}
+    
+    private func updateSelection() {
+        
+        deleteButton.isEnabled = !(tableView.indexPathsForSelectedRows?.isEmpty ?? true)
+    }
 }
 
 extension RU_Classifieds_ViewController : UITableViewDelegate, UITableViewDataSource {
@@ -150,24 +223,44 @@ extension RU_Classifieds_ViewController : UITableViewDelegate, UITableViewDataSo
 	
 	public func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
 		
-		tableView.deselectRow(at: indexPath, animated: true)
-		
-		let viewController:RU_Classifieds_Edit_ViewController = .init()
-		viewController.classified = classifieds?[indexPath.row]
-		navigationController?.pushViewController(viewController, animated: true)
+		if !tableView.isEditing {
+         
+            tableView.deselectRow(at: indexPath, animated: true)
+            
+            let viewController:RU_Classifieds_Detail_ViewController = .init()
+            viewController.classified = classifieds?[indexPath.row]
+            navigationController?.pushViewController(viewController, animated: true)
+        }
+        else {
+            
+            updateSelection()
+        }
 	}
+    
+    public func tableView(_ tableView: UITableView, didDeselectRowAt indexPath: IndexPath) {
+        
+        if tableView.isEditing {
+            
+            updateSelection()
+        }
+    }
 	
 	public func tableView(_ tableView: UITableView, contextMenuConfigurationForRowAt indexPath: IndexPath, point: CGPoint) -> UIContextMenuConfiguration? {
 		
-		return UIContextMenuConfiguration.init(identifier: indexPath as NSIndexPath, previewProvider: { () -> UIViewController? in
-			
-			return nil
-			
-		}) { (suggestedActions) -> UIMenu? in
-			
-			let cell = tableView.cellForRow(at: indexPath) as? RU_Classified_TableViewCell
-			return cell?.menu
-		}
+        if !tableView.isEditing {
+            
+            return UIContextMenuConfiguration.init(identifier: indexPath as NSIndexPath, previewProvider: { () -> UIViewController? in
+                
+                return nil
+                
+            }) { (suggestedActions) -> UIMenu? in
+                
+                let cell = tableView.cellForRow(at: indexPath) as? RU_Classified_TableViewCell
+                return cell?.menu
+            }
+        }
+        
+        return nil
 	}
 	
 	public func tableView(_ tableView: UITableView, willPerformPreviewActionForMenuWith configuration: UIContextMenuConfiguration, animator: UIContextMenuInteractionCommitAnimating) {

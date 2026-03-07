@@ -40,11 +40,18 @@ public class RU_Classified : Codable, Equatable {
 			public var reductiontype:ReductionType?
 			public var percent:Int?
 		}
+
+		public class Traveler : Codable {
+			
+			public var included:Int?
+			public var extraPrice:Int?
+		}
 		
 		public var platform:RU_Platform?
 		public var price:Int?
 		public var cleaning:Int?
 		public var offers:[Offer] = .init()
+		public var travelers:Traveler = .init()
 	}
 	
 	public var id:String = UUID().uuidString

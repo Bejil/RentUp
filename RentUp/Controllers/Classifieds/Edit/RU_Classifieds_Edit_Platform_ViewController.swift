@@ -54,6 +54,35 @@ public class RU_Classifieds_Edit_Platform_ViewController : RU_ViewController {
 		return $0
 		
 	}(RU_Section_TextFieldRow_StackView())
+    private lazy var travelersIncludedTextFieldRowStack:RU_Section_StepperRow_StackView = {
+        
+        $0.image = UIImage(systemName: "person.2.fill")
+        $0.title = String(key: "settings.classified.platform.tarification.travelers.included")
+        $0.stepper.minimumValue = 0
+        $0.stepper.addAction(.init(handler: { [weak self] _ in
+            
+            self?.updateSaveButton()
+            
+        }), for: .valueChanged)
+        return $0
+        
+    }(RU_Section_StepperRow_StackView())
+    private lazy var travelersExtraTextFieldRowStack:RU_Section_TextFieldRow_StackView = {
+        
+        $0.backgroundColor = Colors.Background.View
+        $0.title = String(key: "settings.classified.platform.tarification.travelers.extra")
+        $0.image = UIImage(systemName: "person.badge.plus")
+        $0.suffix = String(key: "settings.platform.value.amount")
+        $0.isLayoutMarginsRelativeArrangement = true
+        $0.layoutMargins.bottom = UI.Margins/2
+        $0.textField.addAction(.init(handler: { [weak self] _ in
+            
+            self?.updateSaveButton()
+            
+        }), for: .editingDidEnd)
+        return $0
+        
+    }(RU_Section_TextFieldRow_StackView())
 	private lazy var offerWeekTextFieldRowStack:RU_Section_TextFieldRow_StackView = {
 		
 		$0.backgroundColor = Colors.Background.View
@@ -102,8 +131,18 @@ public class RU_Classifieds_Edit_Platform_ViewController : RU_ViewController {
 				
 				self?.classified?.tarification.first(where: { $0.platform == platform })?.cleaning = intValue
 			}
-			
-			if let value = self?.offerWeekTextFieldRowStack.textField.text, let intValue = Int(value) {
+            
+            if let value = self?.travelersIncludedTextFieldRowStack.value, let intValue = Int(value) {
+                
+                self?.classified?.tarification.first(where: { $0.platform == platform })?.travelers.included = intValue
+                
+                if let value = self?.travelersExtraTextFieldRowStack.textField.text, let intValue = Int(value) {
+                    
+                    self?.classified?.tarification.first(where: { $0.platform == platform })?.travelers.extraPrice = intValue
+                }
+            }
+            
+            if let value = self?.offerWeekTextFieldRowStack.textField.text, let intValue = Int(value) {
 				
 				if let offer = self?.classified?.tarification.first(where: { $0.platform == platform })?.offers.first(where: { $0.reductiontype == .week }) {
 					
@@ -172,6 +211,12 @@ public class RU_Classifieds_Edit_Platform_ViewController : RU_ViewController {
 		pricesSectionStackView.addArrangedSubview(priceTextFieldRowStack)
 		pricesSectionStackView.addArrangedSubview(cleaningTextFieldRowStack)
 		contentStackView.addArrangedSubview(pricesSectionStackView)
+        
+        let travelersSectionStackView:RU_Section_StackView = .init()
+        travelersSectionStackView.subtitle = String(key: "settings.classified.platform.tarification.travelers.section.subtitle")
+        travelersSectionStackView.addArrangedSubview(travelersIncludedTextFieldRowStack)
+        travelersSectionStackView.addArrangedSubview(travelersExtraTextFieldRowStack)
+        contentStackView.addArrangedSubview(travelersSectionStackView)
 		
 		let offersSectionStackView:RU_Section_StackView = .init()
 		offersSectionStackView.title = String(key: "settings.classified.platform.tarification.offers.section.title")
@@ -205,7 +250,10 @@ public class RU_Classifieds_Edit_Platform_ViewController : RU_ViewController {
 	
 	private func updateSaveButton() {
 		
-		saveButton.isEnabled = !priceTextFieldRowStack.textField.text!.isEmpty
+        let travelersIncluded = Int(travelersIncludedTextFieldRowStack.value ?? "0") ?? 0
+        let travelersExtra = Int(travelersExtraTextFieldRowStack.textField.text ?? "0") ?? 0
+        
+		saveButton.isEnabled = !priceTextFieldRowStack.textField.text!.isEmpty && (travelersIncluded == 0 || (travelersIncluded > 0 && travelersExtra > 0))
 	}
 	
 	private func updateData() {
@@ -220,6 +268,14 @@ public class RU_Classifieds_Edit_Platform_ViewController : RU_ViewController {
 		if let cleaning = tarification?.cleaning {
 			cleaningTextFieldRowStack.textField.text = "\(cleaning)"
 		}
+        
+        if let travelersIncluded = tarification?.travelers.included, let travelersExtra = tarification?.travelers.extraPrice {
+            
+            travelersIncludedTextFieldRowStack.stepper.value = Double(travelersIncluded)
+            travelersIncludedTextFieldRowStack.value = "\(travelersIncluded)"
+            
+            travelersExtraTextFieldRowStack.textField.text = "\(travelersExtra)"
+        }
 		
 		if let weekPercent = tarification?.offers.first(where: { $0.reductiontype == .week })?.percent {
 			offerWeekTextFieldRowStack.textField.text = "\(weekPercent)"

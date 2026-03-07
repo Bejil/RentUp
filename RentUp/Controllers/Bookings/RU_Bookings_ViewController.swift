@@ -13,6 +13,8 @@ public class RU_Bookings_ViewController: RU_ViewController {
 	private var bookings:[RU_Booking]? {
 		
 		didSet {
+            
+            updateFilterNavigationItem()
 			
 			let sortedBookings = bookings?.sorted { $0.dates.start > $1.dates.start }
 			filteredBookings = sortedBookings
@@ -51,6 +53,7 @@ public class RU_Bookings_ViewController: RU_ViewController {
 	}
     private lazy var bookingsTableView:RU_TableView = {
 		
+        $0.allowsMultipleSelectionDuringEditing = true
 		$0.register(RU_Booking_TableViewCell.self, forCellReuseIdentifier: RU_Booking_TableViewCell.identifier)
 		$0.delegate = self
 		$0.dataSource = self
@@ -128,6 +131,50 @@ public class RU_Bookings_ViewController: RU_ViewController {
             }
         }
     })
+    private lazy var deleteButton:RU_Button = {
+        
+        $0.isHidden = true
+        $0.image = UIImage(systemName: "trash")
+        $0.type = .delete
+        return $0
+        
+    }(RU_Button(String(key: "bookings.delete.button")) { [weak self] _ in
+        
+        let alertController:RU_Alert_ViewController = .init()
+        alertController.title = String(key: "bookings.delete.alert.title")
+        alertController.add(String(key: "bookings.delete.alert.content"))
+        let button = alertController.addButton(title: String(key: "bookings.delete.alert.button")) { [weak self] button in
+            
+            button?.isLoading = true
+            
+            let dispatchGroup = DispatchGroup()
+            
+            self?.bookingsTableView.indexPathsForSelectedRows?.forEach({
+                
+                dispatchGroup.enter()
+                
+                self?.bookings?[$0.row].delete { _ in
+                    
+                    dispatchGroup.leave()
+                }
+            })
+            
+            dispatchGroup.notify(queue: .main) { [weak self] in
+                
+                button?.isLoading = false
+                
+                alertController.close()
+                
+                self?.setEditing(false, animated: true)
+                
+                self?.updateData()
+            }
+        }
+        button.type = .delete
+        button.image = UIImage(systemName: "trash")
+        alertController.addCancelButton()
+        alertController.present()
+    })
 	
 	public override init(nibName nibNameOrNil: String?, bundle nibBundleOrNil: Bundle?) {
 		
@@ -147,25 +194,6 @@ public class RU_Bookings_ViewController: RU_ViewController {
 		
 		navigationItem.title = String(key: "bookings.title")
 		
-		updateFilterNavigationItem()
-		
-		navigationItem.leftBarButtonItem = .init(title: String(key: "bookings.calendar.button"), primaryAction: .init(handler: { [weak self] _ in
-			
-			let calendarViewController = RU_Bookings_Calendar_ViewController()
-			calendarViewController.bookings = self?.bookings
-			calendarViewController.didSelectBooking = { [weak self] booking in
-				
-				calendarViewController.dismiss {
-					
-					let detailViewController = RU_Bookings_Detail_ViewController()
-					detailViewController.booking = booking
-					self?.navigationController?.pushViewController(detailViewController, animated: true)
-				}
-			}
-			
-			UI.MainController.present(RU_NavigationController(rootViewController: calendarViewController), animated: true)
-		}))
-		
 		view.addSubview(bookingsTableView)
         view.addSubview(bottomStackView)
         
@@ -173,9 +201,12 @@ public class RU_Bookings_ViewController: RU_ViewController {
             make.edges.equalToSuperview()
         }
         
-        bottomStackView.snp.makeConstraints { make in
+        let buttonsStackView:RU_StackView = .init(arrangedSubviews: [bottomStackView,deleteButton])
+        buttonsStackView.axis = .vertical
+        view.addSubview(buttonsStackView)
+        buttonsStackView.snp.makeConstraints { make in
             make.bottom.equalTo(view.safeAreaLayoutGuide).inset(UI.Margins)
-            make.right.left.equalTo(view.safeAreaLayoutGuide).inset(1.5*UI.Margins)
+            make.left.right.equalTo(view.safeAreaLayoutGuide).inset(1.5 * UI.Margins)
         }
 		
 		NotificationCenter.add(.updateBookings) { [weak self] _ in
@@ -201,6 +232,30 @@ public class RU_Bookings_ViewController: RU_ViewController {
         }
         bookingsTableView.contentInset.bottom = bottomStackView.frame.size.height + (2*UI.Margins)
         bookingsTableView.verticalScrollIndicatorInsets.bottom = bookingsTableView.contentInset.bottom
+    }
+    
+    public override func setEditing(_ editing: Bool, animated: Bool) {
+        
+        super.setEditing(editing, animated: animated)
+        
+        updateFilterNavigationItem()
+        bookingsTableView.setEditing(editing, animated: animated)
+        
+        updateSelection()
+        
+        UIView.animation {
+            
+            self.deleteButton.isHidden = !editing
+            self.deleteButton.alpha = self.deleteButton.isHidden ? 0 : 1
+            
+            self.bottomStackView.isHidden = editing
+            self.bottomStackView.alpha = self.bottomStackView.isHidden ? 0 : 1
+        }
+    }
+    
+    private func updateSelection() {
+        
+        deleteButton.isEnabled = !(bookingsTableView.indexPathsForSelectedRows?.isEmpty ?? true)
     }
 	
 	private func updateData() {
@@ -228,78 +283,106 @@ public class RU_Bookings_ViewController: RU_ViewController {
 	
 	private func updateFilterNavigationItem() {
 		
-		var children:[UIMenuElement] = .init()
-		
-		children.append(UIAction(title: String(key: "bookings.filter.reset"), image: UIImage(systemName: "arrow.counterclockwise"), attributes: .destructive, handler: { [weak self] _ in
-
-			self?.currentFilterName = nil
-			self?.filteredBookings = self?.bookings
-		}))
-
-		children.append(UIMenu(title: String(key: "bookings.filter.status"), children: [
-			UIAction(title: String(key: "bookings.status.current"), handler: { [weak self] _ in
-				self?.currentFilterName = String(key: "bookings.status.current")
-				self?.filteredBookings = self?.bookings?.filter { $0.status == .current }
-			}),
-			UIAction(title: String(key: "bookings.status.upcoming"), handler: { [weak self] _ in
-				self?.currentFilterName = String(key: "bookings.status.upcoming")
-				self?.filteredBookings = self?.bookings?.filter { $0.status == .upcoming }
-			}),
-			UIAction(title: String(key: "bookings.status.past"), handler: { [weak self] _ in
-				self?.currentFilterName = String(key: "bookings.status.past")
-				self?.filteredBookings = self?.bookings?.filter { $0.status == .past }
-			})
-		]))
-
-		if let platforms = RU_Platform.all, !platforms.isEmpty {
-			
-			children.append(UIMenu(title: String(key: "bookings.filter.platform"), children: platforms.compactMap({ platform in
-				
-				if let name = platform.type?.name {
-					
-					return UIAction(title: name, handler: { [weak self] _ in
-						
-						self?.currentFilterName = name
-						self?.filteredBookings = self?.bookings?.filter({ $0.platform == platform })
-					})
-				}
-				
-				return nil
-			})))
-		}
-		
-		RU_Classified.getAll { [weak self] error, classifieds in
-			
-			if let classifieds, !classifieds.isEmpty {
-				
-				children.append(UIMenu(title: String(key: "bookings.filter.classified"), children: classifieds.compactMap({ classified in
-					
-					if let name = classified.name {
-						
-						return UIAction(title: name, handler: { [weak self] _ in
-							
-							self?.currentFilterName = name
-							self?.filteredBookings = self?.bookings?.filter({ $0.classified == classified })
-						})
-					}
-					
-					return nil
-				})))
-			}
-			
-			if !children.isEmpty {
-				
-				let buttonTitle:String
-				if let filterName = self?.currentFilterName {
-					buttonTitle = String(key: "bookings.filter.active") + filterName
-				}
-				else {
-					buttonTitle = String(key: "bookings.filter.button")
-				}
-				
-				self?.navigationItem.rightBarButtonItem = .init(title: buttonTitle, menu: .init(title: String(key: "bookings.filter.menu.title"), children: children))
-			}
-		}
+        navigationItem.leftBarButtonItem = nil
+        navigationItem.rightBarButtonItems = [editButtonItem]
+        bottomStackView.isHidden = true
+        
+        if !(bookings?.isEmpty ?? true) && !isEditing {
+            
+            navigationItem.leftBarButtonItem = .init(title: String(key: "bookings.calendar.button"), primaryAction: .init(handler: { [weak self] _ in
+                
+                let calendarViewController = RU_Bookings_Calendar_ViewController()
+                calendarViewController.bookings = self?.bookings
+                calendarViewController.didSelectBooking = { [weak self] booking in
+                    
+                    calendarViewController.dismiss {
+                        
+                        let detailViewController = RU_Bookings_Detail_ViewController()
+                        detailViewController.booking = booking
+                        self?.navigationController?.pushViewController(detailViewController, animated: true)
+                    }
+                }
+                
+                UI.MainController.present(RU_NavigationController(rootViewController: calendarViewController), animated: true)
+            }))
+            
+            var children:[UIMenuElement] = .init()
+            
+            children.append(UIAction(title: String(key: "bookings.filter.reset"), image: UIImage(systemName: "arrow.counterclockwise"), attributes: .destructive, handler: { [weak self] _ in
+                
+                self?.currentFilterName = nil
+                self?.filteredBookings = self?.bookings
+            }))
+            
+            children.append(UIMenu(title: String(key: "bookings.filter.status"), children: [
+                UIAction(title: String(key: "bookings.status.current"), handler: { [weak self] _ in
+                    self?.currentFilterName = String(key: "bookings.status.current")
+                    self?.filteredBookings = self?.bookings?.filter { $0.status == .current }
+                }),
+                UIAction(title: String(key: "bookings.status.upcoming"), handler: { [weak self] _ in
+                    self?.currentFilterName = String(key: "bookings.status.upcoming")
+                    self?.filteredBookings = self?.bookings?.filter { $0.status == .upcoming }
+                }),
+                UIAction(title: String(key: "bookings.status.past"), handler: { [weak self] _ in
+                    self?.currentFilterName = String(key: "bookings.status.past")
+                    self?.filteredBookings = self?.bookings?.filter { $0.status == .past }
+                })
+            ]))
+            
+            if let platforms = RU_Platform.all, !platforms.isEmpty {
+                
+                children.append(UIMenu(title: String(key: "bookings.filter.platform"), children: platforms.compactMap({ platform in
+                    
+                    if let name = platform.type?.name {
+                        
+                        return UIAction(title: name, handler: { [weak self] _ in
+                            
+                            self?.currentFilterName = name
+                            self?.filteredBookings = self?.bookings?.filter({ $0.platform == platform })
+                        })
+                    }
+                    
+                    return nil
+                })))
+            }
+            
+            RU_Classified.getAll { [weak self] error, classifieds in
+                
+                if let classifieds, !classifieds.isEmpty {
+                    
+                    children.append(UIMenu(title: String(key: "bookings.filter.classified"), children: classifieds.compactMap({ classified in
+                        
+                        if let name = classified.name {
+                            
+                            return UIAction(title: name, handler: { [weak self] _ in
+                                
+                                self?.currentFilterName = name
+                                self?.filteredBookings = self?.bookings?.filter({ $0.classified == classified })
+                            })
+                        }
+                        
+                        return nil
+                    })))
+                }
+                
+                if !children.isEmpty {
+                    
+                    let buttonTitle:String
+                    if let filterName = self?.currentFilterName {
+                        buttonTitle = String(key: "bookings.filter.active") + filterName
+                    }
+                    else {
+                        buttonTitle = String(key: "bookings.filter.button")
+                    }
+                    
+                    var rightBarButtonItems = self?.navigationItem.rightBarButtonItems ?? []
+                    rightBarButtonItems.append(.init(title: buttonTitle, menu: .init(title: String(key: "bookings.filter.menu.title"), children: children)))
+                    self?.navigationItem.rightBarButtonItems = rightBarButtonItems
+                }
+            }
+            
+            bottomStackView.isHidden = false
+        }
 	}
 }
 
@@ -353,24 +436,44 @@ extension RU_Bookings_ViewController: UITableViewDelegate, UITableViewDataSource
 	
 	public func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
 		
-		tableView.deselectRow(at: indexPath, animated: true)
-		
-		let viewController:RU_Bookings_Detail_ViewController = .init()
-		viewController.booking = filteredBookings?[indexPath.row]
-		navigationController?.pushViewController(viewController, animated: true)
-	}
+        if !tableView.isEditing {
+            
+            tableView.deselectRow(at: indexPath, animated: true)
+            
+            let viewController:RU_Bookings_Detail_ViewController = .init()
+            viewController.booking = filteredBookings?[indexPath.row]
+            navigationController?.pushViewController(viewController, animated: true)
+        }
+        else {
+            
+            updateSelection()
+        }
+    }
+    
+    public func tableView(_ tableView: UITableView, didDeselectRowAt indexPath: IndexPath) {
+        
+        if tableView.isEditing {
+            
+            updateSelection()
+        }
+    }
 	
 	public func tableView(_ tableView: UITableView, contextMenuConfigurationForRowAt indexPath: IndexPath, point: CGPoint) -> UIContextMenuConfiguration? {
 		
-		return UIContextMenuConfiguration.init(identifier: indexPath as NSIndexPath, previewProvider: { () -> UIViewController? in
-			
-			return nil
-			
-		}) { (suggestedActions) -> UIMenu? in
-			
-			let cell = tableView.cellForRow(at: indexPath) as? RU_Booking_TableViewCell
-			return cell?.menu
-		}
+        if !tableView.isEditing {
+            
+            return UIContextMenuConfiguration.init(identifier: indexPath as NSIndexPath, previewProvider: { () -> UIViewController? in
+                
+                return nil
+                
+            }) { (suggestedActions) -> UIMenu? in
+                
+                let cell = tableView.cellForRow(at: indexPath) as? RU_Booking_TableViewCell
+                return cell?.menu
+            }
+        }
+        
+        return nil
 	}
 	
 	public func tableView(_ tableView: UITableView, willPerformPreviewActionForMenuWith configuration: UIContextMenuConfiguration, animator: UIContextMenuInteractionCommitAnimating) {

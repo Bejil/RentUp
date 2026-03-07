@@ -266,6 +266,13 @@ public class RU_Bookings_Detail_ViewController : RU_ViewController {
 		super.loadView()
 		
 		isModal = true
+        
+        navigationItem.rightBarButtonItem = .init(title: String(key: "bookings.details.edit.button"), primaryAction: .init(handler: { [weak self] _ in
+            
+            let viewController:RU_Bookings_Edit_ViewController = .init()
+            viewController.booking = self?.booking
+            UI.MainController.present(RU_NavigationController(rootViewController: viewController), animated: true)
+        }))
 		
 		let contentScrollView:RU_ScrollView = .init()
 		
@@ -308,6 +315,20 @@ public class RU_Bookings_Detail_ViewController : RU_ViewController {
 		
 		contentStackView.addArrangedSubview(configurationSectionStackView)
 		contentStackView.addArrangedSubview(pricesStackView)
+        
+        NotificationCenter.add(.updateBookings) { [weak self] _ in
+            
+            RU_Alert_ViewController.presentLoading { [weak self] alertController in
+                
+                RU_Booking.getAll { [weak self] error, bookings in
+                    
+                    alertController?.close { [weak self] in
+                      
+                        self?.booking = bookings?.first(where: { $0.id == self?.booking?.id })
+                    }
+                }
+            }
+        }
 	}
 	
 	private func createRow(icon: String, title: String, view: UIView, isHighlighted: Bool = false) -> RU_Section_Row_StackView {
