@@ -31,7 +31,7 @@ public class RU_Bookings_ViewController: RU_ViewController {
 				
 				DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) { [weak self] in
 					
-					self?.bookingsTableView.scrollToRow(at: IndexPath(row: index, section: 0), at: .middle, animated: false)
+                    self?.bookingsTableView.selectRow(at: IndexPath(row: index, section: 0), animated: true, scrollPosition: .middle)
 				}
 			}
 			

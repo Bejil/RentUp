@@ -39,18 +39,19 @@ public class RU_TabBarController : UITabBarController {
 		
 		let appearance = UITabBarAppearance()
 		appearance.configureWithDefaultBackground()
-		appearance.backgroundColor = Colors.TabBar.Background
 		
-		appearance.compactInlineLayoutAppearance.normal.iconColor = Colors.TabBar.Item.Default
-		appearance.compactInlineLayoutAppearance.normal.titleTextAttributes = [.foregroundColor : Colors.TabBar.Item.Default, .font: Fonts.TabBar.Default]
+		appearance.compactInlineLayoutAppearance.normal.titleTextAttributes = [.font: Fonts.TabBar.Default]
+		appearance.compactInlineLayoutAppearance.normal.badgeBackgroundColor = Colors.TabBar.Badge
 		appearance.compactInlineLayoutAppearance.selected.iconColor = Colors.TabBar.Item.Selected
 		appearance.compactInlineLayoutAppearance.selected.titleTextAttributes = [.foregroundColor : Colors.TabBar.Item.Selected, .font: Fonts.TabBar.Selected]
-		
+
+		appearance.inlineLayoutAppearance.normal.badgeBackgroundColor = Colors.TabBar.Badge
 		appearance.inlineLayoutAppearance.normal.iconColor = appearance.compactInlineLayoutAppearance.normal.iconColor
 		appearance.inlineLayoutAppearance.normal.titleTextAttributes = appearance.compactInlineLayoutAppearance.normal.titleTextAttributes
 		appearance.inlineLayoutAppearance.selected.iconColor = appearance.compactInlineLayoutAppearance.selected.iconColor
 		appearance.inlineLayoutAppearance.selected.titleTextAttributes = appearance.compactInlineLayoutAppearance.selected.titleTextAttributes
 		
+		appearance.stackedLayoutAppearance.normal.badgeBackgroundColor = Colors.TabBar.Badge
 		appearance.stackedLayoutAppearance.normal.iconColor = appearance.compactInlineLayoutAppearance.normal.iconColor
 		appearance.stackedLayoutAppearance.normal.titleTextAttributes = appearance.compactInlineLayoutAppearance.normal.titleTextAttributes
 		appearance.stackedLayoutAppearance.selected.iconColor = appearance.compactInlineLayoutAppearance.selected.iconColor

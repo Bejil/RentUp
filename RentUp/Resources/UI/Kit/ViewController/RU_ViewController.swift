@@ -47,7 +47,7 @@ public class RU_ViewController: UIViewController {
         
         self?.close()
     })
-	
+    
 	public override func loadView() {
 		
 		super.loadView()

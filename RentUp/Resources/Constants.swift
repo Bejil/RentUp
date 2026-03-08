@@ -38,12 +38,11 @@ public struct Colors {
 	
 	public struct TabBar {
 	
-		public static let Background:UIColor = UIColor(named: "TabBarBackground")!
-		
-		public struct Item {
+        public static let Badge:UIColor = Colors.Tertiary
+        
+        public struct Item {
 			
-			public static let Default:UIColor = UIColor(named: "TabBarItemDefault")!
-            public static let Selected:UIColor = Colors.Primary
+			public static let Selected:UIColor = Colors.Secondary
 		}
 	}
 	
@@ -70,7 +69,7 @@ public struct Colors {
 	public struct Tip {
 		
 		public static let Background:UIColor = UIColor(named: "TipBackground")!
-        public static let Icon:UIColor = Colors.Primary
+        public static let Icon:UIColor = Colors.Secondary
 	}
 	
 	public struct TextField {

@@ -63,8 +63,8 @@ public class SceneDelegate: UIResponder, UIWindowSceneDelegate {
 	}
 
 	public func sceneWillEnterForeground(_ scene: UIScene) {
-		// Called as the scene transitions from the background to the foreground.
-		// Use this method to undo the changes made on entering the background.
+
+		updateTabBarBadges()
 	}
 
 	public func sceneDidEnterBackground(_ scene: UIScene) {
@@ -77,12 +77,45 @@ public class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         
         window?.rootViewController = RU_TabBarController()
         
+        updateTabBarBadges()
+        
         if let window {
             
             UIView.transition(with: window, duration: 0.5, options: .transitionCrossDissolve, animations: {}, completion: { [weak self] _ in
                 
                 self?.loadBookingsCSVIfNeeded()
             })
+        }
+    }
+    
+    private func updateTabBarBadges() {
+        
+        if let tabBarController = window?.rootViewController as? RU_TabBarController {
+            
+            tabBarController.viewControllers?.forEach { $0.tabBarItem.badgeValue = nil }
+            
+            RU_Booking.getAll { _, bookings in
+                
+                var indexesToBadge: [RU_TabBarController.Indexes] = [.Bookings]
+                
+                if bookings?.current != nil {
+                    
+                    if Date().nextUpcomingHolidayOpportunity(withinDays: 60) != nil {
+                        
+                        indexesToBadge.append(.Home)
+                    }
+                    
+                    indexesToBadge.append(.Bookings)
+                }
+                    
+                for index in indexesToBadge {
+                    
+                    if let tabIndex = RU_TabBarController.Indexes.allCases.firstIndex(where: { $0 == index }), tabIndex < (tabBarController.viewControllers?.count ?? 0) {
+                        
+                        tabBarController.viewControllers?[tabIndex].tabBarItem.badgeValue = "!"
+                    }
+                }
+            }
         }
     }
     
