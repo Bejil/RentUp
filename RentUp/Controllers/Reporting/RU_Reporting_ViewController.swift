@@ -48,6 +48,7 @@ public class RU_Reporting_ViewController : RU_ViewController {
             profitabilityPreviousMonthRow.isHidden = !hasAnyClassifiedWithFees
             profitabilityCurrentMonthRow.isHidden = !hasAnyClassifiedWithFees
             profitabilityTotalRow.isHidden = !hasAnyClassifiedWithFees
+            profitabilityButton.isHidden = !hasAnyClassifiedWithFees
             
             guard let list = filteredBookings?.filter({ $0.status != .cancelled }), !list.isEmpty else { return }
             
@@ -223,6 +224,19 @@ public class RU_Reporting_ViewController : RU_ViewController {
     private lazy var profitabilityCurrentMonthLabel: RU_Label = .init()
     private lazy var profitabilityPreviousMonthLabel: RU_Label = .init()
     private lazy var profitabilityTotalLabel: RU_Label = .init()
+    private lazy var profitabilityButton:RU_Button = {
+        
+        $0.titleFont = Fonts.Content.Button.Title.withSize(Fonts.Size)
+        $0.image = UIImage(systemName: "arrowtriangle.right.square")?.applyingSymbolConfiguration(.init(scale: .small))
+        $0.configuration?.imagePadding = UI.Margins/2
+        $0.configuration?.imagePlacement = .trailing
+        return $0
+        
+    }(RU_Button(String(key: "reporting.details.button")) { [weak self] _ in
+        
+        let viewController:RU_Reporting_Detail_Profitability_ViewController = .init()
+        self?.navigationController?.pushViewController(viewController, animated: true)
+    })
     private lazy var totalNightsLabel: RU_Label = .init()
     private lazy var averageNightsLabel: RU_Label = .init()
     private lazy var averageGuestsLabel: RU_Label = .init()
@@ -300,7 +314,6 @@ public class RU_Reporting_ViewController : RU_ViewController {
         occupationSectionButton.configuration?.imagePadding = UI.Margins/2
         occupationSectionButton.configuration?.imagePlacement = .trailing
         occupationSectionStackView.addArrangedSubview(occupationSectionButton)
-        
         contentStackView.addArrangedSubview(occupationSectionStackView)
         
         let profitabilitySectionStackView:RU_Section_StackView = .init()
@@ -310,18 +323,7 @@ public class RU_Reporting_ViewController : RU_ViewController {
         profitabilitySectionStackView.addArrangedSubview(profitabilityPreviousMonthRow)
         profitabilitySectionStackView.addArrangedSubview(profitabilityCurrentMonthRow)
         profitabilitySectionStackView.addArrangedSubview(profitabilityTotalRow)
-        
-        let profitabilitySectionButton:RU_Button = .init(String(key: "reporting.details.button")) { [weak self] _ in
-            
-            let viewController:RU_Reporting_Detail_Profitability_ViewController = .init()
-            self?.navigationController?.pushViewController(viewController, animated: true)
-        }
-        profitabilitySectionButton.titleFont = Fonts.Content.Button.Title.withSize(Fonts.Size)
-        profitabilitySectionButton.image = UIImage(systemName: "arrowtriangle.right.square")?.applyingSymbolConfiguration(.init(scale: .small))
-        profitabilitySectionButton.configuration?.imagePadding = UI.Margins/2
-        profitabilitySectionButton.configuration?.imagePlacement = .trailing
-        profitabilitySectionStackView.addArrangedSubview(profitabilitySectionButton)
-        
+        profitabilitySectionStackView.addArrangedSubview(profitabilityButton)
         contentStackView.addArrangedSubview(profitabilitySectionStackView)
         
         NotificationCenter.add(.updateBookings) { [weak self] _ in
