@@ -50,6 +50,8 @@
 "reporting.occupancy.currentMonth" = "Mois en cours";
 "reporting.occupancy.previousMonth" = "Mois précédent";
 "reporting.occupancy.total" = "TOTAL";
+"reporting.profitability.tip.title" = "Calculez votre rentabilité";
+"reporting.profitability.tip.content" = "Ajustez les charges de chacun de vos biens pour calculer votre rentabilité net mois par mois et suivre vos tendances";
 "reporting.profitability.currentMonth" = "Mois en cours";
 "reporting.profitability.previousMonth" = "Mois précédent";
 "reporting.profitability.total" = "TOTAL";

@@ -41,6 +41,13 @@ public class RU_Reporting_ViewController : RU_ViewController {
                 mostProfitablePlatformLabel.platform = nil
                 mostProfitablePlatformLabel.text = String(key: "reporting.value.placeholder")
             }
+
+            let listForFees = filteredBookings?.filter { $0.status != .cancelled } ?? []
+            let hasAnyClassifiedWithFees = listForFees.contains(where: { ($0.classified?.fees ?? 0) > 0 })
+            profitabilityTipView.isHidden = hasAnyClassifiedWithFees
+            profitabilityPreviousMonthRow.isHidden = !hasAnyClassifiedWithFees
+            profitabilityCurrentMonthRow.isHidden = !hasAnyClassifiedWithFees
+            profitabilityTotalRow.isHidden = !hasAnyClassifiedWithFees
             
             guard let list = filteredBookings?.filter({ $0.status != .cancelled }), !list.isEmpty else { return }
             
@@ -203,6 +210,16 @@ public class RU_Reporting_ViewController : RU_ViewController {
     private lazy var occupationCurrentMonthLabel: RU_Label = .init()
     private lazy var occupationPreviousMonthLabel: RU_Label = .init()
     private lazy var occupationTotalLabel: RU_Label = .init()
+    private lazy var profitabilityTipView:RU_Tip_StackView = {
+        
+        $0.title = String(key: "reporting.profitability.tip.title")
+        $0.add(RU_Label(String(key: "reporting.profitability.tip.content")))
+        return $0
+        
+    }(RU_Tip_StackView())
+    private lazy var profitabilityPreviousMonthRow:RU_Section_Row_StackView = createRow(icon: "eurosign.circle", title: String(key: "reporting.profitability.previousMonth"), view: profitabilityPreviousMonthLabel)
+    private lazy var profitabilityCurrentMonthRow:RU_Section_Row_StackView = createRow(icon: "eurosign", title: String(key: "reporting.profitability.currentMonth"), view: profitabilityCurrentMonthLabel)
+    private lazy var profitabilityTotalRow:RU_Section_Row_StackView = createRow(icon: "equal.circle.fill", title: String(key: "reporting.profitability.total"), view: profitabilityTotalLabel, isHighlighted: true)
     private lazy var profitabilityCurrentMonthLabel: RU_Label = .init()
     private lazy var profitabilityPreviousMonthLabel: RU_Label = .init()
     private lazy var profitabilityTotalLabel: RU_Label = .init()
@@ -289,9 +306,10 @@ public class RU_Reporting_ViewController : RU_ViewController {
         let profitabilitySectionStackView:RU_Section_StackView = .init()
         profitabilitySectionStackView.title = String(key: "reporting.section.profitability")
         profitabilitySectionStackView.subtitle = String(key: "reporting.section.profitability.subtitle")
-        profitabilitySectionStackView.addArrangedSubview(createRow(icon: "eurosign.circle", title: String(key: "reporting.profitability.previousMonth"), view: profitabilityPreviousMonthLabel))
-        profitabilitySectionStackView.addArrangedSubview(createRow(icon: "eurosign", title: String(key: "reporting.profitability.currentMonth"), view: profitabilityCurrentMonthLabel))
-        profitabilitySectionStackView.addArrangedSubview(createRow(icon: "equal.circle.fill", title: String(key: "reporting.profitability.total"), view: profitabilityTotalLabel, isHighlighted: true))
+        profitabilitySectionStackView.addArrangedSubview(profitabilityTipView)
+        profitabilitySectionStackView.addArrangedSubview(profitabilityPreviousMonthRow)
+        profitabilitySectionStackView.addArrangedSubview(profitabilityCurrentMonthRow)
+        profitabilitySectionStackView.addArrangedSubview(profitabilityTotalRow)
         
         let profitabilitySectionButton:RU_Button = .init(String(key: "reporting.details.button")) { [weak self] _ in
             
