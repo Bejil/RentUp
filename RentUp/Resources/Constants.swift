@@ -33,7 +33,7 @@ public struct Colors {
 	public struct Navigation {
 		
 		public static let Title:UIColor = UIColor(named: "NavigationTitle")!
-		public static let Button:UIColor = UIColor(named: "NavigationButton")!
+        public static let Button:UIColor = Colors.Primary
 	}
 	
 	public struct TabBar {
@@ -43,7 +43,7 @@ public struct Colors {
 		public struct Item {
 			
 			public static let Default:UIColor = UIColor(named: "TabBarItemDefault")!
-			public static let Selected:UIColor = UIColor(named: "TabBarItemSelected")!
+            public static let Selected:UIColor = Colors.Primary
 		}
 	}
 	
@@ -52,7 +52,7 @@ public struct Colors {
 		public struct Background {
 			
 			public static let Default:UIColor = UIColor(named: "SegmentedControlBackgroundDefault")!
-			public static let Selected:UIColor = UIColor(named: "SegmentedControlBackgroundSelected")!
+            public static let Selected:UIColor = Colors.Primary
 		}
 		
 		public struct Text {
@@ -64,23 +64,23 @@ public struct Colors {
 	
 	public struct Stepper {
 		
-		public static let TintColor:UIColor = UIColor(named: "StepperTintColor")!
+        public static let TintColor:UIColor = Colors.Primary
 	}
 	
 	public struct Tip {
 		
 		public static let Background:UIColor = UIColor(named: "TipBackground")!
-		public static let Icon:UIColor = UIColor(named: "TipIcon")!
+        public static let Icon:UIColor = Colors.Primary
 	}
 	
 	public struct TextField {
 		
-		public static let TintColor:UIColor = UIColor(named: "TextFieldTintColor")!
+        public static let TintColor:UIColor = Colors.Primary
 	}
 	
 	public struct TableView {
 		
-		public static let Tint:UIColor = UIColor(named: "TableViewTint")!
+        public static let Tint:UIColor = Colors.Primary
 	}
 	
 	public struct Content {
@@ -91,7 +91,7 @@ public struct Colors {
 	
 	public struct DatePicker {
 		
-		public static let TintColor:UIColor = UIColor(named: "DatePickerTintColor")!
+        public static let TintColor:UIColor = Colors.Primary
 	}
 	
 	public struct Button {
@@ -100,19 +100,19 @@ public struct Colors {
 		
 		public struct Primary {
 			
-			public static let Background:UIColor = UIColor(named: "ButtonPrimaryBackground")!
+            public static let Background:UIColor = Colors.Primary
 			public static let Content:UIColor = UIColor(named: "ButtonPrimaryContent")!
 		}
 		
 		public struct Secondary {
 			
-			public static let Background:UIColor = UIColor(named: "ButtonSecondaryBackground")!
+            public static let Background:UIColor = Colors.Secondary
 			public static let Content:UIColor = UIColor(named: "ButtonSecondaryContent")!
 		}
 		
 		public struct Tertiary {
 			
-			public static let Background:UIColor = UIColor(named: "ButtonTertiaryBackground")!
+            public static let Background:UIColor = Colors.Tertiary
 			public static let Content:UIColor = UIColor(named: "ButtonTertiaryContent")!
 		}
 		
@@ -125,13 +125,13 @@ public struct Colors {
 		public struct Navigation {
 			
 			public static let Background:UIColor = UIColor(named: "ButtonNavigationBackground")!
-			public static let Content:UIColor = UIColor(named: "ButtonNavigationContent")!
+            public static let Content:UIColor = Colors.Primary
 		}
 		
 		public struct Text {
 			
 			public static let Background:UIColor = UIColor(named: "ButtonTextBackground")!
-			public static let Content:UIColor = UIColor(named: "ButtonTextContent")!
+            public static let Content:UIColor = Colors.Primary
 		}
 	}
 	
