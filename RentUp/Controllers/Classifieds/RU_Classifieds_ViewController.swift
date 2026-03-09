@@ -50,7 +50,7 @@ public class RU_Classifieds_ViewController : RU_ViewController {
         
     }(RU_Button(String(key: "classifieds.create.button")) { _ in
         
-        UI.MainController.present(RU_NavigationController(rootViewController: RU_Classifieds_Edit_ViewController()), animated: true)
+        UI.MainController.present(RU_NavigationController(rootViewController: RU_Classifieds_Create_Name_ViewController()), animated: true)
     })
     private lazy var deleteButton:RU_Button = {
         

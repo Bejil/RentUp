@@ -98,12 +98,12 @@ public class SceneDelegate: UIResponder, UIWindowSceneDelegate {
                 
                 var indexesToBadge: [RU_TabBarController.Indexes] = [.Bookings]
                 
-                if bookings?.current != nil {
+                if bookings?.current != nil || Date().nextUpcomingHolidayOpportunity(withinDays: 60) != nil {
                     
-                    if Date().nextUpcomingHolidayOpportunity(withinDays: 60) != nil {
-                        
-                        indexesToBadge.append(.Home)
-                    }
+                    indexesToBadge.append(.Home)
+                }
+                
+                if bookings?.current != nil {
                     
                     indexesToBadge.append(.Bookings)
                 }

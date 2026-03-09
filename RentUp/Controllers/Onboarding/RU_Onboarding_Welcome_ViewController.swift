@@ -26,7 +26,7 @@ public class RU_Onboarding_Welcome_ViewController : RU_ViewController {
 		$0.contentMode = .scaleAspectFit
 		return $0
 
-	}(UIImageView(image: UIImage(named: "onboarding_placeholder")))
+	}(UIImageView(image: UIImage(named: "placeholder_welcome")))
 	private lazy var contentLabel: RU_Label = {
 
 		$0.textAlignment = .center
