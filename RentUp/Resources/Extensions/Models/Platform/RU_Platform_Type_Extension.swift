@@ -23,7 +23,7 @@ extension RU_Platform.PlatformType {
     
     public var icon:UIImage? {
         
-        return UIImage(named: "plateform_\(rawValue)")
+        return UIImage(named: "platform_\(rawValue)")
     }
 	
 	public var textColor: UIColor {
