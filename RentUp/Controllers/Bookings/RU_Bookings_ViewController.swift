@@ -14,15 +14,15 @@ public class RU_Bookings_ViewController: RU_ViewController {
 		
 		didSet {
             
-            updateFilterNavigationItem()
-			
-			let sortedBookings = bookings?.sorted { $0.dates.start > $1.dates.start }
+            let sortedBookings = bookings?.sorted { $0.dates.start > $1.dates.start }
 			filteredBookings = sortedBookings
 		}
 	}
 	private var filteredBookings:[RU_Booking]? {
 		
 		didSet {
+            
+            updateFilterNavigationItem()
 			
 			bookingsTableView.dismissPlaceholder()
 			bookingsTableView.reloadData()
@@ -37,7 +37,12 @@ public class RU_Bookings_ViewController: RU_ViewController {
 			
 			if filteredBookings?.isEmpty ?? true {
 				
-				bookingsTableView.showPlaceholder(.Empty)
+				let placeholderView = bookingsTableView.showPlaceholder(.Empty)
+                let button = placeholderView.addButton(String(key: "bookings.create.button")) { _ in
+                    
+                    RU_Booking.create()
+                }
+                button.image = UIImage(systemName: "plus")
 			}
 			
             let total = filteredBookings?.filter({ $0.status != .cancelled }).compactMap { $0.platform?.calculatePrice(for: $0)?.hostTotal }.reduce(0, +) ?? 0
@@ -109,27 +114,9 @@ public class RU_Bookings_ViewController: RU_ViewController {
         $0.setContentCompressionResistancePriority(.required, for: .horizontal)
         return $0
         
-    }(RU_Button() { button in
+    }(RU_Button() { _ in
         
-        button?.isLoading = true
-        
-        RU_Classified.getAll { error, classifieds in
-            
-            button?.isLoading = false
-            
-            if let error {
-                
-                RU_Alert_ViewController.present(error)
-            }
-            else if classifieds?.isEmpty ?? true {
-                
-                RU_Alert_ViewController.present(RU_Error(String(key: "bookings.create.noClassifieds")))
-            }
-            else {
-                
-                UI.MainController.present(RU_NavigationController(rootViewController: RU_Bookings_Edit_ViewController()), animated: true)
-            }
-        }
+        RU_Booking.create()
     })
     private lazy var deleteButton:RU_Button = {
         
@@ -284,80 +271,65 @@ public class RU_Bookings_ViewController: RU_ViewController {
 	private func updateFilterNavigationItem() {
 		
         navigationItem.leftBarButtonItem = nil
-        navigationItem.rightBarButtonItems = [editButtonItem]
+        
         bottomStackView.isHidden = true
         
-        if !(bookings?.isEmpty ?? true) && !isEditing {
+        if !(bookings?.isEmpty ?? true) {
             
-            navigationItem.leftBarButtonItem = .init(title: String(key: "bookings.calendar.button"), primaryAction: .init(handler: { [weak self] _ in
+            navigationItem.rightBarButtonItems = [editButtonItem]
+            
+            if !isEditing {
                 
-                let calendarViewController = RU_Bookings_Calendar_ViewController()
-                calendarViewController.bookings = self?.bookings
-                calendarViewController.didSelectBooking = { [weak self] booking in
+                navigationItem.leftBarButtonItem = .init(title: String(key: "bookings.calendar.button"), primaryAction: .init(handler: { [weak self] _ in
                     
-                    calendarViewController.dismiss {
+                    let calendarViewController = RU_Bookings_Calendar_ViewController()
+                    calendarViewController.bookings = self?.bookings
+                    calendarViewController.didSelectBooking = { [weak self] booking in
                         
-                        let detailViewController = RU_Bookings_Detail_ViewController()
-                        detailViewController.booking = booking
-                        self?.navigationController?.pushViewController(detailViewController, animated: true)
-                    }
-                }
-                
-                UI.MainController.present(RU_NavigationController(rootViewController: calendarViewController), animated: true)
-            }))
-            
-            var children:[UIMenuElement] = .init()
-            
-            children.append(UIAction(title: String(key: "bookings.filter.reset"), image: UIImage(systemName: "arrow.counterclockwise"), attributes: .destructive, handler: { [weak self] _ in
-                
-                self?.currentFilterName = nil
-                self?.filteredBookings = self?.bookings
-            }))
-            
-            children.append(UIMenu(title: String(key: "bookings.filter.status"), children: [
-                UIAction(title: String(key: "bookings.status.current"), handler: { [weak self] _ in
-                    self?.currentFilterName = String(key: "bookings.status.current")
-                    self?.filteredBookings = self?.bookings?.filter { $0.status == .current }
-                }),
-                UIAction(title: String(key: "bookings.status.upcoming"), handler: { [weak self] _ in
-                    self?.currentFilterName = String(key: "bookings.status.upcoming")
-                    self?.filteredBookings = self?.bookings?.filter { $0.status == .upcoming }
-                }),
-                UIAction(title: String(key: "bookings.status.past"), handler: { [weak self] _ in
-                    self?.currentFilterName = String(key: "bookings.status.past")
-                    self?.filteredBookings = self?.bookings?.filter { $0.status == .past }
-                })
-            ]))
-            
-            if let platforms = RU_Platform.all, !platforms.isEmpty {
-                
-                children.append(UIMenu(title: String(key: "bookings.filter.platform"), children: platforms.compactMap({ platform in
-                    
-                    if let name = platform.type?.name {
-                        
-                        return UIAction(title: name, handler: { [weak self] _ in
+                        calendarViewController.dismiss {
                             
-                            self?.currentFilterName = name
-                            self?.filteredBookings = self?.bookings?.filter({ $0.platform == platform })
-                        })
+                            let detailViewController = RU_Bookings_Detail_ViewController()
+                            detailViewController.booking = booking
+                            self?.navigationController?.pushViewController(detailViewController, animated: true)
+                        }
                     }
                     
-                    return nil
-                })))
-            }
-            
-            RU_Classified.getAll { [weak self] error, classifieds in
+                    UI.MainController.present(RU_NavigationController(rootViewController: calendarViewController), animated: true)
+                }))
                 
-                if let classifieds, !classifieds.isEmpty {
+                var children:[UIMenuElement] = .init()
+                
+                children.append(UIAction(title: String(key: "bookings.filter.reset"), image: UIImage(systemName: "arrow.counterclockwise"), attributes: .destructive, handler: { [weak self] _ in
                     
-                    children.append(UIMenu(title: String(key: "bookings.filter.classified"), children: classifieds.compactMap({ classified in
+                    self?.currentFilterName = nil
+                    self?.filteredBookings = self?.bookings
+                }))
+                
+                children.append(UIMenu(title: String(key: "bookings.filter.status"), children: [
+                    UIAction(title: String(key: "bookings.status.current"), handler: { [weak self] _ in
+                        self?.currentFilterName = String(key: "bookings.status.current")
+                        self?.filteredBookings = self?.bookings?.filter { $0.status == .current }
+                    }),
+                    UIAction(title: String(key: "bookings.status.upcoming"), handler: { [weak self] _ in
+                        self?.currentFilterName = String(key: "bookings.status.upcoming")
+                        self?.filteredBookings = self?.bookings?.filter { $0.status == .upcoming }
+                    }),
+                    UIAction(title: String(key: "bookings.status.past"), handler: { [weak self] _ in
+                        self?.currentFilterName = String(key: "bookings.status.past")
+                        self?.filteredBookings = self?.bookings?.filter { $0.status == .past }
+                    })
+                ]))
+                
+                if let platforms = RU_Platform.all, !platforms.isEmpty {
+                    
+                    children.append(UIMenu(title: String(key: "bookings.filter.platform"), children: platforms.compactMap({ platform in
                         
-                        if let name = classified.name {
+                        if let name = platform.type?.name {
                             
                             return UIAction(title: name, handler: { [weak self] _ in
                                 
                                 self?.currentFilterName = name
-                                self?.filteredBookings = self?.bookings?.filter({ $0.classified == classified })
+                                self?.filteredBookings = self?.bookings?.filter({ $0.platform == platform })
                             })
                         }
                         
@@ -365,23 +337,43 @@ public class RU_Bookings_ViewController: RU_ViewController {
                     })))
                 }
                 
-                if !children.isEmpty {
+                RU_Classified.getAll { [weak self] error, classifieds in
                     
-                    let buttonTitle:String
-                    if let filterName = self?.currentFilterName {
-                        buttonTitle = String(key: "bookings.filter.active") + filterName
-                    }
-                    else {
-                        buttonTitle = String(key: "bookings.filter.button")
+                    if let classifieds, !classifieds.isEmpty {
+                        
+                        children.append(UIMenu(title: String(key: "bookings.filter.classified"), children: classifieds.compactMap({ classified in
+                            
+                            if let name = classified.name {
+                                
+                                return UIAction(title: name, handler: { [weak self] _ in
+                                    
+                                    self?.currentFilterName = name
+                                    self?.filteredBookings = self?.bookings?.filter({ $0.classified == classified })
+                                })
+                            }
+                            
+                            return nil
+                        })))
                     }
                     
-                    var rightBarButtonItems = self?.navigationItem.rightBarButtonItems ?? []
-                    rightBarButtonItems.append(.init(title: buttonTitle, menu: .init(title: String(key: "bookings.filter.menu.title"), children: children)))
-                    self?.navigationItem.rightBarButtonItems = rightBarButtonItems
+                    if !children.isEmpty {
+                        
+                        let buttonTitle:String
+                        if let filterName = self?.currentFilterName {
+                            buttonTitle = String(key: "bookings.filter.active") + filterName
+                        }
+                        else {
+                            buttonTitle = String(key: "bookings.filter.button")
+                        }
+                        
+                        var rightBarButtonItems = self?.navigationItem.rightBarButtonItems ?? []
+                        rightBarButtonItems.append(.init(title: buttonTitle, menu: .init(title: String(key: "bookings.filter.menu.title"), children: children)))
+                        self?.navigationItem.rightBarButtonItems = rightBarButtonItems
+                    }
                 }
+                
+                bottomStackView.isHidden = false
             }
-            
-            bottomStackView.isHidden = false
         }
 	}
 }

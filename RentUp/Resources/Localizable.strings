@@ -144,7 +144,7 @@
 "bookings.filter.active" = "Filtré par : ";
 "bookings.calendar.button" = "Calendrier";
 "bookings.total.label" = "Revenu total:";
-"bookings.create.button" = "Ajouter";
+"bookings.create.button" = "Ajouter une réservation";
 "bookings.delete.button" = "Supprimer";
 //Create
 "bookings.create.noClassifieds" = "Vous n'avez pas encore ajouté de biens. Veuillez en créer un pour pouvoir ajouter une réservation";

@@ -9,6 +9,105 @@ import UIKit
 
 public class RU_Classifieds_Create_Configuration_ViewController : RU_Classifieds_Create_ViewController {
     
+    public override var classified: RU_Classified? {
+        
+        didSet {
+            
+            if let value = classified?.configuration.capacity {
+                
+                capacityRow.stepper.value = Double(value)
+                capacityRow.value = "\(value)"
+            }
+            
+            if let value = classified?.configuration.beds.doubles {
+                
+                doubleBedsRow.stepper.value = Double(value)
+                doubleBedsRow.value = "\(value)"
+            }
+            
+            if let value = classified?.configuration.beds.singles {
+                
+                singleBedsRow.stepper.value = Double(value)
+                singleBedsRow.value = "\(value)"
+            }
+            
+            if let value = classified?.configuration.beds.babies {
+                
+                babiesBedsRow.stepper.value = Double(value)
+                babiesBedsRow.value = "\(value)"
+            }
+            
+            updateSaveButton()
+        }
+    }
+    private lazy var capacityRow:RU_Section_StepperRow_StackView = {
+        
+        $0.image = UIImage(systemName: "person.2.fill")
+        $0.title = String(key: "settings.classified.capacity")
+        $0.stepper.minimumValue = 0
+        $0.stepper.addAction(.init(handler: { [weak self] _ in
+            
+            if let value = self?.capacityRow.value, let intValue = Int(value) {
+                
+                self?.classified?.configuration.capacity = intValue
+                self?.updateSaveButton()
+            }
+            
+        }), for: .valueChanged)
+        return $0
+        
+    }(RU_Section_StepperRow_StackView())
+    private lazy var doubleBedsRow:RU_Section_StepperRow_StackView = {
+        
+        $0.image = UIImage(systemName: "bed.double.fill")
+        $0.title = String(key: "settings.classified.beds.double")
+        $0.stepper.minimumValue = 0
+        $0.stepper.addAction(.init(handler: { [weak self] _ in
+            
+            if let value = self?.doubleBedsRow.value, let intValue = Int(value) {
+                
+                self?.classified?.configuration.beds.doubles = intValue
+                self?.updateSaveButton()
+            }
+            
+        }), for: .valueChanged)
+        return $0
+        
+    }(RU_Section_StepperRow_StackView())
+    private lazy var singleBedsRow:RU_Section_StepperRow_StackView = {
+        
+        $0.image = UIImage(systemName: "bed.double")
+        $0.title = String(key: "settings.classified.beds.single")
+        $0.stepper.minimumValue = 0
+        $0.stepper.addAction(.init(handler: { [weak self] _ in
+            
+            if let value = self?.singleBedsRow.value, let intValue = Int(value) {
+                
+                self?.classified?.configuration.beds.singles = intValue
+                self?.updateSaveButton()
+            }
+            
+        }), for: .valueChanged)
+        return $0
+        
+    }(RU_Section_StepperRow_StackView())
+    private lazy var babiesBedsRow:RU_Section_StepperRow_StackView = {
+        
+        $0.image = UIImage(systemName: "stroller")
+        $0.title = String(key: "settings.classified.beds.baby")
+        $0.stepper.minimumValue = 0
+        $0.stepper.addAction(.init(handler: { [weak self] _ in
+            
+            if let value = self?.babiesBedsRow.value, let intValue = Int(value) {
+                
+                self?.classified?.configuration.beds.babies = intValue
+            }
+            
+        }), for: .valueChanged)
+        return $0
+        
+    }(RU_Section_StepperRow_StackView())
+    
     public override func loadView() {
         
         super.loadView()
@@ -22,61 +121,6 @@ public class RU_Classifieds_Create_Configuration_ViewController : RU_Classifieds
         let label:RU_Label = .init(String(key: "Décrivez la configuration de votre logement. Combien de personnes maximum peuvent y séjourner et combien de lits ?"))
         label.textAlignment = .center
         placeholderView.contentStackView.addArrangedSubview(label)
-        
-        let capacityRow:RU_Section_StepperRow_StackView = .init()
-        capacityRow.image = UIImage(systemName: "person.2.fill")
-        capacityRow.title = String(key: "settings.classified.capacity")
-        capacityRow.stepper.minimumValue = 0
-        capacityRow.stepper.addAction(.init(handler: { [weak self] _ in
-            
-            if let value = capacityRow.value, let intValue = Int(value) {
-                
-                self?.classified?.configuration.capacity = intValue
-                self?.updateSaveButton()
-            }
-            
-        }), for: .valueChanged)
-        
-        let doubleBedsRow:RU_Section_StepperRow_StackView = .init()
-        doubleBedsRow.image = UIImage(systemName: "bed.double.fill")
-        doubleBedsRow.title = String(key: "settings.classified.beds.double")
-        doubleBedsRow.stepper.minimumValue = 0
-        doubleBedsRow.stepper.addAction(.init(handler: { [weak self] _ in
-            
-            if let value = doubleBedsRow.value, let intValue = Int(value) {
-                
-                self?.classified?.configuration.beds.doubles = intValue
-                self?.updateSaveButton()
-            }
-            
-        }), for: .valueChanged)
-        
-        let singleBedsRow:RU_Section_StepperRow_StackView = .init()
-        singleBedsRow.image = UIImage(systemName: "bed.double")
-        singleBedsRow.title = String(key: "settings.classified.beds.single")
-        singleBedsRow.stepper.minimumValue = 0
-        singleBedsRow.stepper.addAction(.init(handler: { [weak self] _ in
-            
-            if let value = singleBedsRow.value, let intValue = Int(value) {
-                
-                self?.classified?.configuration.beds.singles = intValue
-                self?.updateSaveButton()
-            }
-            
-        }), for: .valueChanged)
-        
-        let babiesBedsRow:RU_Section_StepperRow_StackView = .init()
-        babiesBedsRow.image = UIImage(systemName: "stroller")
-        babiesBedsRow.title = String(key: "settings.classified.beds.baby")
-        babiesBedsRow.stepper.minimumValue = 0
-        babiesBedsRow.stepper.addAction(.init(handler: { [weak self] _ in
-            
-            if let value = babiesBedsRow.value, let intValue = Int(value) {
-                
-                self?.classified?.configuration.beds.babies = intValue
-            }
-            
-        }), for: .valueChanged)
         
         let rowsStackView:RU_StackView = .init(arrangedSubviews: [capacityRow,doubleBedsRow,singleBedsRow,babiesBedsRow])
         rowsStackView.axis = .vertical

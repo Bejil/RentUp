@@ -21,7 +21,12 @@ public class RU_Home_ViewController: RU_ViewController {
 			
             if currentBookingSectionStackView.isHidden && nextBookingSectionStackView.isHidden {
 				
-                view.showPlaceholder(.Empty)
+                let placeholderView = view.showPlaceholder(.Empty)
+                let button = placeholderView.addButton(String(key: "bookings.create.button")) { _ in
+                    
+                    RU_Booking.create()
+                }
+                button.image = UIImage(systemName: "plus")
 			}
 		}
 	}

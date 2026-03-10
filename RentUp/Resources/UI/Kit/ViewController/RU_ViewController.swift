@@ -105,7 +105,7 @@ public class RU_ViewController: UIViewController {
 	
 	public func dismiss(_ completion:(()->Void)? = nil) {
 		
-		if navigationController?.viewControllers.count ?? 0 > 1 {
+		if navigationController?.viewControllers.count ?? 0 > 1 && !isModal {
 			
 			navigationController?.popViewController(animated: true)
 			completion?()

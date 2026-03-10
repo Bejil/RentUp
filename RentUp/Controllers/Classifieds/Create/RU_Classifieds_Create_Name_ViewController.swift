@@ -9,6 +9,23 @@ import UIKit
 
 public class RU_Classifieds_Create_Name_ViewController : RU_Classifieds_Create_ViewController {
     
+    private lazy var textField:RU_TextField = {
+        
+        $0.font = Fonts.Content.Title.H2
+        $0.textColor = Colors.Secondary
+        $0.textAlignment = .center
+        $0.placeholder = String(key: "settings.classified.name.placeholder")
+        $0.keyboardType = .alphabet
+        $0.autocapitalizationType = .words
+        $0.addAction(.init(handler: { [weak self] _ in
+            
+            self?.classified?.name = self?.textField.text
+            self?.updateSaveButton()
+            
+        }), for: .editingChanged)
+        return $0
+        
+    }(RU_TextField())
     public override func loadView() {
         
         super.loadView()
@@ -25,19 +42,6 @@ public class RU_Classifieds_Create_Name_ViewController : RU_Classifieds_Create_V
         label.textAlignment = .center
         placeholderView.contentStackView.addArrangedSubview(label)
         
-        let textField:RU_TextField = .init()
-        textField.font = Fonts.Content.Title.H2
-        textField.textColor = Colors.Secondary
-        textField.textAlignment = .center
-        textField.placeholder = String(key: "settings.classified.name.placeholder")
-        textField.keyboardType = .alphabet
-        textField.autocapitalizationType = .words
-        textField.addAction(.init(handler: { [weak self] _ in
-            
-            self?.classified?.name = textField.text
-            self?.updateSaveButton()
-            
-        }), for: .editingChanged)
         placeholderView.contentStackView.addArrangedSubview(textField)
         placeholderView.contentStackView.setCustomSpacing(placeholderView.contentStackView.spacing * 2, after: textField)
         
@@ -48,6 +52,13 @@ public class RU_Classifieds_Create_Name_ViewController : RU_Classifieds_Create_V
             self?.navigationController?.pushViewController(viewController, animated: true)
         }
         placeholderView.contentStackView.addArrangedSubview(saveButton)
+    }
+    
+    public override func viewWillAppear(_ animated: Bool) {
+        
+        super.viewWillAppear(animated)
+        
+        textField.becomeFirstResponder()
     }
     
     private func updateSaveButton() {

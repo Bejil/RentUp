@@ -41,7 +41,7 @@ public class RU_Onboarding_Welcome_ViewController : RU_ViewController {
 
 	}(RU_Button(String(key: "onboarding.welcome.button.start")) { _ in
 
-		UI.MainController.present(RU_NavigationController(rootViewController: RU_Classifieds_Edit_ViewController()), animated: true)
+        UI.MainController.present(RU_NavigationController(rootViewController: RU_Classifieds_Create_Name_ViewController()), animated: true)
 	})
 	private lazy var contentStackView: RU_StackView = {
 

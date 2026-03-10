@@ -23,14 +23,8 @@ public class RU_Classifieds_ViewController : RU_ViewController {
             navigationItem.rightBarButtonItem = isEmpty ? nil : editButtonItem
 			
 			if isEmpty {
-				
-				let placeholderView = view.showPlaceholder(.Empty)
-				let addButton:RU_Button = .init(String(key: "classifieds.create.button")) { _ in
-					
-					UI.MainController.present(RU_NavigationController(rootViewController: RU_Classifieds_Edit_ViewController()), animated: true)
-				}
-				addButton.image = UIImage(systemName: "plus.circle")
-				placeholderView.contentStackView.addArrangedSubview(addButton)
+                
+                UIApplication.presentWelcome()
 			}
 		}
 	}

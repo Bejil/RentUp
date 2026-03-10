@@ -63,8 +63,9 @@ public class RU_Platform_Label: UIView {
 
 	private func update() {
 		backgroundColor = platform?.type?.backgroundColor
-		textLabel.textColor = platform?.type?.textColor
+        textLabel.textColor = platform?.type?.textColor
 		iconImageView.image = platform?.type?.icon
+        iconImageView.tintColor = platform?.type?.textColor
 		iconImageView.isHidden = isMinimal || platform?.type?.icon == nil
 
 		if isMinimal {
