@@ -343,15 +343,15 @@ extension RU_Classifieds_Edit_ViewController : UITableViewDelegate, UITableViewD
 		tableView.deselectRow(at: indexPath, animated: true)
 		
 		let platform = RU_Platform.all?[indexPath.row]
-		
-		let viewController:RU_Classifieds_Edit_Platform_ViewController = .init()
-		viewController.classified = classified
-		viewController.platform = platform
-		viewController.completion = { [weak self] in
-			
-			self?.tarificationTableView.reloadData()
-			self?.updateSaveButton()
-		}
-		navigationController?.pushViewController(viewController, animated: true)
+        
+        let alertController:RU_Classified_Platform_Alert_ViewController = .init()
+        alertController.classified = classified
+        alertController.platform = platform
+        alertController.completion = { [weak self] in
+            
+            self?.tarificationTableView.reloadData()
+            self?.updateSaveButton()
+        }
+        alertController.present(as: .Sheet)
 	}
 }

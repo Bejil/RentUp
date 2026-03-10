@@ -22,7 +22,7 @@ public class RU_Alert_ViewController : UIViewController {
 	public var dismissHandler:(()->Void)?
 	public lazy var backgroundView:UIView = {
 		
-		let visualEffectView:UIVisualEffectView = .init(effect: UIBlurEffect.init(style: .regular))
+        let visualEffectView:UIVisualEffectView = .init(effect: UIGlassEffect(style: .regular))
 		$0.addSubview(visualEffectView)
 		visualEffectView.snp.makeConstraints { make in
 			make.edges.equalToSuperview()
@@ -37,14 +37,12 @@ public class RU_Alert_ViewController : UIViewController {
 	}(UIView())
 	public lazy var containerView:UIView = {
 		
-		$0.clipsToBounds = true
-		
-		let visualEffectView:UIVisualEffectView = .init(effect: UIBlurEffect.init(style: .dark))
-		$0.addSubview(visualEffectView)
-		visualEffectView.snp.makeConstraints { make in
-			make.edges.equalToSuperview()
-		}
-		
+        $0.backgroundColor = Colors.Background.View
+        $0.clipsToBounds = false
+        $0.layer.shadowColor = UIColor.black.cgColor
+        $0.layer.shadowOffset = CGSize(width: 0, height: 4)
+        $0.layer.shadowRadius = UI.CornerRadius
+        $0.layer.shadowOpacity = 0.1
 		$0.addSubview(dismissIndicatorView)
 		dismissIndicatorView.snp.makeConstraints { make in
 			make.top.right.left.equalToSuperview()
@@ -64,7 +62,7 @@ public class RU_Alert_ViewController : UIViewController {
 	public lazy var titleLabel:RU_Label = {
 		
 		$0.font = Fonts.Content.Title.H1
-		$0.textColor = .white
+        $0.textColor = Colors.Content.Title
 		$0.textAlignment = .center
 		return $0
 		
@@ -78,12 +76,15 @@ public class RU_Alert_ViewController : UIViewController {
 	}
 	private lazy var dismissIndicatorView:UIView = {
 		
-		let visualEffectView:UIVisualEffectView = .init(effect: UIBlurEffect.init(style: .regular))
+        $0.alpha = 0.5
+        
+		let visualEffectView:UIVisualEffectView = .init(effect: UIBlurEffect.init(style: .dark))
 		visualEffectView.clipsToBounds = true
 		visualEffectView.layer.cornerRadius = (UI.Margins/2)/2
 		$0.addSubview(visualEffectView)
 		visualEffectView.snp.makeConstraints { make in
-			make.top.bottom.centerX.equalToSuperview().inset(UI.Margins/2)
+			make.top.bottom.equalToSuperview().inset(3*UI.Margins/4)
+            make.centerX.equalToSuperview()
 			make.width.equalToSuperview().multipliedBy(1.0/3.0)
 			make.height.equalTo(UI.Margins/2)
 		}
@@ -229,7 +230,7 @@ public class RU_Alert_ViewController : UIViewController {
 					
 					self?.containerView.transform = .identity
 					self?.containerView.alpha = 1.0
-					self?.backgroundView.alpha = 0.75
+					self?.backgroundView.alpha = 1.0
 					
 				} _: {
 					
@@ -439,7 +440,6 @@ public class RU_Alert_ViewController : UIViewController {
 		
 		let label:RU_Label = .init(string)
 		label.textAlignment = .center
-		label.textColor = .white
 		add(label)
 		
 		return label
@@ -489,7 +489,7 @@ public class RU_Alert_ViewController : UIViewController {
 			})
 			
 		}
-		button.style = .transparent
+        button.type = .text
 		button.configuration?.contentInsets = .zero
 		button.snp.makeConstraints { make in
 			

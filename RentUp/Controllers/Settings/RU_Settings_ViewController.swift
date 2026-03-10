@@ -103,8 +103,6 @@ public class RU_Settings_ViewController: RU_ViewController {
 	
 	private func reset() {
 		
-		UserDefaults.reset()
-		
 		RU_Alert_ViewController.presentLoading { [weak self] alertController in
 			
 			RU_Platform.setUp { [weak self] error in
@@ -123,6 +121,8 @@ public class RU_Settings_ViewController: RU_ViewController {
 						NotificationCenter.post(.updatePlatforms)
 						NotificationCenter.post(.updateClassifieds)
 						NotificationCenter.post(.updateBookings)
+                        
+                        UIApplication.reset()
 					}
 				}
 			}

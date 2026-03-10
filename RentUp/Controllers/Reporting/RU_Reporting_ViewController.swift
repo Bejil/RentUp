@@ -25,7 +25,14 @@ public class RU_Reporting_ViewController : RU_ViewController {
             
             if filteredBookings?.isEmpty ?? true {
                 
-                view.showPlaceholder(.Empty)
+                contentScrollView.isHidden = true
+                
+                let placeholderView = view.showPlaceholder(.Empty)
+                let button = placeholderView.addButton(String(key: "bookings.create.button")) { _ in
+                    
+                    RU_Booking.create()
+                }
+                button.image = UIImage(systemName: "plus")
                 
                 [occupationCurrentMonthLabel, occupationPreviousMonthLabel, occupationTotalLabel, profitabilityCurrentMonthLabel, profitabilityPreviousMonthLabel, profitabilityTotalLabel, totalNightsLabel, averageNightsLabel, averageGuestsLabel].forEach { $0.text = String(key: "reporting.value.placeholder") }
                 mostUsedPlatformLabel.platform = nil
@@ -34,6 +41,8 @@ public class RU_Reporting_ViewController : RU_ViewController {
                 mostProfitablePlatformLabel.text = String(key: "reporting.value.placeholder")
             }
             else {
+                
+                contentScrollView.isHidden = false
                 
                 [occupationCurrentMonthLabel, occupationPreviousMonthLabel, occupationTotalLabel, profitabilityCurrentMonthLabel, profitabilityPreviousMonthLabel, profitabilityTotalLabel, totalNightsLabel, averageNightsLabel, averageGuestsLabel].forEach { $0.text = String(key: "reporting.value.placeholder") }
                 mostUsedPlatformLabel.platform = nil
@@ -208,6 +217,7 @@ public class RU_Reporting_ViewController : RU_ViewController {
             updateFilterNavigationItem()
         }
     }
+    private lazy var contentScrollView:RU_ScrollView = .init()
     private lazy var occupationCurrentMonthLabel: RU_Label = .init()
     private lazy var occupationPreviousMonthLabel: RU_Label = .init()
     private lazy var occupationTotalLabel: RU_Label = .init()
@@ -262,11 +272,7 @@ public class RU_Reporting_ViewController : RU_ViewController {
         updateFilterNavigationItem()
 		navigationItem.title = String(key: "reporting.title")
         
-        let contentScrollView:RU_ScrollView = .init()
         view.addSubview(contentScrollView)
-        contentScrollView.snp.makeConstraints { make in
-            make.edges.equalToSuperview()
-        }
         
         let contentStackView:RU_StackView = .init()
         contentStackView.axis = .vertical
@@ -341,43 +347,30 @@ public class RU_Reporting_ViewController : RU_ViewController {
     
     private func updateFilterNavigationItem() {
         
-        var children:[UIMenuElement] = .init()
-        
-        children.append(UIAction(title: String(key: "reporting.filter.reset"), image: UIImage(systemName: "arrow.counterclockwise"), attributes: .destructive, handler: { [weak self] _ in
+        if filteredBookings?.isEmpty ?? true {
             
-            self?.currentFilterName = nil
-            self?.filteredBookings = self?.bookings
-        }))
-        
-        if let platforms = RU_Platform.all, !platforms.isEmpty {
-            
-            children.append(UIMenu(title: String(key: "reporting.filter.platform"), children: platforms.compactMap({ platform in
-                
-                if let name = platform.type?.name {
-                    
-                    return UIAction(title: name, handler: { [weak self] _ in
-                        
-                        self?.currentFilterName = name
-                        self?.filteredBookings = self?.bookings?.filter({ $0.platform == platform })
-                    })
-                }
-                
-                return nil
-            })))
+            navigationItem.rightBarButtonItem = nil
         }
-        
-        RU_Classified.getAll { [weak self] error, classifieds in
+        else {
             
-            if let classifieds, !classifieds.isEmpty {
+            var children:[UIMenuElement] = .init()
+            
+            children.append(UIAction(title: String(key: "reporting.filter.reset"), image: UIImage(systemName: "arrow.counterclockwise"), attributes: .destructive, handler: { [weak self] _ in
                 
-                children.append(UIMenu(title: String(key: "reporting.filter.classified"), children: classifieds.compactMap({ classified in
+                self?.currentFilterName = nil
+                self?.filteredBookings = self?.bookings
+            }))
+            
+            if let platforms = RU_Platform.all, !platforms.isEmpty {
+                
+                children.append(UIMenu(title: String(key: "reporting.filter.platform"), children: platforms.compactMap({ platform in
                     
-                    if let name = classified.name {
+                    if let name = platform.type?.name {
                         
                         return UIAction(title: name, handler: { [weak self] _ in
                             
                             self?.currentFilterName = name
-                            self?.filteredBookings = self?.bookings?.filter({ $0.classified == classified })
+                            self?.filteredBookings = self?.bookings?.filter({ $0.platform == platform })
                         })
                     }
                     
@@ -385,17 +378,37 @@ public class RU_Reporting_ViewController : RU_ViewController {
                 })))
             }
             
-            if !children.isEmpty {
+            RU_Classified.getAll { [weak self] error, classifieds in
                 
-                let buttonTitle:String
-                if let filterName = self?.currentFilterName {
-                    buttonTitle = String(key: "reporting.filter.active") + filterName
-                }
-                else {
-                    buttonTitle = String(key: "reporting.filter.button")
+                if let classifieds, !classifieds.isEmpty {
+                    
+                    children.append(UIMenu(title: String(key: "reporting.filter.classified"), children: classifieds.compactMap({ classified in
+                        
+                        if let name = classified.name {
+                            
+                            return UIAction(title: name, handler: { [weak self] _ in
+                                
+                                self?.currentFilterName = name
+                                self?.filteredBookings = self?.bookings?.filter({ $0.classified == classified })
+                            })
+                        }
+                        
+                        return nil
+                    })))
                 }
                 
-                self?.navigationItem.rightBarButtonItem = .init(title: buttonTitle, menu: .init(title: String(key: "reporting.filter.menu.title"), children: children))
+                if !children.isEmpty {
+                    
+                    let buttonTitle:String
+                    if let filterName = self?.currentFilterName {
+                        buttonTitle = String(key: "reporting.filter.active") + filterName
+                    }
+                    else {
+                        buttonTitle = String(key: "reporting.filter.button")
+                    }
+                    
+                    self?.navigationItem.rightBarButtonItem = .init(title: buttonTitle, menu: .init(title: String(key: "reporting.filter.menu.title"), children: children))
+                }
             }
         }
     }
