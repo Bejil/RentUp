@@ -171,6 +171,7 @@ extension UIApplication {
                                 
                                 booking.save(nil)
                             }
+                            NotificationCenter.post(.updateBookings)
                         }
                     }
                 }

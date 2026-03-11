@@ -210,8 +210,6 @@ public class RU_Classifieds_Edit_ViewController : RU_ViewController {
 	public override func loadView() {
 		
 		super.loadView()
-		
-		isModal = true
         
         title = String(key: "settings.classified.title.update")
         

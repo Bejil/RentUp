@@ -283,7 +283,7 @@ public class RU_Bookings_ViewController: RU_ViewController {
                 navigationItem.leftBarButtonItem = .init(title: String(key: "bookings.calendar.button"), primaryAction: .init(handler: { [weak self] _ in
                     
                     let calendarViewController = RU_Bookings_Calendar_ViewController()
-                    calendarViewController.bookings = self?.bookings
+                    calendarViewController.bookings = self?.bookings?.filter({ $0.status != .cancelled })
                     calendarViewController.didSelectBooking = { [weak self] booking in
                         
                         calendarViewController.dismiss {
