@@ -24,7 +24,7 @@ public class RU_Settings_ViewController: RU_ViewController {
 		
 		super.init(nibName: nibNameOrNil, bundle: nibBundleOrNil)
 		
-		tabBarItem = .init(title: String(key: "tabbar.settings"), image: UIImage(systemName: "slider.horizontal.3"), tag: RU_TabBarController.Indexes.allCases.firstIndex(of: .Settings) ?? 0)
+        tabBarItem = .init(title: String(key: "tabbar.settings"), image: UIImage(systemName: "slider.horizontal.3")?.withRenderingMode(.alwaysTemplate), tag: RU_TabBarController.Indexes.allCases.firstIndex(of: .Settings) ?? 0)
 	}
 	
 	required init?(coder: NSCoder) {

@@ -273,6 +273,9 @@ public class RU_Reporting_ViewController : RU_ViewController {
 		navigationItem.title = String(key: "reporting.title")
         
         view.addSubview(contentScrollView)
+        contentScrollView.snp.makeConstraints { make in
+            make.edges.equalToSuperview()
+        }
         
         let contentStackView:RU_StackView = .init()
         contentStackView.axis = .vertical
@@ -333,6 +336,11 @@ public class RU_Reporting_ViewController : RU_ViewController {
         contentStackView.addArrangedSubview(profitabilitySectionStackView)
         
         NotificationCenter.add(.updateBookings) { [weak self] _ in
+            
+            self?.updateData()
+        }
+        
+        NotificationCenter.add(.updateClassifieds) { [weak self] _ in
             
             self?.updateData()
         }

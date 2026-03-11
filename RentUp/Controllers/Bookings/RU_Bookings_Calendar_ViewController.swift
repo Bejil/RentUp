@@ -157,6 +157,7 @@ public class RU_Bookings_Calendar_ViewController: RU_ViewController {
 			let date = calendar.date(from: DateComponents(year: day.month.year, month: day.month.month, day: day.day))!
 			let dayStart = calendar.startOfDay(for: date)
 			let isToday = calendar.isDateInToday(date)
+            let isInSecondaryRange = secondary.contains(where: { $0.contains(dayStart) })
 			
 			// Trouver TOUTES les réservations pour ce jour
 			let bookingsForDay = self?.bookings?.filter({ booking in
@@ -170,7 +171,7 @@ public class RU_Bookings_Calendar_ViewController: RU_ViewController {
 				BookingBarInfo(
 					isStartDate: calendar.isDate(date, inSameDayAs: booking.dates.start),
 					isEndDate: calendar.isDate(date, inSameDayAs: booking.dates.end),
-					color: booking.platform?.type?.backgroundColor ?? Colors.Primary
+                    color: booking.platform?.type?.backgroundColor ?? .red
 				)
 			}
 			
@@ -179,6 +180,7 @@ public class RU_Bookings_Calendar_ViewController: RU_ViewController {
 				content: .init(
 					day: day,
 					isToday: isToday,
+                    isInSecondaryRange: isInSecondaryRange,
 					bookings: bookingInfos
 				)
 			)
@@ -293,7 +295,7 @@ private final class BookingRangeBackgroundView: UIView, CalendarItemViewRepresen
 
 	override init(frame: CGRect) {
 		super.init(frame: frame)
-		rangeLayer.fillColor = Colors.Primary.cgColor
+        rangeLayer.fillColor = UIColor.clear.cgColor
 		layer.addSublayer(rangeLayer)
 	}
 
@@ -313,7 +315,7 @@ private final class BookingRangeBackgroundView: UIView, CalendarItemViewRepresen
 	static func setContent(_ content: BookingRangeBackgroundViewContent, on view: BookingRangeBackgroundView) {
 		// En arrière des labels et bullets des jours ; Secondary au-dessus de Primary
 		view.layer.zPosition = content.isSecondary ? -1 : -2
-		view.rangeLayer.fillColor = (content.isSecondary ? Colors.Secondary : Colors.Primary).cgColor
+        view.rangeLayer.fillColor = (content.isSecondary ? Colors.Secondary : .clear).cgColor
 		guard !content.framesOfDaysToHighlight.isEmpty else {
 			view.rangeLayer.path = nil
 			return
@@ -355,10 +357,15 @@ private struct BookingDayViewProperties: Hashable {}
 private struct BookingDayViewContent: Equatable {
 	let day: DayComponents
 	let isToday: Bool
+    /// Indique si le jour fait partie de la plage secondaire (sélection en cours)
+    let isInSecondaryRange: Bool
 	let bookings: [BookingBarInfo]
 	
 	static func == (lhs: BookingDayViewContent, rhs: BookingDayViewContent) -> Bool {
-		return lhs.day == rhs.day && lhs.isToday == rhs.isToday && lhs.bookings == rhs.bookings
+		return lhs.day == rhs.day
+        && lhs.isToday == rhs.isToday
+        && lhs.isInSecondaryRange == rhs.isInSecondaryRange
+        && lhs.bookings == rhs.bookings
 	}
 }
 
@@ -372,19 +379,19 @@ private final class BookingDayView: UIView, CalendarItemViewRepresentable {
 	private let bulletsStackView = UIStackView()
 	private let label = UILabel()
 
-	private static let bulletSize: CGFloat = 4
+    private static let bulletSize: CGFloat = UI.Margins/3
 	private static let bulletSpacing: CGFloat = 2
 	private static let bulletLabelSpacing: CGFloat = 3
 
 	init() {
 		super.init(frame: .zero)
 
-		backgroundCircleView.backgroundColor = .white
+        backgroundCircleView.backgroundColor = Colors.Secondary
 		backgroundCircleView.isHidden = true
 		addSubview(backgroundCircleView)
 		backgroundCircleView.snp.makeConstraints { make in
 			make.center.equalToSuperview()
-			make.size.equalTo(28)
+            make.size.equalTo(UI.Margins*2)
 		}
 
 		contentStackView.axis = .vertical
@@ -427,17 +434,19 @@ private final class BookingDayView: UIView, CalendarItemViewRepresentable {
 	static func setContent(_ content: BookingDayViewContent, on view: BookingDayView) {
 		view.label.text = "\(content.day.day)"
 
-		let isTodayWithBooking = content.isToday && !content.bookings.isEmpty
-		view.backgroundCircleView.isHidden = !isTodayWithBooking
+		view.backgroundCircleView.isHidden = !content.isToday
+        if content.isToday {
+            // Cercle autour d'aujourd'hui : blanc si dans la sélection secondaire, sinon Secondary
+            view.backgroundCircleView.backgroundColor = content.isInSecondaryRange ? .white : Colors.Secondary
+        }
 
 		// Bullets au-dessus du numéro : une par réservation
-		let bulletColor: UIColor = isTodayWithBooking ? Colors.Primary : .white
-		view.bulletsStackView.arrangedSubviews.forEach { $0.removeFromSuperview() }
+        view.bulletsStackView.arrangedSubviews.forEach { $0.removeFromSuperview() }
 		if !content.bookings.isEmpty {
 			view.bulletsStackView.isHidden = false
-			for _ in content.bookings {
+			for booking in content.bookings {
 				let bullet = UIView()
-				bullet.backgroundColor = bulletColor
+                bullet.backgroundColor = content.isToday ? .white : booking.color
 				bullet.layer.cornerRadius = Self.bulletSize / 2
 				view.bulletsStackView.addArrangedSubview(bullet)
 				bullet.snp.makeConstraints { make in
@@ -448,13 +457,25 @@ private final class BookingDayView: UIView, CalendarItemViewRepresentable {
 			view.bulletsStackView.isHidden = true
 		}
 
-		if !content.bookings.isEmpty {
-			view.label.textColor = isTodayWithBooking ? Colors.Primary : .white
+        if content.isToday && content.isInSecondaryRange {
+            // Aujourd'hui dans la plage sélectionnée : cercle blanc, texte Secondary
+            view.label.textColor = Colors.Secondary
+            view.label.font = Fonts.Content.Text.Bold
+        }
+        else if content.isInSecondaryRange {
+            // Autres jours dans la plage sélectionnée : texte blanc
+            view.label.textColor = .white
+            view.label.font = content.isToday ? Fonts.Content.Text.Bold : Fonts.Content.Text.Regular
+        }
+        else if !content.bookings.isEmpty {
+            view.label.textColor = content.isToday ? .white : Colors.Primary
 			view.label.font = content.isToday ? Fonts.Content.Text.Bold : Fonts.Content.Text.Regular
-		} else if content.isToday {
-			view.label.textColor = Colors.Primary
+		}
+        else if content.isToday {
+            view.label.textColor = .white
 			view.label.font = Fonts.Content.Text.Bold
-		} else {
+		}
+        else {
 			view.label.textColor = Colors.Content.Text
 			view.label.font = Fonts.Content.Text.Regular
 		}

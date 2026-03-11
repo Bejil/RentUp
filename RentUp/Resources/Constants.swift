@@ -39,11 +39,7 @@ public struct Colors {
 	public struct TabBar {
 	
         public static let Badge:UIColor = Colors.Tertiary
-        
-        public struct Item {
-			
-			public static let Selected:UIColor = Colors.Secondary
-		}
+        public static let Selected:UIColor = Colors.Primary
 	}
 	
 	public struct SegmentedControl {
@@ -207,13 +203,13 @@ public struct Fonts {
 	public struct TabBar {
 		
 		static let Default:UIFont = UIFont(name: Name.Regular, size: Fonts.Size-4)!
-		static let Selected:UIFont = UIFont(name: Name.Bold, size: Fonts.Size-4)!
+		static let Selected:UIFont = UIFont(name: Name.Black, size: Fonts.Size-4)!
 	}
 	
 	public struct SegmentedControl {
 		
 		static let Default:UIFont = UIFont(name: Name.Regular, size: Fonts.Size)!
-		static let Selected:UIFont = UIFont(name: Name.Bold, size: Fonts.Size)!
+		static let Selected:UIFont = UIFont(name: Name.Black, size: Fonts.Size)!
 	}
 	
 	public struct Content {

@@ -359,7 +359,6 @@ public class RU_Bookings_Edit_ViewController : RU_ViewController {
 		
 		super.loadView()
 		
-		isModal = true
 		title = String(key: booking == nil ? "bookings.create.title.new" : "bookings.create.title.update")
 		
 		view.addSubview(contentScrollView)
@@ -514,8 +513,6 @@ public class RU_Bookings_Edit_ViewController : RU_ViewController {
 			}
 		}
 	}
-    
-    
 	
 	private func updateClassified() {
 		

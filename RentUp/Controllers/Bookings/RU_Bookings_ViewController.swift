@@ -193,7 +193,7 @@ public class RU_Bookings_ViewController: RU_ViewController {
         view.addSubview(buttonsStackView)
         buttonsStackView.snp.makeConstraints { make in
             make.bottom.equalTo(view.safeAreaLayoutGuide).inset(UI.Margins)
-            make.left.right.equalTo(view.safeAreaLayoutGuide).inset(1.5 * UI.Margins)
+            make.left.right.equalToSuperview().inset(1.5 * UI.Margins)
         }
 		
 		NotificationCenter.add(.updateBookings) { [weak self] _ in

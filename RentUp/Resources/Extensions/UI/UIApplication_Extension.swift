@@ -111,63 +111,66 @@ extension UIApplication {
         }
     }
     
-    private static func loadBookingsCSVIfNeeded() {
+    private static func loadBookingsCSVIfNeeded(_ state:Bool = false) {
         
-        RU_Alert_ViewController.presentLoading { alertController in
+        if state {
             
-            RU_Classified.getAll { error, classifieds in
+            RU_Alert_ViewController.presentLoading { alertController in
                 
-                alertController?.close {
-                  
-                    if false, !(classifieds?.isEmpty ?? true), let url = Bundle.main.url(forResource: "RU_Bookings", withExtension: "csv"), let content = try? String(contentsOf: url, encoding: .utf8) {
+                RU_Classified.getAll { error, classifieds in
+                    
+                    alertController?.close {
                         
-                        UserDefaults.delete(.bookings)
-                        
-                        let platforms = RU_Platform.all ?? []
-                        let dateFormatter: DateFormatter = {
-                            let f = DateFormatter()
-                            f.dateFormat = "dd/MM/yyyy"
-                            f.locale = Locale(identifier: "fr_FR")
-                            return f
-                        }()
-                        let lines = content.components(separatedBy: .newlines)
-                        guard let headerLine = lines.first,
-                              headerLine.contains("Arrivée"),
-                              headerLine.contains("Départ") else {
-                            return
-                        }
-                        for line in lines.dropFirst() {
-                            guard !line.trimmingCharacters(in: .whitespaces).isEmpty else { continue }
-                            let row = UIApplication.parseCSVLine(line)
-                            guard row.count >= 8 else { continue }
-                            let arriveeStr = row[0]
-                            let departStr = row[1]
-                            let indemniteStr = row[2]
-                            let menageStr = row[3]
-                            let plateformeStr = row[4]
-                            let persStr = row[5]
-                            let configStr = row[6]
-                            let commentaire = row[7]
-                            guard let start = dateFormatter.date(from: arriveeStr),
-                                  let end = dateFormatter.date(from: departStr) else { continue }
-                            let booking = RU_Booking()
-                            booking.classified = classifieds?.first
-                            booking.dates.start = start
-                            booking.dates.end = end
-                            booking.costs.compensation = UIApplication.parseEuroAmount(indemniteStr)
-                            booking.costs.cleaning = UIApplication.parseEuroAmount(menageStr)
-                            let platformType = UIApplication.parsePlatformType(plateformeStr)
-                            booking.platform = platforms.first { $0.type == platformType }
-                            if let p = Int(persStr.trimmingCharacters(in: .whitespaces)), p > 0 {
-                                booking.travelers.adults = p
-                            }
-                            let beds = UIApplication.parseConfigurationBeds(configStr)
-                            booking.beds.doubles = beds.doubles
-                            booking.beds.singles = beds.singles
-                            booking.beds.babies = beds.babies
-                            booking.comment = commentaire.isEmpty ? nil : commentaire
+                        if !(classifieds?.isEmpty ?? true), let url = Bundle.main.url(forResource: "RU_Bookings", withExtension: "csv"), let content = try? String(contentsOf: url, encoding: .utf8) {
                             
-                            booking.save(nil)
+                            UserDefaults.delete(.bookings)
+                            
+                            let platforms = RU_Platform.all ?? []
+                            let dateFormatter: DateFormatter = {
+                                let f = DateFormatter()
+                                f.dateFormat = "dd/MM/yyyy"
+                                f.locale = Locale(identifier: "fr_FR")
+                                return f
+                            }()
+                            let lines = content.components(separatedBy: .newlines)
+                            guard let headerLine = lines.first,
+                                  headerLine.contains("Arrivée"),
+                                  headerLine.contains("Départ") else {
+                                return
+                            }
+                            for line in lines.dropFirst() {
+                                guard !line.trimmingCharacters(in: .whitespaces).isEmpty else { continue }
+                                let row = UIApplication.parseCSVLine(line)
+                                guard row.count >= 8 else { continue }
+                                let arriveeStr = row[0]
+                                let departStr = row[1]
+                                let indemniteStr = row[2]
+                                let menageStr = row[3]
+                                let plateformeStr = row[4]
+                                let persStr = row[5]
+                                let configStr = row[6]
+                                let commentaire = row[7]
+                                guard let start = dateFormatter.date(from: arriveeStr),
+                                      let end = dateFormatter.date(from: departStr) else { continue }
+                                let booking = RU_Booking()
+                                booking.classified = classifieds?.first
+                                booking.dates.start = start
+                                booking.dates.end = end
+                                booking.costs.compensation = UIApplication.parseEuroAmount(indemniteStr)
+                                booking.costs.cleaning = UIApplication.parseEuroAmount(menageStr)
+                                let platformType = UIApplication.parsePlatformType(plateformeStr)
+                                booking.platform = platforms.first { $0.type == platformType }
+                                if let p = Int(persStr.trimmingCharacters(in: .whitespaces)), p > 0 {
+                                    booking.travelers.adults = p
+                                }
+                                let beds = UIApplication.parseConfigurationBeds(configStr)
+                                booking.beds.doubles = beds.doubles
+                                booking.beds.singles = beds.singles
+                                booking.beds.babies = beds.babies
+                                booking.comment = commentaire.isEmpty ? nil : commentaire
+                                
+                                booking.save(nil)
+                            }
                         }
                     }
                 }
