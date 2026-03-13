@@ -28,6 +28,28 @@ public class RU_Classifieds_ViewController : RU_ViewController {
 			}
 		}
 	}
+    private lazy var comparatorTipView:UIView = {
+        
+        $0.addSubview(comparatorTipStackView)
+        comparatorTipStackView.snp.makeConstraints { make in
+            make.bottom.equalToSuperview()
+            make.top.left.right.equalToSuperview().inset(UI.Margins)
+        }
+        return $0
+        
+    }(UIView())
+    private lazy var comparatorTipStackView:RU_Tip_StackView = {
+        
+        $0.contentStackView.spacing = UI.Margins
+        $0.title = String(key: "classifieds.comparator.title")
+        $0.add(String(key: "classifieds.comparator.tip"))
+        $0.add(RU_Button(String(key: "classifieds.comparator.button")) { _ in
+            
+            RU_Classified.compare()
+        })
+        return $0
+        
+    }(RU_Tip_StackView())
 	private lazy var tableView:RU_TableView = {
 		
         $0.allowsMultipleSelectionDuringEditing = true
@@ -108,10 +130,13 @@ public class RU_Classifieds_ViewController : RU_ViewController {
 		super.loadView()
 		
 		navigationItem.title = String(key: "classifieds.title")
-		
-        view.addSubview(tableView)
-        tableView.snp.makeConstraints { make in
-            make.edges.equalToSuperview()
+        
+        let stackView:RU_StackView = .init(arrangedSubviews: [comparatorTipView,tableView])
+        stackView.axis = .vertical
+        stackView.spacing = UI.Margins
+        view.addSubview(stackView)
+        stackView.snp.makeConstraints { make in
+            make.edges.equalTo(view.safeAreaLayoutGuide)
         }
         
         let buttonsStackView:RU_StackView = .init(arrangedSubviews: [addButton,deleteButton])

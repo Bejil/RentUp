@@ -11,49 +11,66 @@ import SnapKit
 public class RU_Classifieds_Detail_ViewController: RU_ViewController {
 
 	public var classified: RU_Classified? {
+        
 		didSet {
+            
 			title = classified?.name ?? String(key: "settings.classified.general.section.title")
 
 			nameValueLabel.text = classified?.name
 
 			if let fees = classified?.fees {
+                
 				feesValueLabel.text = String(format: "%i €", fees)
-			} else {
+			}
+            else {
+                
 				feesValueLabel.text = nil
 			}
 
 			if let capacity = classified?.configuration.capacity {
+                
 				capacityValueLabel.text = "\(capacity)"
 				capacitySectionRowStackView.isHidden = false
-			} else {
+			}
+            else {
+                
 				capacitySectionRowStackView.isHidden = true
 			}
 
 			if let doubles = classified?.configuration.beds.doubles, doubles > 0 {
+                
 				doubleBedsValueLabel.text = "\(doubles)"
 				doubleBedsSectionRowStackView.isHidden = false
-			} else {
+			}
+            else {
+                
 				doubleBedsSectionRowStackView.isHidden = true
 			}
 
 			if let singles = classified?.configuration.beds.singles, singles > 0 {
+                
 				singleBedsValueLabel.text = "\(singles)"
 				singleBedsSectionRowStackView.isHidden = false
-			} else {
+			}
+            else {
+                
 				singleBedsSectionRowStackView.isHidden = true
 			}
 
 			if let babies = classified?.configuration.beds.babies, babies > 0 {
+                
 				babyBedsValueLabel.text = "\(babies)"
 				babyBedsSectionRowStackView.isHidden = false
-			} else {
+			}
+            else {
+                
 				babyBedsSectionRowStackView.isHidden = true
 			}
 
-			let hasAnyBed = (classified?.configuration.beds.doubles ?? 0) > 0
-				|| (classified?.configuration.beds.singles ?? 0) > 0
-				|| (classified?.configuration.beds.babies ?? 0) > 0
+			let hasAnyBed = (classified?.configuration.beds.doubles ?? 0) > 0 || (classified?.configuration.beds.singles ?? 0) > 0 || (classified?.configuration.beds.babies ?? 0) > 0
 			configurationSectionStackView.isHidden = !hasAnyBed
+            
+            comparatorTipStackView.isHidden = classified?.tarification.count ?? 0 <= 1
 		}
 	}
 
@@ -99,9 +116,24 @@ public class RU_Classifieds_Detail_ViewController: RU_ViewController {
 		$0.addArrangedSubview(babyBedsSectionRowStackView)
 		return $0
 	}(RU_Section_StackView())
+    private lazy var comparatorTipStackView:RU_Tip_StackView = {
+        
+        $0.contentStackView.spacing = UI.Margins
+        $0.title = String(key: "classifieds.comparator.title")
+        $0.add(String(key: "classifieds.comparator.tip"))
+        $0.add(RU_Button(String(key: "classifieds.comparator.button")) { [weak self] _ in
+            
+            let viewController:RU_Classifieds_Comparator_ViewController = .init()
+            viewController.classified = self?.classified
+            UI.MainController.present(RU_NavigationController(rootViewController: viewController), animated: true)
+        })
+        return $0
+        
+    }(RU_Tip_StackView())
 	private lazy var tarificationSectionStackView: RU_Section_StackView = {
 		$0.title = String(key: "settings.classified.tarification.section.title")
 		$0.subtitle = String(key: "settings.classified.tarification.section.subtitle")
+        $0.addArrangedSubview(comparatorTipStackView)
 		$0.addArrangedSubview(tarificationTableView)
 		return $0
 	}(RU_Section_StackView())

@@ -71,44 +71,45 @@
 "classifieds.create.button" = "Nouveau bien";
 "classifieds.delete.button" = "Supprimer";
 "classifieds.error.getAll" = "Une erreur est survenue lors de la récuperation des biens";
-"classifieds.error.sav" = "Une erreur est survenue lors de la sauvegarde du bien";
+"classifieds.error.save" = "Une erreur est survenue lors de la sauvegarde du bien";
 "classifieds.error.delete" = "Une erreur est survenue lors de la suppression du bien";
 "classifieds.delete.alert.title" = "Attention";
 "classifieds.delete.alert.content" = "Voulez-vous vraiment supprimer ce(s) bien(s) ? Cette action est irréversible.";
 "classifieds.delete.alert.button" = "Supprimer";
+"classifieds.comparator.title" = "Comparateur de prix";
+"classifieds.comparator.tip" = "Comparez les différences de prix pour chaque bien selon les plateformes. Une nuit est simulée : le revenu net par bien et par plateforme s'affiche pour vous aider à ajuster vos tarifs et aligner le revenu net entre les 3 plateformes.";
+"classifieds.comparator.button" = "Vérifier les prix";
+//Create wizard
+"classified.create.step.1" = "Étape 1/4";
+"classified.create.step.2" = "Étape 2/4";
+"classified.create.step.3" = "Étape 3/4";
+"classified.create.step.4" = "Étape 4/4";
+"classified.create.button.next" = "Suivant";
+"classified.create.button.create" = "Créer";
+"classified.create.placeholder.platforms" = "Plateformes";
+"classified.create.placeholder.platforms.description" = "Définissez les plateformes où votre annonce est visible. Vous pourrez ensuite ajouter des réservations pour chacune d'entre elle en fonction de vos besoins";
+"classified.create.placeholder.name" = "Votre annonce";
+"classified.create.placeholder.name.description" = "Donnez un nom à votre annonce pour l'identifier simplement et rapidement";
+"classified.create.placeholder.profitability" = "Rentabilité";
+"classified.create.placeholder.configuration" = "Configuration";
+"classified.create.placeholder.configuration.description" = "Décrivez la configuration de votre logement. Combien de personnes maximum peuvent y séjourner et combien de lits ?";
+//Comparator
+"classifieds.comparator.result.header" = "Plateforme";
+"classifieds.comparator.result.metric.night" = "1 nuit";
+"classifieds.comparator.result.metric.week" = "1 semaine";
+"classifieds.comparator.result.metric.month" = "1 mois";
+"classifieds.comparator.tips.title" = "Conseils pour lisser les prix";
+"classifieds.comparator.tips.increase" = "Sur %@ : augmentez le prix par nuit d'environ %.0f € pour vous rapprocher de %@.";
+"classifieds.comparator.tips.decrease" = "Sur %@ : baissez le prix par nuit d'environ %.0f € pour vous rapprocher de %@.";
+"classifieds.comparator.tips.cleaning" = "Vous pouvez aussi ajuster les frais de ménage sur %@ (actuellement %.0f €) pour compenser.";
+"classifieds.comparator.tips.aligned" = "Vos revenus sont déjà bien alignés entre les plateformes.";
+"classifieds.comparator.tips.single" = "Ajoutez des tarifications sur d'autres plateformes pour comparer et lisser les prix.";
 
 //MARK: - Dashboard
 "home.title" = "Vos actualités";
-//General
-"home.general.section.title" = "Général";
-"home.general.totalRevenue" = "Revenu net total";
-"home.general.totalNights" = "Nuitées total";
-"home.general.averageNights" = "Nuitées moyen";
-"home.general.averageTravelers" = "Voyageurs moyen";
-"home.general.mostUsedPlatform" = "Plateforme la + utilisée";
-"home.general.mostProfitablePlatform" = "Plateforme la + rentable";
-"home.general.averageOccupancy" = "Occupation moyenne";
-"home.general.forecastOccupancy" = "Occupation prévisionnelle";
-"home.general.averageProfitability" = "Rentabilité moyenne";
-"home.general.forecastProfitability" = "Rentabilité prévisionnelle";
-//Current Month
-"home.currentMonth.section.title" = "Mois en cours";
-"home.currentMonth.currentOccupancy" = "Occupation actuelle";
-"home.currentMonth.forecastOccupancy" = "Occupation prévisionnelle";
-"home.currentMonth.currentYield" = "Rendement actuel";
-"home.currentMonth.forecastYield" = "Rendement prévisionnel";
-"home.currentMonth.estimatedRevenue" = "Revenu net estimé";
-//Current Booking
 "home.currentBooking.section.title" = "En cours";
-"home.currentBooking.departure" = "Départ dans";
-"home.currentBooking.none" = "Aucune réservation en cours";
-//Next Booking
 "home.nextBooking.section.title" = "À venir";
-"home.nextBooking.arrival" = "Arrivée dans";
-"home.nextBooking.none" = "Aucune réservation à venir";
-//Common Booking
 "home.booking.nights" = "Nombre de nuitées";
-"home.days" = "%i jours";
 "home.details.button" = "Plus de détails";
 "home.tip.promo.title" = "Idée promotion";
 "home.tip.promo.message" = "Un week-end prolongé ou des vacances approchent : pensez à créer une promotion pour remplir vos créneaux.";
@@ -132,9 +133,6 @@
 
 //MARK: - Bookings
 "bookings.title" = "Vos réservations";
-"bookings.status.current" = "En cours";
-"bookings.status.upcoming" = "À venir";
-"bookings.status.past" = "Passée";
 "bookings.filter.button" = "Filtrer";
 "bookings.filter.menu.title" = "Filtrer par";
 "bookings.filter.status" = "Statut";
@@ -192,6 +190,9 @@
 "booking.status.current.name" = "En cours";
 "booking.status.upcoming.name" = "À venir";
 "booking.status.cancelled.name" = "Annulée";
+"booking.status.departure.today" = "Départ auj";
+"booking.status.departure.tomorrow" = "Départ dem";
+"booking.status.upcoming.tomorrow" = "À venir dem";
 //Cell
 "bookings.cell.dates.format" = "Du %@ au %@";
 "bookings.cell.edit.button" = "Modifier";
@@ -266,10 +267,8 @@
 "settings.classified.fees.tip.content" = "Il s'agit des différents postes qui composent les dépenses fixes de votre bien: Prêt immobilier, Assurance habitation, Taxe foncière par mois, Charges de copropriété, Électricité, Gaz, Eau, Internet...";
 "settings.classified.fees" = "Charges";
 "settings.classified.capacity" = "Capacité max";
-"settings.classified.capacity.placeholder" = "Nombre de personnes max";
 "settings.classified.tarification.section.title" = "Tarification";
 "settings.classified.tarification.section.subtitle" = "Paramétrez les prix appliqués au bien";
-"settings.classified.tarification.alert.content" = "Paramétrez les prix appliqués au bien";
 
 "settings.classified.platform.tarification.price" = "Prix par nuit";
 "settings.classified.platform.tarification.cleaning" = "Montant du ménage";

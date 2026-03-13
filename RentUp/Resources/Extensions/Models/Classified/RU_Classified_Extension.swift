@@ -5,7 +5,7 @@
 //  Created by BLIN Michael on 26/01/2026.
 //
 
-import Foundation
+import UIKit
 
 extension RU_Classified {
 	
@@ -110,4 +110,33 @@ extension RU_Classified {
 			}
 		}
 	}
+    
+    public static func compare() {
+        
+        RU_Alert_ViewController.presentLoading { controller in
+            
+            RU_Classified.getAll { error, classifieds in
+                
+                controller?.close {
+                    
+                    if let error {
+                        
+                        RU_Alert_ViewController.present(error)
+                    }
+                    else {
+                        
+                        let alertController:RU_Classified_Select_Alert_ViewController = .init()
+                        alertController.classifieds = classifieds
+                        alertController.selectHandler = { classified in
+                            
+                            let viewController:RU_Classifieds_Comparator_ViewController = .init()
+                            viewController.classified = classified
+                            UI.MainController.present(RU_NavigationController(rootViewController: viewController), animated: true)
+                        }
+                        alertController.present(as: .Sheet)
+                    }
+                }
+            }
+        }
+    }
 }

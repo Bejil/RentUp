@@ -17,7 +17,7 @@ public class RU_Classifieds_Create_ViewController : RU_ViewController {
         $0.configuration?.imagePlacement = .trailing
         return $0
         
-    }(RU_Button(String(key: "Suivant")))
+    }(RU_Button(String(key: "classified.create.button.next")))
     
     public override func loadView() {
         

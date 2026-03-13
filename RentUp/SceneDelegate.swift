@@ -16,6 +16,9 @@ public class SceneDelegate: UIResponder, UIWindowSceneDelegate {
 		
         if let windowScene = scene as? UIWindowScene {
             
+            RU_Firebase.shared.start()
+            IQKeyboardManager.shared.isEnabled = true
+            
             window = UIWindow(windowScene: windowScene)
             window?.backgroundColor = Colors.Background.Application
             
@@ -33,8 +36,6 @@ public class SceneDelegate: UIResponder, UIWindowSceneDelegate {
             }
             window?.rootViewController = viewController
             window?.makeKeyAndVisible()
-            
-            IQKeyboardManager.shared.isEnabled = true
         }
 	}
 

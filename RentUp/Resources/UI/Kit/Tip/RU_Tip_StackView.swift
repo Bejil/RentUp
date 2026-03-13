@@ -65,12 +65,12 @@ public class RU_Tip_StackView: RU_StackView {
 		
 		$0.isHidden = false
 		$0.axis = .horizontal
-		$0.spacing = UI.Margins
+		$0.spacing = UI.Margins/2
 		$0.alignment = .center
 		return $0
 		
 	}(RU_StackView(arrangedSubviews: [iconTitleImageView,titleLabel]))
-	private lazy var contentStackView:RU_StackView = {
+	public lazy var contentStackView:RU_StackView = {
 		
 		$0.isHidden = true
 		$0.axis = .vertical

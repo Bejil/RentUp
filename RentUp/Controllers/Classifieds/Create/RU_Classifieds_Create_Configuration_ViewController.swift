@@ -112,13 +112,13 @@ public class RU_Classifieds_Create_Configuration_ViewController : RU_Classifieds
         
         super.loadView()
         
-        navigationItem.title = String(key: "Étape 2/4")
-        
+navigationItem.title = String(key: "classified.create.step.2")
+
         let placeholderView = view.showPlaceholder()
-        placeholderView.title = String(key: "Configuration")
+        placeholderView.title = String(key: "classified.create.placeholder.configuration")
         placeholderView.image = UIImage(named: "placeholder_classified_configuration")
-        
-        let label:RU_Label = .init(String(key: "Décrivez la configuration de votre logement. Combien de personnes maximum peuvent y séjourner et combien de lits ?"))
+
+        let label:RU_Label = .init(String(key: "classified.create.placeholder.configuration.description"))
         label.textAlignment = .center
         placeholderView.contentStackView.addArrangedSubview(label)
         

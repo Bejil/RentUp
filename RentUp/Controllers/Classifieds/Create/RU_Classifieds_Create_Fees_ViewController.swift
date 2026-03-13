@@ -40,10 +40,10 @@ public class RU_Classifieds_Create_Fees_ViewController : RU_Classifieds_Create_V
         
         super.loadView()
         
-        navigationItem.title = String(key: "Étape 4/4")
-        
+navigationItem.title = String(key: "classified.create.step.4")
+
         let placeholderView = view.showPlaceholder()
-        placeholderView.title = String(key: "Rentabilité")
+        placeholderView.title = String(key: "classified.create.placeholder.profitability")
         placeholderView.image = UIImage(named: "placeholder_classified_fees")
         
         let label:RU_Label = .init(String(key: "settings.classified.fees.tip.content"))
@@ -53,7 +53,7 @@ public class RU_Classifieds_Create_Fees_ViewController : RU_Classifieds_Create_V
         placeholderView.contentStackView.addArrangedSubview(feesRow)
         placeholderView.contentStackView.setCustomSpacing(placeholderView.contentStackView.spacing * 2, after: feesRow)
         
-        let button:RU_Button = .init(String(key: "Créer")) { [weak self] button in
+        let button:RU_Button = .init(String(key: "classified.create.button.create")) { [weak self] button in
             
             button?.isLoading = true
             

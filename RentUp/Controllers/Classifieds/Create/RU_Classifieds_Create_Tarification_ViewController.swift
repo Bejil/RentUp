@@ -31,13 +31,13 @@ public class RU_Classifieds_Create_Tarification_ViewController : RU_Classifieds_
         
         super.loadView()
         
-        navigationItem.title = String(key: "Étape 3/4")
-        
+navigationItem.title = String(key: "classified.create.step.3")
+
         let placeholderView = view.showPlaceholder()
-        placeholderView.title = String(key: "Plateformes")
+        placeholderView.title = String(key: "classified.create.placeholder.platforms")
         placeholderView.image = UIImage(named: "placeholder_classified_plateforms")
-        
-        let label:RU_Label = .init(String(key: "Définissez les plateformes où votre annonce est visible. Vous pourrez ensuite ajouter des réservations pour chacune d'entre elle en fonction de vos besoins"))
+
+        let label:RU_Label = .init(String(key: "classified.create.placeholder.platforms.description"))
         label.textAlignment = .center
         placeholderView.contentStackView.addArrangedSubview(label)
         

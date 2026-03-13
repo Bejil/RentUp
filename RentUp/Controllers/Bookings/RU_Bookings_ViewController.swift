@@ -45,7 +45,11 @@ public class RU_Bookings_ViewController: RU_ViewController {
                 button.image = UIImage(systemName: "plus")
 			}
 			
-            let total = filteredBookings?.filter({ $0.status != .cancelled }).compactMap { $0.platform?.calculatePrice(for: $0)?.hostTotal }.reduce(0, +) ?? 0
+            let total = filteredBookings?.filter({
+                
+                currentFilterName == RU_Booking.Status.cancelled.text ? $0.status == .cancelled : $0.status != .cancelled
+                
+            }).compactMap { $0.platform?.calculatePrice(for: $0)?.hostTotal }.reduce(0, +) ?? 0
 			totalValueLabel.text = String(format: "%.2f €", total)
 		}
 	}
@@ -305,20 +309,12 @@ public class RU_Bookings_ViewController: RU_ViewController {
                     self?.filteredBookings = self?.bookings
                 }))
                 
-                children.append(UIMenu(title: String(key: "bookings.filter.status"), children: [
-                    UIAction(title: String(key: "bookings.status.current"), handler: { [weak self] _ in
-                        self?.currentFilterName = String(key: "bookings.status.current")
-                        self?.filteredBookings = self?.bookings?.filter { $0.status == .current }
-                    }),
-                    UIAction(title: String(key: "bookings.status.upcoming"), handler: { [weak self] _ in
-                        self?.currentFilterName = String(key: "bookings.status.upcoming")
-                        self?.filteredBookings = self?.bookings?.filter { $0.status == .upcoming }
-                    }),
-                    UIAction(title: String(key: "bookings.status.past"), handler: { [weak self] _ in
-                        self?.currentFilterName = String(key: "bookings.status.past")
-                        self?.filteredBookings = self?.bookings?.filter { $0.status == .past }
+                children.append(UIMenu(title: String(key: "bookings.filter.status"), children: RU_Booking.Status.allCases.map({ status in
+                    UIAction(title: status.text, handler: { [weak self] _ in
+                        self?.currentFilterName = status.text
+                        self?.filteredBookings = self?.bookings?.filter { $0.status == status }
                     })
-                ]))
+                })))
                 
                 if let platforms = RU_Platform.all, !platforms.isEmpty {
                     

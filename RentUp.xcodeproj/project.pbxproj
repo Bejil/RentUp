@@ -10,6 +10,7 @@
 		7A08253C2F4334C800E46CBB /* WidgetKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 7A08253B2F4334C800E46CBB /* WidgetKit.framework */; };
 		7A08253E2F4334C800E46CBB /* SwiftUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 7A08253D2F4334C800E46CBB /* SwiftUI.framework */; };
 		7A0825492F4334C900E46CBB /* BookingsWidgetExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 7A0825392F4334C800E46CBB /* BookingsWidgetExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		7A60A5E72F64059A00393CE9 /* FirebaseFirestore in Frameworks */ = {isa = PBXBuildFile; productRef = 7A60A5E62F64059A00393CE9 /* FirebaseFirestore */; };
 		D44F09852F2CAEB9001832DF /* HorizonCalendar in Frameworks */ = {isa = PBXBuildFile; productRef = D44F09842F2CAEB9001832DF /* HorizonCalendar */; };
 		D466785E2F1FC1690079C4AA /* SnapKit in Frameworks */ = {isa = PBXBuildFile; productRef = D466785D2F1FC1690079C4AA /* SnapKit */; };
 		D4A9543E2F23DAB90038CAA3 /* IQKeyboardManagerSwift in Frameworks */ = {isa = PBXBuildFile; productRef = D4A9543D2F23DAB90038CAA3 /* IQKeyboardManagerSwift */; };
@@ -115,6 +116,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				D466785E2F1FC1690079C4AA /* SnapKit in Frameworks */,
+				7A60A5E72F64059A00393CE9 /* FirebaseFirestore in Frameworks */,
 				D44F09852F2CAEB9001832DF /* HorizonCalendar in Frameworks */,
 				D4A9543E2F23DAB90038CAA3 /* IQKeyboardManagerSwift in Frameworks */,
 			);
@@ -199,6 +201,7 @@
 				D466785D2F1FC1690079C4AA /* SnapKit */,
 				D4A9543D2F23DAB90038CAA3 /* IQKeyboardManagerSwift */,
 				D44F09842F2CAEB9001832DF /* HorizonCalendar */,
+				7A60A5E62F64059A00393CE9 /* FirebaseFirestore */,
 			);
 			productName = RentUp;
 			productReference = D466783F2F1FBFF20079C4AA /* RentUp.app */;
@@ -235,6 +238,7 @@
 				D466785C2F1FC1690079C4AA /* XCRemoteSwiftPackageReference "SnapKit" */,
 				D4A9543C2F23DAB90038CAA3 /* XCRemoteSwiftPackageReference "IQKeyboardManager" */,
 				D44F09832F2CAEB9001832DF /* XCRemoteSwiftPackageReference "HorizonCalendar" */,
+				7A60A5E52F64059A00393CE9 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = D46678402F1FBFF20079C4AA /* Products */;
@@ -577,6 +581,14 @@
 /* End XCConfigurationList section */
 
 /* Begin XCRemoteSwiftPackageReference section */
+		7A60A5E52F64059A00393CE9 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/firebase/firebase-ios-sdk";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 12.10.0;
+			};
+		};
 		D44F09832F2CAEB9001832DF /* XCRemoteSwiftPackageReference "HorizonCalendar" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/airbnb/HorizonCalendar.git";
@@ -604,6 +616,11 @@
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
+		7A60A5E62F64059A00393CE9 /* FirebaseFirestore */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 7A60A5E52F64059A00393CE9 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseFirestore;
+		};
 		D44F09842F2CAEB9001832DF /* HorizonCalendar */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = D44F09832F2CAEB9001832DF /* XCRemoteSwiftPackageReference "HorizonCalendar" */;

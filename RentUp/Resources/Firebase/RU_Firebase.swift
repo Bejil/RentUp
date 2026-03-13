@@ -1,0 +1,18 @@
+//
+//  RU_Firebase.swift
+//  RentUp
+//
+//  Created by BLIN Michael on 07/03/2025.
+//
+
+import Firebase
+
+public class RU_Firebase {
+	
+	public static let shared:RU_Firebase = .init()
+	
+	public func start() {
+		
+		FirebaseApp.configure()
+	}
+}

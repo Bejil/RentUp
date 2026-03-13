@@ -32,13 +32,13 @@ public class RU_Classifieds_Create_Name_ViewController : RU_Classifieds_Create_V
         
         classified = .init()
         
-        navigationItem.title = String(key: "Étape 1/4")
-        
+navigationItem.title = String(key: "classified.create.step.1")
+
         let placeholderView = view.showPlaceholder()
-        placeholderView.title = String(key: "Votre annonce")
+        placeholderView.title = String(key: "classified.create.placeholder.name")
         placeholderView.image = UIImage(named: "placeholder_classified_name")
-        
-        let label:RU_Label = .init(String(key: "Donnez un nom à votre annonce pour l'dentifier simplement et rapidement"))
+
+        let label:RU_Label = .init(String(key: "classified.create.placeholder.name.description"))
         label.textAlignment = .center
         placeholderView.contentStackView.addArrangedSubview(label)
         

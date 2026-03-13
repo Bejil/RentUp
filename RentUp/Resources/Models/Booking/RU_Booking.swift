@@ -9,7 +9,7 @@ import Foundation
 
 public class RU_Booking : Codable, Equatable {
     
-    public enum Status : Codable {
+    public enum Status : Codable, CaseIterable {
         
         case past
         case current

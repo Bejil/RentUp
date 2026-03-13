@@ -48,6 +48,15 @@ public class RU_Classified_TableViewCell : RU_TableViewCell {
 			}
 			
 			detailsLabel.text = details.joined(separator: " • ")
+            
+            platformsStackView.arrangedSubviews.forEach({ $0.removeFromSuperview() })
+            
+            classified?.tarification.forEach({
+                
+                let platformLabel:RU_Platform_Label = .init()
+                platformLabel.platform = $0.platform
+                platformsStackView.addArrangedSubview(platformLabel)
+            })
 		}
 	}
 	private lazy var nameLabel:RU_Label = {
@@ -62,6 +71,14 @@ public class RU_Classified_TableViewCell : RU_TableViewCell {
 		return $0
 		
 	}(RU_Label())
+    private lazy var platformsStackView:RU_StackView = {
+        
+        $0.axis = .horizontal
+        $0.spacing = UI.Margins/2
+        $0.alignment = .center
+        return $0
+        
+    }(RU_StackView())
 	public var menu:UIMenu? {
 		
 		get{
@@ -115,8 +132,12 @@ public class RU_Classified_TableViewCell : RU_TableViewCell {
 		super.init(style: style, reuseIdentifier: reuseIdentifier)
 		
 		accessoryType = .disclosureIndicator
+        
+        let platformsContainerStackView:RU_StackView = .init(arrangedSubviews: [platformsStackView])
+        platformsContainerStackView.axis = .vertical
+        platformsContainerStackView.alignment = .leading
 		
-		let stackView:RU_StackView = .init(arrangedSubviews: [nameLabel,detailsLabel])
+		let stackView:RU_StackView = .init(arrangedSubviews: [nameLabel,detailsLabel,platformsContainerStackView])
 		stackView.axis = .vertical
 		stackView.spacing = UI.Margins/2
 		contentView.addSubview(stackView)

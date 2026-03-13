@@ -27,12 +27,22 @@ public class RU_Booking_Status_Label : RU_Label {
 			case .upcoming:
 				let startDay = calendar.startOfDay(for: booking.dates.start)
 				let days = calendar.dateComponents([.day], from: today, to: startDay).day ?? 0
-				text = "\(booking.status.text) ➜ \(days) j"
+				if days == 1 {
+					text = String(key: "booking.status.upcoming.tomorrow")
+				} else {
+					text = "\(booking.status.text) ➜ \(days) j"
+				}
 				
 			case .current:
 				let endDay = calendar.startOfDay(for: booking.dates.end)
 				let days = calendar.dateComponents([.day], from: today, to: endDay).day ?? 0
-				text = "\(booking.status.text) ➜ \(days) j"
+				if days == 0 {
+					text = String(key: "booking.status.departure.today")
+				} else if days == 1 {
+					text = String(key: "booking.status.departure.tomorrow")
+				} else {
+					text = "\(booking.status.text) ➜ \(days) j"
+				}
 				
 			default:
 				text = booking.status.text
