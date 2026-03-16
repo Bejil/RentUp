@@ -34,6 +34,30 @@
 "tabbar.classifieds" = "Biens";
 "tabbar.settings" = "Réglages";
 
+//MARK: - Onboarding
+"onboarding.account.title" = "Votre compte";
+"onboarding.account.content" = "Afin de personnaliser votre expérience, veuillez vous identifier ou créer un compte";
+"onboarding.account.signIn.button" = "Connexion";
+"onboarding.account.signUp.button" = "Inscription";
+"onboarding.signIn.title" = "Connectez-vous";
+"onboarding.signIn.label" = "Connectez-vous à votre compte et retrouver toutes vos réservations en un clin d'oeil 😉";
+"onboarding.signIn.email.placeholder" = "Email";
+"onboarding.signIn.password.placeholder" = "Mot de passe";
+"onboarding.signIn.password.reset.button" = "Mot de passe oublié ?";
+"onboarding.signIn.password.reset.alert.title" = "Mot de passe oublié ?";
+"onboarding.signIn.password.reset.alert.content" = "Ça arrive à tout le monde. Entrez votre adresse, vous recevrez un email avec la marche à suivre 👍";
+"onboarding.signIn.password.reset.alert.email.placeholder" = "Email";
+"onboarding.signIn.password.reset.alert.button" = "Réinitialiser";
+"onboarding.signIn.password.reset.alert.success" = "Envoyé";
+"onboarding.signIn.button" = "Je me connecte";
+"onboarding.signIn.success.alert" = "Connecté";
+"onboarding.signUp.title" = "Créez votre compte";
+"onboarding.signUp.label" = "Créez votre compte pour retrouver toutes vos réservations en un clin d'oeil 😉";
+"onboarding.signUp.email.placeholder" = "Email";
+"onboarding.signUp.password.placeholder" = "Mot de passe";
+"onboarding.signUp.button" = "Je crée mon compte";
+"onboarding.signUp.success.alert" = "Connecté";
+
 //MARK: - Reporting
 "reporting.title" = "Vos statistiques";
 "reporting.section.main" = "Général";
@@ -235,6 +259,7 @@
 
 //MARK: - Settings
 "settings.title" = "Vos réglages";
+"settings.account.signout" = "Déconnexion";
 "settings.platforms.section.title" = "Paramètres des plateformes";
 "settings.platforms.section.subtitle" = "Configurez les commissions, frais et tarifs pour chaque plateforme";
 "settings.platform.tip.title" = "Prix public et revenus nets";
@@ -344,3 +369,9 @@
 "onboarding.success.title" = "C'est parti !";
 "onboarding.success.message" = "Votre premier bien est enregistré. Vous pouvez maintenant gérer vos réservations.";
 "onboarding.success.button.done" = "Terminer";
+
+"user.passwordValidation.characters" = "Au moins 8 caractères";
+"user.passwordValidation.lowercase" = "Au moins une lettre minuscule";
+"user.passwordValidation.uppercase" = "Au moins une lettre majuscule";
+"user.passwordValidation.special" = "Au moins un caractère spécial";
+"user.passwordValidation.number" = "Au moins un chiffre";

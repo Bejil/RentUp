@@ -9,6 +9,7 @@ import Foundation
 
 extension Notification.Name {
 	
+    static let updateAccount = Notification.Name("updateAccount")
 	static let updateBookings = Notification.Name("updateBookings")
 	static let updatePlatforms = Notification.Name("updatePlatforms")
 	static let updateClassifieds = Notification.Name("updateClassifieds")

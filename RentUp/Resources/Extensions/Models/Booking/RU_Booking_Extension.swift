@@ -133,6 +133,31 @@ extension RU_Booking {
 			}
 		}
 	}
+    
+    public static func create() {
+        
+        RU_Alert_ViewController.presentLoading { controller in
+            
+            RU_Classified.getAll { error, classifieds in
+                
+                controller?.close {
+                  
+                    if let error {
+                        
+                        RU_Alert_ViewController.present(error)
+                    }
+                    else if classifieds?.isEmpty ?? true {
+                        
+                        RU_Alert_ViewController.present(RU_Error(String(key: "bookings.create.noClassifieds")))
+                    }
+                    else {
+                        
+                        UI.MainController.present(RU_NavigationController(rootViewController: RU_Bookings_Edit_ViewController()), animated: true)
+                    }
+                }
+            }
+        }
+    }
 }
 
 extension [RU_Booking] {
@@ -162,6 +187,34 @@ extension RU_Booking.Status {
             return String(key: "booking.status.upcoming.name")
         case .cancelled:
             return String(key: "booking.status.cancelled.name")
+        }
+    }
+    
+    public var backgroundColor: UIColor {
+        
+        switch self {
+        case .past:
+            return Colors.Booking.Status.Past.Background
+        case .current:
+            return Colors.Booking.Status.Current.Background
+        case .upcoming:
+            return Colors.Booking.Status.Upcoming.Background
+        case .cancelled:
+            return Colors.Booking.Status.Cancelled.Background
+        }
+    }
+    
+    public var textColor: UIColor {
+        
+        switch self {
+        case .past:
+            return Colors.Booking.Status.Past.Text
+        case .current:
+            return Colors.Booking.Status.Current.Text
+        case .upcoming:
+            return Colors.Booking.Status.Upcoming.Text
+        case .cancelled:
+            return Colors.Booking.Status.Cancelled.Text
         }
     }
 }

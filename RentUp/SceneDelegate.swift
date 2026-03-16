@@ -17,6 +17,8 @@ public class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         if let windowScene = scene as? UIWindowScene {
             
             RU_Firebase.shared.start()
+            _ = RU_Account.shared
+            
             IQKeyboardManager.shared.isEnabled = true
             
             window = UIWindow(windowScene: windowScene)

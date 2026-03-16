@@ -99,7 +99,34 @@ public class RU_Settings_ViewController: RU_ViewController {
 			
 			self?.platformsTableView.reloadData()
 		}
+        
+        NotificationCenter.add(.updateAccount) { [weak self] _ in
+            
+            self?.updateAccount()
+        }
 	}
+    
+    public override func viewWillAppear(_ animated: Bool) {
+        
+        super.viewWillAppear(animated)
+        
+        updateAccount()
+    }
+    
+    private func updateAccount() {
+        
+        navigationItem.rightBarButtonItem = RU_Account.shared.isLoggedIn ? .init(title: String(key: "settings.account.signout"), primaryAction: .init(handler: { _ in
+            
+            RU_Account.shared.signOut { error in
+                    
+                if let error {
+                    
+                    RU_Alert_ViewController.present(error)
+                }
+            }
+            
+        })) : nil
+    }
 	
 	private func reset() {
 		

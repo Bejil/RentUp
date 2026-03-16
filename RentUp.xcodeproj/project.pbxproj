@@ -7,24 +7,14 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		7A08253C2F4334C800E46CBB /* WidgetKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 7A08253B2F4334C800E46CBB /* WidgetKit.framework */; };
-		7A08253E2F4334C800E46CBB /* SwiftUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 7A08253D2F4334C800E46CBB /* SwiftUI.framework */; };
-		7A0825492F4334C900E46CBB /* BookingsWidgetExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 7A0825392F4334C800E46CBB /* BookingsWidgetExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
-		7A60A5E72F64059A00393CE9 /* FirebaseFirestore in Frameworks */ = {isa = PBXBuildFile; productRef = 7A60A5E62F64059A00393CE9 /* FirebaseFirestore */; };
+		7A60A8272F65DC1000393CE9 /* FirebaseAuth in Frameworks */ = {isa = PBXBuildFile; productRef = 7A60A8262F65DC1000393CE9 /* FirebaseAuth */; };
+		7A60A8292F65DC1000393CE9 /* FirebaseFirestore in Frameworks */ = {isa = PBXBuildFile; productRef = 7A60A8282F65DC1000393CE9 /* FirebaseFirestore */; };
+		7A60A82F2F65DFE500393CE9 /* GoogleSignIn in Frameworks */ = {isa = PBXBuildFile; productRef = 7A60A82E2F65DFE500393CE9 /* GoogleSignIn */; };
+		7A60A8312F65DFE500393CE9 /* GoogleSignInSwift in Frameworks */ = {isa = PBXBuildFile; productRef = 7A60A8302F65DFE500393CE9 /* GoogleSignInSwift */; };
 		D44F09852F2CAEB9001832DF /* HorizonCalendar in Frameworks */ = {isa = PBXBuildFile; productRef = D44F09842F2CAEB9001832DF /* HorizonCalendar */; };
 		D466785E2F1FC1690079C4AA /* SnapKit in Frameworks */ = {isa = PBXBuildFile; productRef = D466785D2F1FC1690079C4AA /* SnapKit */; };
 		D4A9543E2F23DAB90038CAA3 /* IQKeyboardManagerSwift in Frameworks */ = {isa = PBXBuildFile; productRef = D4A9543D2F23DAB90038CAA3 /* IQKeyboardManagerSwift */; };
 /* End PBXBuildFile section */
-
-/* Begin PBXContainerItemProxy section */
-		7A0825472F4334C900E46CBB /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = D46678372F1FBFF20079C4AA /* Project object */;
-			proxyType = 1;
-			remoteGlobalIDString = 7A0825382F4334C800E46CBB;
-			remoteInfo = BookingsWidgetExtension;
-		};
-/* End PBXContainerItemProxy section */
 
 /* Begin PBXCopyFilesBuildPhase section */
 		7A08254E2F4334C900E46CBB /* Embed Foundation Extensions */ = {
@@ -33,7 +23,6 @@
 			dstPath = "";
 			dstSubfolderSpec = 13;
 			files = (
-				7A0825492F4334C900E46CBB /* BookingsWidgetExtension.appex in Embed Foundation Extensions */,
 			);
 			name = "Embed Foundation Extensions";
 			runOnlyForDeploymentPostprocessing = 0;
@@ -41,7 +30,6 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
-		7A0825392F4334C800E46CBB /* BookingsWidgetExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = BookingsWidgetExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		7A08253B2F4334C800E46CBB /* WidgetKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = WidgetKit.framework; path = System/Library/Frameworks/WidgetKit.framework; sourceTree = SDKROOT; };
 		7A08253D2F4334C800E46CBB /* SwiftUI.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SwiftUI.framework; path = System/Library/Frameworks/SwiftUI.framework; sourceTree = SDKROOT; };
 		7A082A192F436DCE00E46CBB /* BookingsWidgetExtension.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = BookingsWidgetExtension.entitlements; sourceTree = "<group>"; };
@@ -49,29 +37,6 @@
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
-		7A08254D2F4334C900E46CBB /* Exceptions for "BookingsWidget" folder in "BookingsWidgetExtension" target */ = {
-			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
-			membershipExceptions = (
-				Info.plist,
-			);
-			target = 7A0825382F4334C800E46CBB /* BookingsWidgetExtension */;
-		};
-		7A082A1B2F4376BA00E46CBB /* Exceptions for "RentUp" folder in "BookingsWidgetExtension" target */ = {
-			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
-			membershipExceptions = (
-				Resources/Error/RU_Error.swift,
-				Resources/Extensions/Models/Booking/RU_Booking_Extension.swift,
-				Resources/Extensions/Models/Platform/RU_Platform_Extension.swift,
-				Resources/Extensions/String/String_Extension.swift,
-				Resources/Extensions/UserDefaults/UserDefaults_Extension.swift,
-				Resources/Localizable.strings,
-				Resources/Models/Booking/RU_Booking.swift,
-				Resources/Models/Classified/RU_Classified.swift,
-				Resources/Models/Platform/RU_Platform.swift,
-				Resources/UI/Colors.xcassets,
-			);
-			target = 7A0825382F4334C800E46CBB /* BookingsWidgetExtension */;
-		};
 		D46678512F1FBFF40079C4AA /* Exceptions for "RentUp" folder in "RentUp" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
@@ -82,19 +47,10 @@
 /* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
-		7A08253F2F4334C800E46CBB /* BookingsWidget */ = {
-			isa = PBXFileSystemSynchronizedRootGroup;
-			exceptions = (
-				7A08254D2F4334C900E46CBB /* Exceptions for "BookingsWidget" folder in "BookingsWidgetExtension" target */,
-			);
-			path = BookingsWidget;
-			sourceTree = "<group>";
-		};
 		D46678412F1FBFF20079C4AA /* RentUp */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			exceptions = (
 				D46678512F1FBFF40079C4AA /* Exceptions for "RentUp" folder in "RentUp" target */,
-				7A082A1B2F4376BA00E46CBB /* Exceptions for "RentUp" folder in "BookingsWidgetExtension" target */,
 			);
 			path = RentUp;
 			sourceTree = "<group>";
@@ -102,23 +58,17 @@
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
-		7A0825362F4334C800E46CBB /* Frameworks */ = {
-			isa = PBXFrameworksBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-				7A08253E2F4334C800E46CBB /* SwiftUI.framework in Frameworks */,
-				7A08253C2F4334C800E46CBB /* WidgetKit.framework in Frameworks */,
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
 		D466783C2F1FBFF20079C4AA /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				7A60A8272F65DC1000393CE9 /* FirebaseAuth in Frameworks */,
 				D466785E2F1FC1690079C4AA /* SnapKit in Frameworks */,
-				7A60A5E72F64059A00393CE9 /* FirebaseFirestore in Frameworks */,
+				7A60A8312F65DFE500393CE9 /* GoogleSignInSwift in Frameworks */,
 				D44F09852F2CAEB9001832DF /* HorizonCalendar in Frameworks */,
 				D4A9543E2F23DAB90038CAA3 /* IQKeyboardManagerSwift in Frameworks */,
+				7A60A8292F65DC1000393CE9 /* FirebaseFirestore in Frameworks */,
+				7A60A82F2F65DFE500393CE9 /* GoogleSignIn in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -139,7 +89,6 @@
 			children = (
 				7A082A192F436DCE00E46CBB /* BookingsWidgetExtension.entitlements */,
 				D46678412F1FBFF20079C4AA /* RentUp */,
-				7A08253F2F4334C800E46CBB /* BookingsWidget */,
 				7A08253A2F4334C800E46CBB /* Frameworks */,
 				D46678402F1FBFF20079C4AA /* Products */,
 			);
@@ -149,7 +98,6 @@
 			isa = PBXGroup;
 			children = (
 				D466783F2F1FBFF20079C4AA /* RentUp.app */,
-				7A0825392F4334C800E46CBB /* BookingsWidgetExtension.appex */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -157,28 +105,6 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
-		7A0825382F4334C800E46CBB /* BookingsWidgetExtension */ = {
-			isa = PBXNativeTarget;
-			buildConfigurationList = 7A08254A2F4334C900E46CBB /* Build configuration list for PBXNativeTarget "BookingsWidgetExtension" */;
-			buildPhases = (
-				7A0825352F4334C800E46CBB /* Sources */,
-				7A0825362F4334C800E46CBB /* Frameworks */,
-				7A0825372F4334C800E46CBB /* Resources */,
-			);
-			buildRules = (
-			);
-			dependencies = (
-			);
-			fileSystemSynchronizedGroups = (
-				7A08253F2F4334C800E46CBB /* BookingsWidget */,
-			);
-			name = BookingsWidgetExtension;
-			packageProductDependencies = (
-			);
-			productName = BookingsWidgetExtension;
-			productReference = 7A0825392F4334C800E46CBB /* BookingsWidgetExtension.appex */;
-			productType = "com.apple.product-type.app-extension";
-		};
 		D466783E2F1FBFF20079C4AA /* RentUp */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = D46678522F1FBFF40079C4AA /* Build configuration list for PBXNativeTarget "RentUp" */;
@@ -191,7 +117,6 @@
 			buildRules = (
 			);
 			dependencies = (
-				7A0825482F4334C900E46CBB /* PBXTargetDependency */,
 			);
 			fileSystemSynchronizedGroups = (
 				D46678412F1FBFF20079C4AA /* RentUp */,
@@ -201,7 +126,10 @@
 				D466785D2F1FC1690079C4AA /* SnapKit */,
 				D4A9543D2F23DAB90038CAA3 /* IQKeyboardManagerSwift */,
 				D44F09842F2CAEB9001832DF /* HorizonCalendar */,
-				7A60A5E62F64059A00393CE9 /* FirebaseFirestore */,
+				7A60A8262F65DC1000393CE9 /* FirebaseAuth */,
+				7A60A8282F65DC1000393CE9 /* FirebaseFirestore */,
+				7A60A82E2F65DFE500393CE9 /* GoogleSignIn */,
+				7A60A8302F65DFE500393CE9 /* GoogleSignInSwift */,
 			);
 			productName = RentUp;
 			productReference = D466783F2F1FBFF20079C4AA /* RentUp.app */;
@@ -217,9 +145,6 @@
 				LastSwiftUpdateCheck = 2620;
 				LastUpgradeCheck = 2620;
 				TargetAttributes = {
-					7A0825382F4334C800E46CBB = {
-						CreatedOnToolsVersion = 26.2;
-					};
 					D466783E2F1FBFF20079C4AA = {
 						CreatedOnToolsVersion = 26.2;
 					};
@@ -238,7 +163,8 @@
 				D466785C2F1FC1690079C4AA /* XCRemoteSwiftPackageReference "SnapKit" */,
 				D4A9543C2F23DAB90038CAA3 /* XCRemoteSwiftPackageReference "IQKeyboardManager" */,
 				D44F09832F2CAEB9001832DF /* XCRemoteSwiftPackageReference "HorizonCalendar" */,
-				7A60A5E52F64059A00393CE9 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */,
+				7A60A8252F65DC1000393CE9 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */,
+				7A60A82D2F65DFE500393CE9 /* XCRemoteSwiftPackageReference "GoogleSignIn-iOS" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = D46678402F1FBFF20079C4AA /* Products */;
@@ -246,19 +172,11 @@
 			projectRoot = "";
 			targets = (
 				D466783E2F1FBFF20079C4AA /* RentUp */,
-				7A0825382F4334C800E46CBB /* BookingsWidgetExtension */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
-		7A0825372F4334C800E46CBB /* Resources */ = {
-			isa = PBXResourcesBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
 		D466783D2F1FBFF20079C4AA /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -269,13 +187,6 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
-		7A0825352F4334C800E46CBB /* Sources */ = {
-			isa = PBXSourcesBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
 		D466783B2F1FBFF20079C4AA /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -285,78 +196,7 @@
 		};
 /* End PBXSourcesBuildPhase section */
 
-/* Begin PBXTargetDependency section */
-		7A0825482F4334C900E46CBB /* PBXTargetDependency */ = {
-			isa = PBXTargetDependency;
-			target = 7A0825382F4334C800E46CBB /* BookingsWidgetExtension */;
-			targetProxy = 7A0825472F4334C900E46CBB /* PBXContainerItemProxy */;
-		};
-/* End PBXTargetDependency section */
-
 /* Begin XCBuildConfiguration section */
-		7A08254B2F4334C900E46CBB /* Debug */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
-				ASSETCATALOG_COMPILER_WIDGET_BACKGROUND_COLOR_NAME = WidgetBackground;
-				CODE_SIGN_ENTITLEMENTS = BookingsWidgetExtension.entitlements;
-				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1.0.0;
-				DEVELOPMENT_TEAM = K73XJ748R3;
-				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_FILE = BookingsWidget/Info.plist;
-				INFOPLIST_KEY_CFBundleDisplayName = BookingsWidget;
-				INFOPLIST_KEY_NSHumanReadableCopyright = "";
-				LD_RUNPATH_SEARCH_PATHS = (
-					"$(inherited)",
-					"@executable_path/Frameworks",
-					"@executable_path/../../Frameworks",
-				);
-				MARKETING_VERSION = 1.0.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.michaelblin.RentUp.BookingsWidget;
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				SKIP_INSTALL = YES;
-				STRING_CATALOG_GENERATE_SYMBOLS = YES;
-				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "APP_EXTENSION DEBUG $(inherited)";
-				SWIFT_APPROACHABLE_CONCURRENCY = YES;
-				SWIFT_EMIT_LOC_STRINGS = YES;
-				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
-				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = "1,2";
-			};
-			name = Debug;
-		};
-		7A08254C2F4334C900E46CBB /* Release */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
-				ASSETCATALOG_COMPILER_WIDGET_BACKGROUND_COLOR_NAME = WidgetBackground;
-				CODE_SIGN_ENTITLEMENTS = BookingsWidgetExtension.entitlements;
-				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1.0.0;
-				DEVELOPMENT_TEAM = K73XJ748R3;
-				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_FILE = BookingsWidget/Info.plist;
-				INFOPLIST_KEY_CFBundleDisplayName = BookingsWidget;
-				INFOPLIST_KEY_NSHumanReadableCopyright = "";
-				LD_RUNPATH_SEARCH_PATHS = (
-					"$(inherited)",
-					"@executable_path/Frameworks",
-					"@executable_path/../../Frameworks",
-				);
-				MARKETING_VERSION = 1.0.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.michaelblin.RentUp.BookingsWidget;
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				SKIP_INSTALL = YES;
-				STRING_CATALOG_GENERATE_SYMBOLS = YES;
-				SWIFT_APPROACHABLE_CONCURRENCY = YES;
-				SWIFT_EMIT_LOC_STRINGS = YES;
-				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
-				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = "1,2";
-			};
-			name = Release;
-		};
 		D46678532F1FBFF40079C4AA /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -374,6 +214,7 @@
 				INFOPLIST_KEY_UILaunchStoryboardName = LaunchScreen;
 				INFOPLIST_KEY_UIMainStoryboardFile = "";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown";
+				INFOPLIST_KEY_UIUserInterfaceStyle = Light;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -408,6 +249,7 @@
 				INFOPLIST_KEY_UILaunchStoryboardName = LaunchScreen;
 				INFOPLIST_KEY_UIMainStoryboardFile = "";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown";
+				INFOPLIST_KEY_UIUserInterfaceStyle = Light;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -551,15 +393,6 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		7A08254A2F4334C900E46CBB /* Build configuration list for PBXNativeTarget "BookingsWidgetExtension" */ = {
-			isa = XCConfigurationList;
-			buildConfigurations = (
-				7A08254B2F4334C900E46CBB /* Debug */,
-				7A08254C2F4334C900E46CBB /* Release */,
-			);
-			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Release;
-		};
 		D466783A2F1FBFF20079C4AA /* Build configuration list for PBXProject "RentUp" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
@@ -581,12 +414,20 @@
 /* End XCConfigurationList section */
 
 /* Begin XCRemoteSwiftPackageReference section */
-		7A60A5E52F64059A00393CE9 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */ = {
+		7A60A8252F65DC1000393CE9 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/firebase/firebase-ios-sdk";
 			requirement = {
 				kind = upToNextMajorVersion;
 				minimumVersion = 12.10.0;
+			};
+		};
+		7A60A82D2F65DFE500393CE9 /* XCRemoteSwiftPackageReference "GoogleSignIn-iOS" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/google/GoogleSignIn-iOS";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 9.1.0;
 			};
 		};
 		D44F09832F2CAEB9001832DF /* XCRemoteSwiftPackageReference "HorizonCalendar" */ = {
@@ -616,10 +457,25 @@
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
-		7A60A5E62F64059A00393CE9 /* FirebaseFirestore */ = {
+		7A60A8262F65DC1000393CE9 /* FirebaseAuth */ = {
 			isa = XCSwiftPackageProductDependency;
-			package = 7A60A5E52F64059A00393CE9 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			package = 7A60A8252F65DC1000393CE9 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseAuth;
+		};
+		7A60A8282F65DC1000393CE9 /* FirebaseFirestore */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 7A60A8252F65DC1000393CE9 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
 			productName = FirebaseFirestore;
+		};
+		7A60A82E2F65DFE500393CE9 /* GoogleSignIn */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 7A60A82D2F65DFE500393CE9 /* XCRemoteSwiftPackageReference "GoogleSignIn-iOS" */;
+			productName = GoogleSignIn;
+		};
+		7A60A8302F65DFE500393CE9 /* GoogleSignInSwift */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 7A60A82D2F65DFE500393CE9 /* XCRemoteSwiftPackageReference "GoogleSignIn-iOS" */;
+			productName = GoogleSignInSwift;
 		};
 		D44F09842F2CAEB9001832DF /* HorizonCalendar */ = {
 			isa = XCSwiftPackageProductDependency;

@@ -192,4 +192,66 @@ extension UIView {
 		let view:UIView = (self as? UIVisualEffectView)?.contentView ?? self
 		view.subviews.first(where: {$0.accessibilityLabel == "placeholderView"})?.removeFromSuperview()
 	}
+    
+    func showLoadingIndicatorView() {
+        
+        showLoadingIndicatorView(blurBackground: true)
+    }
+    
+    func showLoadingIndicatorView(blurBackground:Bool, color:UIColor? = nil) {
+        
+        dismissLoadingIndicatorView()
+        
+        DispatchQueue.main.async {
+            
+            var view:UIView = self
+            
+            if let visualEffectView = self as? UIVisualEffectView {
+                
+                view = visualEffectView.contentView
+            }
+            
+            let visualEffectView:UIVisualEffectView = .init()
+            if blurBackground {
+                
+                visualEffectView.effect = UIBlurEffect.init(style: self.traitCollection.userInterfaceStyle == .light ? .extraLight : .dark)
+            }
+            visualEffectView.accessibilityLabel = "loadingView"
+            view.addSubview(visualEffectView)
+            
+            let activityIndicatorView:UIActivityIndicatorView = .init()
+            if #available(iOS 13, *) {
+                activityIndicatorView.style = .medium
+            }
+            else{
+                activityIndicatorView.style = self.traitCollection.userInterfaceStyle == .light ? .gray : .white
+            }
+            activityIndicatorView.color = color
+            activityIndicatorView.startAnimating()
+            visualEffectView.contentView.addSubview(activityIndicatorView)
+            
+            visualEffectView.snp.makeConstraints { (make) in
+                make.edges.equalToSuperview()
+            }
+            
+            activityIndicatorView.snp.makeConstraints { (make) in
+                make.centerX.centerY.equalToSuperview()
+            }
+        }
+    }
+    
+    func dismissLoadingIndicatorView() {
+        
+        DispatchQueue.main.async {
+            
+            var view:UIView = self
+            
+            if let visualEffectView = self as? UIVisualEffectView {
+                
+                view = visualEffectView.contentView
+            }
+            
+            view.subviews.first(where: {$0.accessibilityLabel == "loadingView"})?.removeFromSuperview()
+        }
+    }
 }

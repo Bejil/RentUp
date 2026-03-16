@@ -6,6 +6,7 @@
 //
 
 import Firebase
+import GoogleSignIn
 
 public class RU_Firebase {
 	
@@ -15,4 +16,9 @@ public class RU_Firebase {
 		
 		FirebaseApp.configure()
 	}
+    
+    public func handle(_ url:URL) -> Bool {
+        
+        return GIDSignIn.sharedInstance.handle(url)
+    }
 }
