@@ -40,12 +40,12 @@ public class RU_Platform_Label: UIView {
 		return $0
 	}(RU_Label())
 
-	private lazy var contentStackView: UIStackView = {
+	private lazy var contentStackView: RU_StackView = {
 		$0.axis = .horizontal
 		$0.spacing = UI.Margins / 3
 		$0.alignment = .center
 		return $0
-	}(UIStackView(arrangedSubviews: [iconImageView, textLabel]))
+	}(RU_StackView(arrangedSubviews: [iconImageView, textLabel]))
 
 	public override init(frame: CGRect) {
 		super.init(frame: frame)

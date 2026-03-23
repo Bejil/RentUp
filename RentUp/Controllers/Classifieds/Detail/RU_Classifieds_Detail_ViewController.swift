@@ -188,7 +188,7 @@ public class RU_Classifieds_Detail_ViewController: RU_ViewController {
                     
                     alertController?.close { [weak self] in
                       
-                        self?.classified = classifieds?.first(where: { $0.id == self?.classified?.id })
+                        self?.classified = classifieds?.first(where: { $0.uuid == self?.classified?.uuid })
                     }
                 }
             }
@@ -260,9 +260,19 @@ extension RU_Classifieds_Detail_ViewController : UITableViewDelegate, UITableVie
         
         let platform = RU_Platform.all?[indexPath.row]
         
-        let viewController:RU_Classifieds_Detail_Platform_ViewController = .init()
-        viewController.classified = classified
-        viewController.platform = platform
-        navigationController?.pushViewController(viewController, animated: true)
+        let alertController:RU_Classified_Platform_Alert_ViewController = .init()
+        alertController.isEditing = false
+        alertController.classified = classified
+        alertController.platform = platform
+        alertController.completion = { [weak self] in
+            
+            self?.tarificationTableView.reloadData()
+        }
+        alertController.present(as: .Sheet)
+    }
+    
+    public func tableView(_ tableView: UITableView, accessoryButtonTappedForRowWith indexPath: IndexPath) {
+        
+        tableView.delegate?.tableView?(tableView, didSelectRowAt: indexPath)
     }
 }

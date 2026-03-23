@@ -98,7 +98,7 @@
 "classifieds.error.save" = "Une erreur est survenue lors de la sauvegarde du bien";
 "classifieds.error.delete" = "Une erreur est survenue lors de la suppression du bien";
 "classifieds.delete.alert.title" = "Attention";
-"classifieds.delete.alert.content" = "Voulez-vous vraiment supprimer ce(s) bien(s) ? Cette action est irréversible.";
+"classifieds.delete.alert.content" = "Voulez-vous vraiment supprimer ce(s) bien(s) ? Cette action est irréversible. Toutes les réservations qui en dépendent seront également supprimées.";
 "classifieds.delete.alert.button" = "Supprimer";
 "classifieds.comparator.title" = "Comparateur de prix";
 "classifieds.comparator.tip" = "Comparez les différences de prix pour chaque bien selon les plateformes. Une nuit est simulée : le revenu net par bien et par plateforme s'affiche pour vous aider à ajuster vos tarifs et aligner le revenu net entre les 3 plateformes.";
@@ -260,13 +260,14 @@
 //MARK: - Settings
 "settings.title" = "Vos réglages";
 "settings.account.signout" = "Déconnexion";
-"settings.platforms.section.title" = "Paramètres des plateformes";
-"settings.platforms.section.subtitle" = "Configurez les commissions, frais et tarifs pour chaque plateforme";
+"settings.account.section.title" = "Votre compte";
+"settings.account.button" = "Réglages du compte";
+"settings.account.section.subtitle" = "Gérez vos informations de connexion, adresse email, mot de passe et d'autres options";
+"settings.platforms.section.title" = "Plateformes";
+"settings.platforms.section.subtitle" = "Les commissions, frais et tarifs pour chaque plateforme";
 "settings.platform.tip.title" = "Prix public et revenus nets";
 "settings.platform.tip.content.traveler" = "Prix public:";
 "settings.platform.tip.content.host" = "Revenus nets:";
-"settings.platform.commissionFees.section.title" = "Commissions et frais";
-"settings.platform.commissionFees.section.subtitle" = "Paramétrez les commissions propres à la plateforme";
 "settings.platform.commission.touristTax" = "Taxe de séjour/pers/nuit";
 "settings.platform.commission.host" = "Frais de service hôte";
 "settings.platform.commission.traveler" = "Frais de service voyageur";
@@ -324,7 +325,7 @@
 "settings.classified.error.save" = "Une erreur est survenue pendant la sauvegarde du bien";
 "settings.classified.error.delete" = "Une erreur est survenue pendant la suppression du bien";
 "settings.classified.delete.alert.title" = "Attention";
-"settings.classified.delete.alert.content" = "Voulez-vous vraiment supprimer ce bien ?";
+"settings.classified.delete.alert.content" = "Voulez-vous vraiment supprimer ce bien ? Cette action est irréversible. Toutes les réservations qui en dépendent seront également supprimées.";
 "settings.classified.delete.alert.button" = "Supprimer";
 "settings.classified.cell.edit.button" = "Modifier";
 "settings.classified.cell.delete.button" = "Supprimer";
@@ -340,10 +341,14 @@
 "settings.about.section.subtitle" = "Informations générales à propos de l'application";
 "settings.about.version" = "Version";
 //Reset
+"settings.data.section.title" = "Données";
+"settings.data.section.subtitle" = "Gérez les données de l'application : vos annonces et vos réservation";
+"settings.data.import.button" = "Importer des réservations";
 "settings.reset.button" = "Réinitialiser les données";
 "settings.reset.alert.title" = "Attention";
 "settings.reset.alert.content" = "Voulez-vous vraiment réinitialiser toutes les données ? Cette action est irréversible.";
 "settings.reset.alert.button" = "Réinitialiser";
+"settings.reset.error" = "Une erreur est survenue pendant la réinitialisation des données";
 
 //MARK: - Platform
 "platform.airbnb.name" = "Airbnb";
@@ -375,3 +380,22 @@
 "user.passwordValidation.uppercase" = "Au moins une lettre majuscule";
 "user.passwordValidation.special" = "Au moins un caractère spécial";
 "user.passwordValidation.number" = "Au moins un chiffre";
+
+"account.placeholder.title" = "Votre compte";
+"account.placeholder.label" = "Vous pouvez modifier les informations de votre compte";
+"account.email.placeholder" = "Email";
+"account.password.placeholder" = "Mot de passe";
+"account.placeholder.button" = "Modifier";
+"account.reautenticate.update.alert.title" = "Confirmation";
+"account.reautenticate.update.alert.label" = "Pour modifier ces informations nous avons besoin de confirmer votre identité. Entrez votre mot de passe actuel.";
+"account.reautenticate.update.alert.password.placeholder" = "Mot de passe";
+"account.reautenticate.update.alert.button" = "Confirmer";
+"account.reautenticate.update.alert.error" = "Une erreur est survenue pendant la modification de vos informations";
+"account.delete.button" = "Supprimer mon compte";
+"account.delete.alert.title" = "Suppression";
+"account.delete.alert.label" = "Attention cette action est irréversible. Toutes les informations et les données relatives à votre compte seront définitivement supprimées.";
+"account.delete.alert.button" = "Confirmer";
+"account.reautenticate.delete.alert.title" = "Confirmation";
+"account.reautenticate.delete.alert.label" = "Pour supprimer votre compte nous avons besoin de confirmer votre identité. Entrez votre mot de passe actuel.";
+"account.reautenticate.delete.alert.password.placeholder" = "Mot de passe";
+"account.reautenticate.delete.alert.button" = "Confirmer";

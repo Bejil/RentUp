@@ -211,6 +211,8 @@ public class RU_Classifieds_Edit_ViewController : RU_ViewController {
 		
 		super.loadView()
         
+        isModal = true
+        
         title = String(key: "settings.classified.title.update")
         
         if classified == nil {
@@ -343,6 +345,7 @@ extension RU_Classifieds_Edit_ViewController : UITableViewDelegate, UITableViewD
 		let platform = RU_Platform.all?[indexPath.row]
         
         let alertController:RU_Classified_Platform_Alert_ViewController = .init()
+        alertController.isEditing = true
         alertController.classified = classified
         alertController.platform = platform
         alertController.completion = { [weak self] in
@@ -352,4 +355,9 @@ extension RU_Classifieds_Edit_ViewController : UITableViewDelegate, UITableViewD
         }
         alertController.present(as: .Sheet)
 	}
+    
+    public func tableView(_ tableView: UITableView, accessoryButtonTappedForRowWith indexPath: IndexPath) {
+        
+        tableView.delegate?.tableView?(tableView, didSelectRowAt: indexPath)
+    }
 }

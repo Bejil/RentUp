@@ -11,6 +11,18 @@ import SnapKit
 public class RU_Classified_Platform_Alert_ViewController : RU_Alert_ViewController {
     
     public var completion:(()->Void)?
+    public override var isEditing: Bool {
+        
+        didSet {
+            
+            priceTextFieldRowStack.textField.isEnabled = isEditing
+            cleaningTextFieldRowStack.textField.isEnabled = isEditing
+            travelersIncludedTextFieldRowStack.stepper.isEnabled = isEditing
+            travelersExtraTextFieldRowStack.textField.isEnabled = isEditing
+            offerWeekTextFieldRowStack.textField.isEnabled = isEditing
+            offerMonthTextFieldRowStack.textField.isEnabled = isEditing
+        }
+    }
     public var classified:RU_Classified?
     public var platform:RU_Platform? {
         

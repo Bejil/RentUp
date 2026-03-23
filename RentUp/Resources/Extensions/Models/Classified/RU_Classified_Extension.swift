@@ -6,6 +6,8 @@
 //
 
 import UIKit
+import FirebaseFirestore
+import FirebaseAuth
 
 extension RU_Classified {
 	
@@ -16,57 +18,51 @@ extension RU_Classified {
 	
 	public static func getAll(_ completion:((Error?,[RU_Classified]?)->Void)?) {
 		
-		if let data = UserDefaults.get(.classifieds) as? Data {
+		Firestore.firestore().collection("classifieds").whereField("uid", isEqualTo: RU_Account.shared.user?.uid ?? "").getDocuments { querySnapshot, error in
 			
-			do {
+			if error != nil {
 				
-				let bookings = try JSONDecoder().decode([RU_Classified].self, from: data)
-				completion?(nil,bookings.sorted(by: { $0.creationDate > $1.creationDate }))
+				completion?(RU_Error(String(key: "classifieds.error.getAll")), nil)
 			}
-			catch {
+			else {
 				
-				completion?(RU_Error(String(key: "classifieds.error.getAll")),nil)
+                Task { @MainActor in
+                    
+                    let classifieds = querySnapshot?.documents.compactMap { try? $0.data(as: RU_Classified.self) }
+                    let sorted = classifieds?.sorted(by: { $0.creationDate > $1.creationDate }) ?? []
+                    completion?(nil, sorted)
+                }
 			}
-		}
-		else {
-			
-			completion?(nil,[])
 		}
 	}
 	
 	public func save(_ completion:((Error?)->Void)?) {
 		
-		RU_Classified.getAll { [weak self] error, classifieds in
+		modificationDate = Date()
+		
+		let collection = Firestore.firestore().collection("classifieds")
+		
+		if let id = id, !id.isEmpty {
 			
-			if error != nil {
+			do {
+				
+				try collection.document(id).setData(from: self)
+				completion?(nil)
+			}
+			catch {
 				
 				completion?(RU_Error(String(key: "classifieds.error.save")))
 			}
-			else if let self, var classifieds {
+		}
+		else {
+			
+			do {
 				
-				if let index = classifieds.firstIndex(of: self) {
-					
-					self.modificationDate = Date()
-					classifieds[index] = self
-				}
-				else {
-					
-					classifieds.append(self)
-				}
-				
-				do {
-					
-					let data = try JSONEncoder().encode(classifieds)
-					UserDefaults.set(data, .classifieds)
-					
-					completion?(nil)
-				}
-				catch {
-					
-					completion?(RU_Error(String(key: "classifieds.error.save")))
-				}
+				let documentReference = try collection.addDocument(from: self)
+				id = documentReference.documentID
+				completion?(nil)
 			}
-			else {
+			catch {
 				
 				completion?(RU_Error(String(key: "classifieds.error.save")))
 			}
@@ -75,38 +71,21 @@ extension RU_Classified {
 	
 	public func delete(_ completion:((Error?)->Void)?) {
 		
-		RU_Classified.getAll { [weak self] error, classifieds in
+		guard let id = id, !id.isEmpty else {
+			
+			completion?(RU_Error(String(key: "classifieds.error.delete")))
+			return
+		}
+        
+        Firestore.firestore().collection("classifieds").document(id).delete { error in
 			
 			if error != nil {
 				
 				completion?(RU_Error(String(key: "classifieds.error.delete")))
 			}
-			else if let self, var classifieds {
-				
-				if classifieds.contains(self) {
-					
-					classifieds.removeAll { $0.id == self.id }
-					
-					do {
-						
-						let data = try JSONEncoder().encode(classifieds)
-						UserDefaults.set(data, .classifieds)
-						
-						completion?(nil)
-					}
-					catch {
-						
-						completion?(RU_Error(String(key: "classifieds.error.delete")))
-					}
-				}
-				else {
-					
-					completion?(RU_Error(String(key: "classifieds.error.delete")))
-				}
-			}
 			else {
 				
-				completion?(RU_Error(String(key: "classifieds.error.delete")))
+				completion?(nil)
 			}
 		}
 	}

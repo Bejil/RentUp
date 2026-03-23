@@ -79,6 +79,7 @@ public class RU_Classifieds_ViewController : RU_ViewController {
         
         let alertController:RU_Alert_ViewController = .init()
         alertController.title = String(key: "classifieds.delete.alert.title")
+        alertController.add(UIImage(named: "placeholder_trash"))
         alertController.add(String(key: "classifieds.delete.alert.content"))
         let button = alertController.addButton(title: String(key: "classifieds.delete.alert.button")) { [weak self] button in
             

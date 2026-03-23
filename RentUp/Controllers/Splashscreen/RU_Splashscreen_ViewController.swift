@@ -22,7 +22,7 @@ public class RU_Splashscreen_ViewController : RU_ViewController {
         
         RU_Alert_ViewController.presentLoading { [weak self] alertController in
             
-            RU_Platform.setUp { [weak self] error in
+            RU_Platform.getAll { [weak self] error in
                 
                 if let error {
                     

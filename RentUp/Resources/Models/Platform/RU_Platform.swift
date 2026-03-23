@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import FirebaseFirestore
 
 public class RU_Platform : Codable, Equatable {
 	
@@ -40,10 +41,11 @@ public class RU_Platform : Codable, Equatable {
 	
 	public static func == (lhs: RU_Platform, rhs: RU_Platform) -> Bool {
 		
-		return lhs.id == rhs.id
+		return lhs.uuid == rhs.uuid
 	}
 	
-	public var id: String = UUID().uuidString
+    @DocumentID public var id: String?
+    public var uuid:String = UUID().uuidString
 	public var type: PlatformType? {
 		
 		didSet {
@@ -105,4 +107,5 @@ public class RU_Platform : Codable, Equatable {
 		}
 	}
 	public var commission: Commission = .init()
+    public var order:Int?
 }

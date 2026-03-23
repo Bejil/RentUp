@@ -6,6 +6,8 @@
 //
 
 import UIKit
+import FirebaseFirestore
+import FirebaseAuth
 
 extension RU_Booking {
 
@@ -39,57 +41,51 @@ extension RU_Booking {
 	
 	public static func getAll(_ completion:((Error?,[RU_Booking]?)->Void)?) {
 		
-		if let data = UserDefaults.get(.bookings) as? Data {
+		Firestore.firestore().collection("bookings").whereField("uid", isEqualTo: RU_Account.shared.user?.uid ?? "").getDocuments { querySnapshot, error in
 			
-			do {
+			if error != nil {
 				
-				let bookings = try JSONDecoder().decode([RU_Booking].self, from: data)
-				completion?(nil,bookings.sorted(by: { $0.dates.start > $1.dates.start }))
+				completion?(RU_Error(String(key: "bookings.error.getAll")), nil)
 			}
-			catch {
+			else {
 				
-				completion?(RU_Error(String(key: "bookings.error.getAll")),nil)
+                Task { @MainActor in
+                    
+                    let bookings = querySnapshot?.documents.compactMap { try? $0.data(as: RU_Booking.self) }
+                    let sorted = bookings?.sorted(by: { $0.dates.start > $1.dates.start }) ?? []
+                    completion?(nil, sorted)
+                }
 			}
-		}
-		else {
-			
-			completion?(nil,[])
 		}
 	}
 	
 	public func save(_ completion:((Error?)->Void)?) {
 		
-		RU_Booking.getAll { [weak self] error, bookings in
+		modificationDate = Date()
+		
+		let collection = Firestore.firestore().collection("bookings")
+		
+		if let id = id, !id.isEmpty {
 			
-			if error != nil {
+			do {
+				
+				try collection.document(id).setData(from: self)
+				completion?(nil)
+			}
+			catch {
 				
 				completion?(RU_Error(String(key: "bookings.error.save")))
 			}
-			else if let self, var bookings {
+		}
+		else {
+			
+			do {
 				
-				if let index = bookings.firstIndex(of: self) {
-					
-					self.modificationDate = Date()
-					bookings[index] = self
-				}
-				else {
-					
-					bookings.append(self)
-				}
-				
-				do {
-					
-					let data = try JSONEncoder().encode(bookings)
-					UserDefaults.set(data, .bookings)
-					
-					completion?(nil)
-				}
-				catch {
-					
-					completion?(RU_Error(String(key: "bookings.error.save")))
-				}
+				let documentReference = try collection.addDocument(from: self)
+				id = documentReference.documentID
+				completion?(nil)
 			}
-			else {
+			catch {
 				
 				completion?(RU_Error(String(key: "bookings.error.save")))
 			}
@@ -98,42 +94,25 @@ extension RU_Booking {
 	
 	public func delete(_ completion:((Error?)->Void)?) {
 		
-		RU_Booking.getAll { [weak self] error, bookings in
+		guard let id = id, !id.isEmpty else {
 			
-			if error != nil {
+			completion?(RU_Error(String(key: "bookings.error.delete")))
+			return
+		}
+		
+		Firestore.firestore().collection("bookings").document(id).delete { error in
+			
+            if error != nil {
 				
 				completion?(RU_Error(String(key: "bookings.error.delete")))
-			}
-			else if let self, var bookings {
-				
-				if bookings.contains(self) {
-					
-					bookings.removeAll { $0.id == self.id }
-					
-					do {
-						
-						let data = try JSONEncoder().encode(bookings)
-						UserDefaults.set(data, .bookings)
-						
-						completion?(nil)
-					}
-					catch {
-						
-						completion?(RU_Error(String(key: "bookings.error.delete")))
-					}
-				}
-				else {
-					
-					completion?(RU_Error(String(key: "bookings.error.delete")))
-				}
 			}
 			else {
 				
-				completion?(RU_Error(String(key: "bookings.error.delete")))
+				completion?(nil)
 			}
 		}
 	}
-    
+				
     public static func create() {
         
         RU_Alert_ViewController.presentLoading { controller in

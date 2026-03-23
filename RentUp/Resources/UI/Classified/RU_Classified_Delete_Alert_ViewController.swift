@@ -17,6 +17,7 @@ public class RU_Classified_Delete_Alert_ViewController : RU_Alert_ViewController
 		super.init(nibName: nibNameOrNil, bundle: nibBundleOrNil)
 		
 		title = String(key: "settings.classified.delete.alert.title")
+        add(UIImage(named: "placeholder_trash"))
 		add(String(key: "settings.classified.delete.alert.content"))
 		let deleteButton = addButton(title: String(key: "settings.classified.delete.alert.button")) { [weak self] button in
 			

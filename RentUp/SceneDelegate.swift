@@ -45,5 +45,13 @@ public class SceneDelegate: UIResponder, UIWindowSceneDelegate {
 
         UIApplication.updateTabBarBadges()
 	}
+    
+    public func scene(_ scene: UIScene, openURLContexts URLContexts: Set<UIOpenURLContext>) {
+        
+        if let context = URLContexts.first {
+            
+            RU_Firebase.shared.handle(context.url)
+        }
+    }
 }
 

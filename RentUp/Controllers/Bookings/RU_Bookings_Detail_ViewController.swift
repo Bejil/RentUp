@@ -324,7 +324,7 @@ public class RU_Bookings_Detail_ViewController : RU_ViewController {
                     
                     alertController?.close { [weak self] in
                       
-                        self?.booking = bookings?.first(where: { $0.id == self?.booking?.id })
+                        self?.booking = bookings?.first(where: { $0.uuid == self?.booking?.uuid })
                     }
                 }
             }

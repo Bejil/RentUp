@@ -7,7 +7,7 @@
 
 import UIKit
 
-public class RU_Account_PasswordValidation_StackView: UIStackView {
+public class RU_Account_PasswordValidation_StackView: RU_StackView {
 
 	public var password:String? {
 		
@@ -73,7 +73,7 @@ public class RU_Account_PasswordValidation_StackView: UIStackView {
 		label.text = string
 		label.numberOfLines = 0
 		
-		let stackView:UIStackView = .init(arrangedSubviews: [imageView,label])
+		let stackView:RU_StackView = .init(arrangedSubviews: [imageView,label])
 		stackView.axis = .horizontal
 		stackView.alignment = .center
 		stackView.spacing = UI.Margins/2

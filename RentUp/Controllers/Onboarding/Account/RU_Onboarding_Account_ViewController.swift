@@ -18,7 +18,7 @@ public class RU_Onboarding_Account_ViewController : RU_ViewController {
         titleLabel.textAlignment = .center
         titleLabel.font = Fonts.Content.Title.H1
         
-        let imageView: UIImageView = .init(image: UIImage(named: "placeholder_welcome"))
+        let imageView: UIImageView = .init(image: UIImage(named: "placeholder_account"))
         imageView.snp.makeConstraints { make in
             make.height.equalTo(10 * UI.Margins)
         }

@@ -246,7 +246,15 @@ public class RU_Bookings_ViewController: RU_ViewController {
     
     private func updateSelection() {
         
-        deleteButton.isEnabled = !(bookingsTableView.indexPathsForSelectedRows?.isEmpty ?? true)
+        let selectedBookings = bookingsTableView.indexPathsForSelectedRows?
+            .compactMap({ filteredBookings?[$0.row] }) ?? []
+        
+        deleteButton.isEnabled = !selectedBookings.isEmpty
+        
+        let totalSelected = selectedBookings
+            .compactMap({ $0.platform?.calculatePrice(for: $0)?.hostTotal })
+            .reduce(0, +)
+        deleteButton.subtitle = selectedBookings.isEmpty ? nil : String(format: "%.2f €", totalSelected)
     }
 	
 	private func updateData() {

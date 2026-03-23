@@ -11,7 +11,7 @@ import SnapKit
 public class RU_Onboarding_Welcome_ViewController : RU_ViewController {
 
 	public var completion: (() -> Void)?
-	private lazy var titleLabel: RU_Label = {
+    private lazy var titleLabel: RU_Label = {
 
 		$0.textAlignment = .center
 		$0.font = Fonts.Content.Title.H1
@@ -96,36 +96,42 @@ public class RU_Onboarding_Welcome_ViewController : RU_ViewController {
 			self?.completion?()
 		}
 
-		UIView.animate(withDuration: 0.35, animations: { [weak self] in
-
-			guard let self else { return }
-			self.view.backgroundColor = Colors.Primary
-			self.titleLabel.alpha = 0
-			self.contentLabel.alpha = 0
-			self.imageView.alpha = 0
-
-		}) { [weak self] _ in
-
-            self?.titleLabel.textColor = .white
-			self?.titleLabel.text = String(key: "onboarding.success.title")
+        let liquidFillView = RU_Liquid_View(color: Colors.Primary)
+        view.addSubview(liquidFillView)
+        liquidFillView.snp.makeConstraints { make in
+            make.edges.equalToSuperview()
+        }
+        view.sendSubviewToBack(liquidFillView)
+        
+        titleLabel.alpha = 0
+        titleLabel.textColor = .white
+        titleLabel.text = String(key: "onboarding.success.title")
+        
+        imageView.alpha = 0
+        
+        contentLabel.alpha = 0
+        contentLabel.textColor = .white
+        contentLabel.text = String(key: "onboarding.success.message")
+        
+        button.style = .inverted
+        button.title = String(key: "onboarding.success.button.done")
+        button.image = UIImage(systemName: "checkmark.circle.fill")
+        button.action = { [weak self] _ in
             
-            self?.contentLabel.textColor = .white
-			self?.contentLabel.text = String(key: "onboarding.success.message")
+            self?.completion?()
+        }
+        
+        liquidFillView.startFill(duration: 1) { [weak self] in
             
-            self?.button.style = .inverted
-			self?.button.title = String(key: "onboarding.success.button.done")
-			self?.button.image = UIImage(systemName: "checkmark.circle.fill")
-			self?.button.action = { [weak self] _ in
-
-				self?.completion?()
-			}
+            self?.view.backgroundColor = Colors.Primary
+            liquidFillView.removeFromSuperview()
+        }
+        
+        UIView.animation { [weak self] in
             
-			UIView.animate(withDuration: 0.3) {
-
-				self?.titleLabel.alpha = 1
-				self?.contentLabel.alpha = 1
-				self?.imageView.alpha = 1
-			}
-		}
+            self?.titleLabel.alpha = 1
+            self?.contentLabel.alpha = 1
+            self?.imageView.alpha = 1
+        }
 	}
 }

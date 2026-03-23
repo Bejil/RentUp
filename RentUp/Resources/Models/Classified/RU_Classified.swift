@@ -6,12 +6,14 @@
 //
 
 import Foundation
+import FirebaseFirestore
+import FirebaseAuth
 
 public class RU_Classified : Codable, Equatable {
 	
 	public static func == (lhs: RU_Classified, rhs: RU_Classified) -> Bool {
 		
-		return lhs.id == rhs.id
+		return lhs.uuid == rhs.uuid
 	}
 	
 	public class Configuration : Codable {
@@ -54,7 +56,9 @@ public class RU_Classified : Codable, Equatable {
 		public var travelers:Traveler = .init()
 	}
 	
-	public var id:String = UUID().uuidString
+    @DocumentID public var id: String?
+    public var uuid:String = UUID().uuidString
+    public var uid:String? = RU_Account.shared.user?.uid
 	public var creationDate:Date = .init()
 	public var modificationDate:Date = .init()
 	public var name:String?

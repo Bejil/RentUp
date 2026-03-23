@@ -25,6 +25,16 @@ public class RU_Account: NSObject {
         
         return Auth.auth().currentUser
     }
+    public var email:String? {
+        
+        if let email = user?.email, !email.isEmpty {
+            return email
+        }
+        
+        // Fallback: providerData peut parfois être la seule source disponible
+        return user?.providerData.first(where: { $0.providerID == SignInType.Email.rawValue })?.email
+        ?? user?.providerData.first?.email
+    }
     public var isLoggedIn:Bool {
         
         return user != nil
@@ -90,6 +100,15 @@ public class RU_Account: NSObject {
         
         Auth.auth().signIn(withEmail: email ?? "", password: password ?? "") { authDataResult, error in
             
+            completion?(error)
+        }
+    }
+    
+    public func reload(_ completion:Error_Completion) {
+        
+        user?.reload { error in
+            
+            NotificationCenter.post(.updateAccount)
             completion?(error)
         }
     }
@@ -240,7 +259,7 @@ public class RU_Account: NSObject {
     
     public func reauthenticate(with password:String?, _ completion:Error_Completion) {
         
-        let credential = EmailAuthProvider.credential(withEmail: user?.email ?? "", password: password ?? "")
+        let credential = EmailAuthProvider.credential(withEmail: email ?? "", password: password ?? "")
         
         user?.reauthenticate(with: credential) { authDataResult, error in
             
@@ -252,8 +271,15 @@ public class RU_Account: NSObject {
         
         Auth.auth().currentUser?.updateEmail(to: email ?? "") { error in
             
-            NotificationCenter.post(.updateAccount)
-            completion?(error)
+            if error == nil {
+                
+                self.reload(completion)
+            }
+            else {
+                
+                NotificationCenter.post(.updateAccount)
+                completion?(error)
+            }
         }
     }
     
@@ -266,42 +292,21 @@ public class RU_Account: NSObject {
         }
     }
     
-    private func update(photoURL:URL, _ completion:Error_Completion) {
-        
-        let changeRequest = Auth.auth().currentUser?.createProfileChangeRequest()
-        changeRequest?.photoURL = photoURL
-        changeRequest?.commitChanges(completion: completion)
-    }
-    
     public func delete(_ completion:Error_Completion) {
         
-        Firestore.firestore().collection("users").whereField("uid", isEqualTo: user?.uid ?? "").getDocuments { querySnapshot, error in
+        reset { [weak self] error in
             
-            querySnapshot?.documents.compactMap({ $0.reference }).forEach({
+            if let error {
                 
-                $0.delete()
-            })
-        }
-        
-        Firestore.firestore().collection("classifieds").whereField("uid", isEqualTo: user?.uid ?? "").getDocuments { querySnapshot, error in
-            
-            querySnapshot?.documents.compactMap({ $0.reference }).forEach({
+                completion?(error)
+            }
+            else {
                 
-                $0.delete()
-            })
-        }
-        
-        Firestore.firestore().collection("bookings").whereField("uid", isEqualTo: user?.uid ?? "").getDocuments { querySnapshot, error in
-            
-            querySnapshot?.documents.compactMap({ $0.reference }).forEach({
-                
-                $0.delete()
-            })
-        }
-        
-        user?.delete() { error in
-            
-            completion?(error)
+                self?.user?.delete() { error in
+                    
+                    completion?(error)
+                }
+            }
         }
     }
 }

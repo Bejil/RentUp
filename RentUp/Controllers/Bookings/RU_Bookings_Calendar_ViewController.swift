@@ -375,8 +375,8 @@ private final class BookingDayView: UIView, CalendarItemViewRepresentable {
 	typealias Content = BookingDayViewContent
 
 	private let backgroundCircleView = UIView()
-	private let contentStackView = UIStackView()
-	private let bulletsStackView = UIStackView()
+	private let contentStackView = RU_StackView()
+	private let bulletsStackView = RU_StackView()
 	private let label = UILabel()
 
     private static let bulletSize: CGFloat = UI.Margins/3

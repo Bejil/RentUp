@@ -64,6 +64,29 @@ extension String {
         return NSPredicate(format: "SELF MATCHES %@", emailRegex).evaluate(with: self)
     }
     
+    public static var randomPassword:String {
+        
+        let lowercase = Array("abcdefghijklmnopqrstuvwxyz")
+        let uppercase = Array("ABCDEFGHIJKLMNOPQRSTUVWXYZ")
+        let digits = Array("0123456789")
+        let specials = Array("!&^%$#@()/")
+        
+        let length = Int.random(in: 8...15)
+        
+        var characters: [Character] = []
+        characters.append(lowercase.randomElement()!)
+        characters.append(uppercase.randomElement()!)
+        characters.append(digits.randomElement()!)
+        characters.append(specials.randomElement()!)
+        
+        let all = lowercase + uppercase + digits + specials
+        while characters.count < length {
+            characters.append(all.randomElement()!)
+        }
+        
+        return String(characters.shuffled())
+    }
+    
     public var isValidPassword:Bool {
         
         return isValidPasswordMinCharacters && isValidPasswordUppercaseCharacter && isValidPasswordLowercaseCharacter && isValidPasswordSpecialCharacter && isValidPasswordNumericCharacter

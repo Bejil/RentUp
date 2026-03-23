@@ -56,7 +56,7 @@ public class RU_Section_Row_StackView : RU_StackView {
 			
 			titleLabel.font = isHighlighted ? Fonts.Content.Title.H4 : Fonts.Content.Text.Regular
 			
-			if let label = view as? RU_Label, !(label is RU_Platform_Label) {
+			if let label = view as? RU_Label {
 				
 				label.textAlignment = .right
 				

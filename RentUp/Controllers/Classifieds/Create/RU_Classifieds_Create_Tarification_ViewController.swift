@@ -88,6 +88,7 @@ navigationItem.title = String(key: "classified.create.step.3")
         stackView.addGestureRecognizer(UITapGestureRecognizer(block: { [weak self] _ in
             
             let alertController:RU_Classified_Platform_Alert_ViewController = .init()
+            alertController.isEditing = true
             alertController.classified = self?.classified
             alertController.platform = platform
             alertController.completion = { [weak self] in
@@ -163,6 +164,7 @@ extension RU_Classifieds_Create_Tarification_ViewController : UITableViewDelegat
         let platform = classified?.tarification[indexPath.row].platform
         
         let alertController:RU_Classified_Platform_Alert_ViewController = .init()
+        alertController.isEditing = true
         alertController.classified = classified
         alertController.platform = platform
         alertController.completion = { [weak self] in
@@ -170,6 +172,11 @@ extension RU_Classifieds_Create_Tarification_ViewController : UITableViewDelegat
             self?.tarificationTableView.reloadData()
         }
         alertController.present(as: .Sheet)
+    }
+    
+    public func tableView(_ tableView: UITableView, accessoryButtonTappedForRowWith indexPath: IndexPath) {
+        
+        tableView.delegate?.tableView?(tableView, didSelectRowAt: indexPath)
     }
 }
 

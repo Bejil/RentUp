@@ -45,25 +45,33 @@ public class RU_Reporting_Detail_Profitability_ViewController: RU_Reporting_Deta
                 let end = min(b.dates.end, monthEnd)
                 return max(0, calendar.dateComponents([.day], from: start, to: end).day ?? 0)
             }
+            func bookingNights(_ b: RU_Booking) -> Int {
+                max(0, calendar.dateComponents([.day], from: b.dates.start, to: b.dates.end).day ?? 0)
+            }
+            func proratedHostTotal(_ b: RU_Booking) -> Double {
+                let monthNights = nightsInMonth(b)
+                guard monthNights > 0 else { return 0 }
+                let totalNights = bookingNights(b)
+                guard totalNights > 0 else { return 0 }
+                guard let hostTotal = b.platform?.calculatePrice(for: b)?.hostTotal else { return 0 }
+                return hostTotal * Double(monthNights) / Double(totalNights)
+            }
+            func uniqueClassifiedFees(for bookings: [RU_Booking]) -> Double {
+                var classifieds: [RU_Classified] = []
+                bookings.compactMap({ $0.classified }).forEach {
+                    if !classifieds.contains($0) {
+                        classifieds.append($0)
+                    }
+                }
+                return Double(classifieds.compactMap({ $0.fees }).reduce(0, +))
+            }
             
             // Charges : une seule fois par classified par mois (ensemble des classifieds ayant une réservation dans le mois)
             func chargesActual() -> Double {
-                var classifiedFees: [String: Int] = [:]
-                for b in pastBookings {
-                    if nightsInMonth(b) > 0, let c = b.classified {
-                        classifiedFees[c.id] = c.fees ?? 0
-                    }
-                }
-                return Double(classifiedFees.values.reduce(0, +))
+                return uniqueClassifiedFees(for: pastBookings.filter({ nightsInMonth($0) > 0 }))
             }
             func chargesForecast() -> Double {
-                var classifiedFees: [String: Int] = [:]
-                for b in filteredBookings {
-                    if nightsInMonth(b) > 0, let c = b.classified {
-                        classifiedFees[c.id] = c.fees ?? 0
-                    }
-                }
-                return Double(classifiedFees.values.reduce(0, +))
+                return uniqueClassifiedFees(for: filteredBookings.filter({ nightsInMonth($0) > 0 }))
             }
             
             // Actuel : uniquement pour les mois <= aujourd'hui (période : plus ancienne résa → aujourd'hui)
@@ -72,9 +80,7 @@ public class RU_Reporting_Detail_Profitability_ViewController: RU_Reporting_Deta
             var revenueActual: Double = 0
             if isInActualPeriod {
                 for b in pastBookings {
-                    if nightsInMonth(b) > 0, let calc = b.platform?.calculatePrice(for: b) {
-                        revenueActual += calc.hostTotal
-                    }
+                    revenueActual += proratedHostTotal(b)
                 }
             }
             let chargesActual = isInActualPeriod ? chargesActual() : 0
@@ -84,9 +90,7 @@ public class RU_Reporting_Detail_Profitability_ViewController: RU_Reporting_Deta
             // Prévisionnel : toutes les réservations sur la période (plus ancienne → plus lointaine)
             var revenueForecast: Double = 0
             for b in filteredBookings {
-                if nightsInMonth(b) > 0, let calc = b.platform?.calculatePrice(for: b) {
-                    revenueForecast += calc.hostTotal
-                }
+                revenueForecast += proratedHostTotal(b)
             }
             let chargesForecast = chargesForecast()
             let forecast = chargesForecast > 0 ? revenueForecast / chargesForecast * 100 : (revenueForecast > 0 ? 100 : 0)

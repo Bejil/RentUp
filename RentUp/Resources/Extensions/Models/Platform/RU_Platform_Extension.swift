@@ -6,6 +6,7 @@
 //
 
 import UIKit
+import FirebaseFirestore
 
 extension RU_Platform {
 	
@@ -28,69 +29,17 @@ extension RU_Platform {
 	
 	public static var all: [RU_Platform]?
 	
-	public static func setUp(_ completion:((Error?)->Void)?) {
-		
-		if let data = UserDefaults.get(.platforms) as? Data, let platforms = try? JSONDecoder().decode([RU_Platform].self, from: data) {
-			
-			all = platforms
-			completion?(nil)
-		}
-		else {
-			
-			let airbnb:RU_Platform = .init()
-			airbnb.type = .airbnb
-			
-			let booking:RU_Platform = .init()
-			booking.type = .booking
-			
-			let abritel:RU_Platform = .init()
-			abritel.type = .abritel
-			
-			let platforms:[RU_Platform] = [airbnb, booking, abritel]
-			
-			do {
-				
-				let data = try JSONEncoder().encode(platforms)
-				UserDefaults.set(data, .platforms)
-				
-				all = platforms
-				
-				completion?(nil)
-			}
-			catch {
-				
-				completion?(error)
-			}
-		}
-	}
-	
-	public func save(_ completion:((Error?)->Void)?) {
-		
-		var platforms = RU_Platform.all
-		
-		if let index = platforms?.firstIndex(of: self) {
-			
-			platforms?[index] = self
-		}
-		else {
-			
-			platforms?.append(self)
-		}
-		
-		do {
-			
-			let data = try JSONEncoder().encode(platforms)
-			UserDefaults.set(data, .platforms)
-			
-			RU_Platform.all = platforms
-			
-			completion?(nil)
-		}
-		catch {
-			
-			completion?(error)
-		}
-	}
+    public static func getAll(_ completion:((Error?)->Void)?) {
+        
+        Firestore.firestore().collection("platforms").getDocuments { querySnapshot, error in
+            
+            Task { @MainActor in
+                
+                all = querySnapshot?.documents.compactMap({ try? $0.data(as: RU_Platform.self) }).sorted(by: { $0.order ?? 0 < $1.order ?? 0 })
+                completion?(error)
+            }
+        }
+    }
 	
 	public var detail: String {
 		

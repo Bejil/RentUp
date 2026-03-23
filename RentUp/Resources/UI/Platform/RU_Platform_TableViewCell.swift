@@ -28,7 +28,7 @@ public class RU_Platform_TableViewCell : RU_TableViewCell {
 		
 		super.init(style: style, reuseIdentifier: reuseIdentifier)
 		
-		accessoryType = .disclosureIndicator
+		accessoryType = .detailButton
 		
 		let stackView:RU_StackView = .init(arrangedSubviews: [platformLabel,detailsLabel])
 		stackView.axis = .horizontal

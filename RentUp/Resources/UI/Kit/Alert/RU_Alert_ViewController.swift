@@ -385,6 +385,32 @@ public class RU_Alert_ViewController : UIViewController {
 		guard let keyboardFrame = notification.userInfo?[UIResponder.keyboardFrameEndUserInfoKey] as? CGRect,
 			  let duration = notification.userInfo?[UIResponder.keyboardAnimationDurationUserInfoKey] as? Double else { return }
 		
+		if style == .Sheet {
+			
+			// En mode sheet, on conserve la hauteur et on pousse la vue vers le haut.
+			let keyboardFrameInView = view.convert(keyboardFrame, from: nil)
+			let desiredBottom = keyboardFrameInView.minY - UI.Margins
+			let overlap = containerView.frame.maxY - desiredBottom
+			
+			var translationY: CGFloat = 0
+			if overlap > 0 {
+				let minTop = view.safeAreaInsets.top + 2 * UI.Margins
+				let maxAllowedPush = max(0, containerView.frame.minY - minTop)
+				translationY = -min(overlap, maxAllowedPush)
+			}
+			
+			UIView.animate(withDuration: duration) {
+				
+				self.containerView.transform = .init(translationX: 0, y: translationY)
+				self.view.layoutIfNeeded()
+				
+			} completion: { _ in
+				
+				self.scrollToFirstResponder()
+			}
+			return
+		}
+		
 		let keyboardHeight = keyboardFrame.height
 		let safeAreaHeight = view.safeAreaLayoutGuide.layoutFrame.height
 		let availableHeight = safeAreaHeight - keyboardHeight - (4 * UI.Margins)

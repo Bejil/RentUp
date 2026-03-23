@@ -6,6 +6,8 @@
 //
 
 import Foundation
+import FirebaseAuth
+import FirebaseFirestore
 
 public class RU_Booking : Codable, Equatable {
     
@@ -19,7 +21,7 @@ public class RU_Booking : Codable, Equatable {
 	
 	public static func == (lhs: RU_Booking, rhs: RU_Booking) -> Bool {
 		
-		return lhs.id == rhs.id
+		return lhs.uuid == rhs.uuid
 	}
 	
 	public class Dates : Codable {
@@ -41,7 +43,9 @@ public class RU_Booking : Codable, Equatable {
         public var compensation:Int?
     }
 	
-	public var id:String = UUID().uuidString
+    @DocumentID public var id: String?
+    public var uuid:String = UUID().uuidString
+    public var uid:String? = RU_Account.shared.user?.uid
 	public var creationDate:Date = .init()
 	public var modificationDate:Date = .init()
 	public var platform:RU_Platform?

@@ -7,6 +7,7 @@
 
 import UIKit
 import SnapKit
+import UniformTypeIdentifiers
 
 public class RU_Settings_ViewController: RU_ViewController {
 	
@@ -52,8 +53,19 @@ public class RU_Settings_ViewController: RU_ViewController {
 		
         view.addSubview(contentScrollView)
 		contentScrollView.snp.makeConstraints { make in
-			make.edges.equalToSuperview()
+            make.edges.equalToSuperview()
 		}
+        
+        let accountSectionTitleStackView:RU_Section_StackView = .init()
+        accountSectionTitleStackView.title = String(key: "settings.account.section.title")
+        accountSectionTitleStackView.subtitle = String(key: "settings.account.section.subtitle")
+        let accountButton:RU_Button = .init(String(key: "settings.account.button")) { _ in
+            
+            RU_Account_Alert_ViewController().present(as: .Sheet)
+        }
+        accountButton.image = UIImage(systemName: "person.crop.circle")
+        accountSectionTitleStackView.addArrangedSubview(accountButton)
+        contentStackView.addArrangedSubview(accountSectionTitleStackView)
 		
 		let platformsSectionTitleStackView:RU_Section_StackView = .init()
 		platformsSectionTitleStackView.title = String(key: "settings.platforms.section.title")
@@ -61,24 +73,25 @@ public class RU_Settings_ViewController: RU_ViewController {
 		platformsSectionTitleStackView.addArrangedSubview(platformsTableView)
 		contentStackView.addArrangedSubview(platformsSectionTitleStackView)
 		
-		// MARK: - About Section
-		let aboutSectionStackView:RU_Section_StackView = .init()
-		aboutSectionStackView.title = String(key: "settings.about.section.title")
-		aboutSectionStackView.subtitle = String(key: "settings.about.section.subtitle")
-		
-		let versionLabel:RU_Label = .init()
-		versionLabel.text = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String
-		let versionRow:RU_Section_Row_StackView = .init()
-		versionRow.image = UIImage(systemName: "info.circle.fill")
-		versionRow.title = String(key: "settings.about.version")
-		versionRow.view = versionLabel
-		aboutSectionStackView.addArrangedSubview(versionRow)
-		contentStackView.addArrangedSubview(aboutSectionStackView)
+		let dataSectionStackView:RU_Section_StackView = .init()
+        dataSectionStackView.title = String(key: "settings.data.section.title")
+        dataSectionStackView.subtitle = String(key: "settings.data.section.subtitle")
+        
+        let importButton:RU_Button = .init(String(key: "settings.data.import.button")) { _ in
+            
+            let picker = UIDocumentPickerViewController(forOpeningContentTypes: [.commaSeparatedText, .plainText], asCopy: true)
+            picker.delegate = self
+            picker.allowsMultipleSelection = false
+            self.present(picker, animated: true)
+        }
+        importButton.image = UIImage(systemName: "square.and.arrow.down")
+        dataSectionStackView.addArrangedSubview(importButton)
 		
 		let resetButton:RU_Button = .init(String(key: "settings.reset.button")) { _ in
 			
 			let alertController:RU_Alert_ViewController = .init()
 			alertController.title = String(key: "settings.reset.alert.title")
+            alertController.add(UIImage(named: "placeholder_trash"))
 			alertController.add(String(key: "settings.reset.alert.content"))
 			let button = alertController.addButton(title: String(key: "settings.reset.alert.button")) { [weak self] _ in
 				
@@ -93,13 +106,24 @@ public class RU_Settings_ViewController: RU_ViewController {
 		}
 		resetButton.type = .delete
 		resetButton.image = UIImage(systemName: "trash")
-		contentStackView.addArrangedSubview(resetButton)
-		
-		NotificationCenter.add(.updatePlatforms) { [weak self] _ in
-			
-			self?.platformsTableView.reloadData()
-		}
+        dataSectionStackView.addArrangedSubview(resetButton)
         
+        contentStackView.addArrangedSubview(dataSectionStackView)
+        
+        // MARK: - About Section
+        let aboutSectionStackView:RU_Section_StackView = .init()
+        aboutSectionStackView.title = String(key: "settings.about.section.title")
+        aboutSectionStackView.subtitle = String(key: "settings.about.section.subtitle")
+        
+        let versionLabel:RU_Label = .init()
+        versionLabel.text = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String
+        let versionRow:RU_Section_Row_StackView = .init()
+        versionRow.image = UIImage(systemName: "info.circle.fill")
+        versionRow.title = String(key: "settings.about.version")
+        versionRow.view = versionLabel
+        aboutSectionStackView.addArrangedSubview(versionRow)
+        contentStackView.addArrangedSubview(aboutSectionStackView)
+		 
         NotificationCenter.add(.updateAccount) { [weak self] _ in
             
             self?.updateAccount()
@@ -132,7 +156,7 @@ public class RU_Settings_ViewController: RU_ViewController {
 		
 		RU_Alert_ViewController.presentLoading { [weak self] alertController in
 			
-			RU_Platform.setUp { [weak self] error in
+			RU_Platform.getAll { [weak self] error in
 				
 				alertController?.close { [weak self] in
 					
@@ -145,16 +169,294 @@ public class RU_Settings_ViewController: RU_ViewController {
 					}
 					else {
 						
-						NotificationCenter.post(.updatePlatforms)
 						NotificationCenter.post(.updateClassifieds)
 						NotificationCenter.post(.updateBookings)
                         
-                        UIApplication.reset()
+                        RU_Account.shared.reset { error in
+                            
+                            if let error {
+                                
+                                RU_Alert_ViewController.present(error)
+                            }
+                            else {
+                                
+                                UIApplication.reset()
+                            }
+                        }
 					}
 				}
 			}
 		}
 	}
+    
+    private func importBookings(from url: URL) {
+        
+        RU_Alert_ViewController.presentLoading { [weak self] alertController in
+            
+            guard let self else { return }
+            let group = DispatchGroup()
+            var loadError: Error?
+            
+            group.enter()
+            RU_Platform.getAll { error in
+                if loadError == nil, let error { loadError = error }
+                group.leave()
+            }
+            
+            group.enter()
+            RU_Classified.getAll { error, classifieds in
+                if loadError == nil, let error { loadError = error }
+                self.importClassifieds = classifieds ?? []
+                group.leave()
+            }
+            
+            group.notify(queue: .main) {
+                
+                if let loadError {
+                    alertController?.close {
+                        RU_Alert_ViewController.present(loadError)
+                    }
+                    return
+                }
+                
+                guard !(self.importClassifieds?.isEmpty ?? true) else {
+                    alertController?.close {
+                        RU_Alert_ViewController.present(RU_Error("Aucune annonce disponible pour l'import."))
+                    }
+                    return
+                }
+                
+                alertController?.close { [weak self] in
+                    
+                    guard let self else { return }
+                    let selectAlertController: RU_Classified_Select_Alert_ViewController = .init()
+                    selectAlertController.classifieds = self.importClassifieds
+                    selectAlertController.selectHandler = { [weak self] selectedClassified in
+                        
+                        guard let self, let selectedClassified else { return }
+                        self.importBookings(from: url, for: selectedClassified)
+                    }
+                    selectAlertController.present(as: .Sheet)
+                }
+            }
+        }
+    }
+    
+    private var importClassifieds: [RU_Classified]?
+    
+    private func importBookings(from url: URL, for selectedClassified: RU_Classified) {
+        
+        let parseResult = parseCSV(url: url, selectedClassified: selectedClassified)
+        if let error = parseResult.error {
+            RU_Alert_ViewController.present(error)
+            return
+        }
+        
+        let bookings = parseResult.bookings
+        guard !bookings.isEmpty else {
+            RU_Alert_ViewController.present(RU_Error("Aucune réservation valide à importer."))
+            return
+        }
+        
+        RU_Alert_ViewController.presentLoading { alertController in
+            
+            let saveGroup = DispatchGroup()
+            var saveError: Error?
+            
+            bookings.forEach { booking in
+                saveGroup.enter()
+                booking.save { error in
+                    if saveError == nil, let error { saveError = error }
+                    saveGroup.leave()
+                }
+            }
+            
+            saveGroup.notify(queue: .main) {
+                alertController?.close {
+                    if let saveError {
+                        RU_Alert_ViewController.present(saveError)
+                    }
+                    else {
+                        NotificationCenter.post(.updateBookings)
+                        let alertController = RU_Alert_ViewController.present(RU_Error("\(bookings.count) réservation(s) importée(s)."))
+                        alertController.title = String(key: "Félicitations")
+                    }
+                }
+            }
+        }
+    }
+    
+    private func parseCSV(url: URL, selectedClassified: RU_Classified) -> (bookings: [RU_Booking], error: Error?) {
+        
+        let hasAccess = url.startAccessingSecurityScopedResource()
+        defer {
+            if hasAccess {
+                url.stopAccessingSecurityScopedResource()
+            }
+        }
+        
+        guard let content = try? String(contentsOf: url, encoding: .utf8) else {
+            return ([], RU_Error("Impossible de lire le fichier CSV."))
+        }
+        
+        let lines = content
+            .replacingOccurrences(of: "\r\n", with: "\n")
+            .replacingOccurrences(of: "\r", with: "\n")
+            .split(separator: "\n")
+            .map { String($0) }
+            .filter { !$0.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }
+        
+        guard let headerLine = lines.first else {
+            return ([], RU_Error("Le fichier CSV est vide."))
+        }
+        
+        let header = parseCSVRow(headerLine).map(normalizeHeader)
+        let expected = ["arrivee", "depart", "indemnite", "menage", "plateforme", "pers.", "configuration", "commentaire"]
+        guard header == expected else {
+            return ([], RU_Error("Format CSV invalide. En-tête attendu: Arrivée,Départ,Indemnité,Ménage,Plateforme,Pers.,Configuration,Commentaire"))
+        }
+        
+        let dateFormatter = DateFormatter()
+        dateFormatter.locale = Locale(identifier: "fr_FR")
+        dateFormatter.dateFormat = "dd/MM/yyyy"
+        
+        var bookings: [RU_Booking] = []
+        
+        for line in lines.dropFirst() {
+            let columns = parseCSVRow(line)
+            if columns.count < 8 { continue }
+            
+            guard let start = dateFormatter.date(from: columns[0].trimmingCharacters(in: .whitespacesAndNewlines)),
+                  let end = dateFormatter.date(from: columns[1].trimmingCharacters(in: .whitespacesAndNewlines)) else { continue }
+            
+            let platform = platformFromString(columns[4])
+            let travelers = Int(columns[5].trimmingCharacters(in: .whitespacesAndNewlines)) ?? 1
+            let beds = bedsFromConfiguration(columns[6])
+            
+            guard let platform else { continue }
+            
+            let booking = RU_Booking()
+            booking.dates.start = start
+            booking.dates.end = end
+            booking.platform = platform
+            booking.travelers.adults = max(1, travelers)
+            booking.travelers.children = 0
+            booking.travelers.babies = 0
+            booking.beds = beds
+            booking.classified = selectedClassified
+            booking.costs.compensation = parseCurrency(columns[2])
+            booking.costs.cleaning = parseCurrency(columns[3])
+            booking.comment = {
+                let value = columns[7].trimmingCharacters(in: .whitespacesAndNewlines)
+                return value.isEmpty ? nil : value
+            }()
+            
+            if booking.dates.end > booking.dates.start {
+                bookings.append(booking)
+            }
+        }
+        
+        return (bookings, nil)
+    }
+    
+    private func parseCSVRow(_ line: String) -> [String] {
+        
+        var values: [String] = []
+        var current = ""
+        var isInQuotes = false
+        
+        for character in line {
+            if character == "\"" {
+                isInQuotes.toggle()
+                continue
+            }
+            
+            if character == ",", isInQuotes == false {
+                values.append(current)
+                current = ""
+            }
+            else {
+                current.append(character)
+            }
+        }
+        
+        values.append(current)
+        return values
+    }
+    
+    private func normalizeHeader(_ value: String) -> String {
+        
+        return value
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+            .folding(options: .diacriticInsensitive, locale: .current)
+            .lowercased()
+    }
+    
+    private func parseCurrency(_ value: String) -> Int {
+        
+        let cleaned = value
+            .replacingOccurrences(of: "\u{00A0}", with: " ")
+            .replacingOccurrences(of: "€", with: "")
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+        
+        let normalized = cleaned.replacingOccurrences(of: ",", with: ".")
+        let filtered = normalized.filter { "0123456789.-".contains($0) }
+        let amount = Double(filtered) ?? 0
+        return Int(amount.rounded())
+    }
+    
+    private func platformFromString(_ value: String) -> RU_Platform? {
+        
+        let normalized = value
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+            .folding(options: .diacriticInsensitive, locale: .current)
+            .lowercased()
+        
+        let type: RU_Platform.PlatformType?
+        if normalized.contains("airbnb") {
+            type = .airbnb
+        }
+        else if normalized.contains("booking") {
+            type = .booking
+        }
+        else if normalized.contains("abritel") {
+            type = .abritel
+        }
+        else {
+            type = nil
+        }
+        
+        guard let type else { return nil }
+        
+        if let existing = RU_Platform.all?.first(where: { $0.type == type }) {
+            return existing
+        }
+        
+        let platform = RU_Platform()
+        platform.type = type
+        return platform
+    }
+    
+    private func bedsFromConfiguration(_ value: String) -> RU_Classified.Configuration.Beds {
+        
+        let normalized = value
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+            .folding(options: .diacriticInsensitive, locale: .current)
+            .lowercased()
+        
+        let beds: RU_Classified.Configuration.Beds = .init()
+        beds.doubles = normalized.contains("double") ? 1 : 0
+        beds.singles = normalized.contains("simple") || normalized.contains("single") ? 1 : 0
+        beds.babies = normalized.contains("bebe") || normalized.contains("baby") ? 1 : 0
+        
+        if (beds.doubles ?? 0) == 0 && (beds.singles ?? 0) == 0 {
+            // Garantit canSave du booking si la colonne "Configuration" est incomplète.
+            beds.doubles = 1
+        }
+        
+        return beds
+    }
+    
 }
 
 extension RU_Settings_ViewController : UITableViewDelegate, UITableViewDataSource {
@@ -175,10 +477,24 @@ extension RU_Settings_ViewController : UITableViewDelegate, UITableViewDataSourc
 	public func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
 		
 		tableView.deselectRow(at: indexPath, animated: true)
-		
-		let viewController:RU_Settings_Platform_ViewController = .init()
-		viewController.platform = RU_Platform.all?[indexPath.row]
-		navigationController?.pushViewController(viewController, animated: true)
+        
+        let alertController:RU_Platform_Alert_ViewController = .init()
+        alertController.platform = RU_Platform.all?[indexPath.row]
+        alertController.present(as: .Sheet)
 	}
+    
+    public func tableView(_ tableView: UITableView, accessoryButtonTappedForRowWith indexPath: IndexPath) {
+        
+        tableView.delegate?.tableView?(tableView, didSelectRowAt: indexPath)
+    }
+}
+
+extension RU_Settings_ViewController: UIDocumentPickerDelegate {
+    
+    public func documentPicker(_ controller: UIDocumentPickerViewController, didPickDocumentsAt urls: [URL]) {
+        
+        guard let url = urls.first else { return }
+        importBookings(from: url)
+    }
 }
 

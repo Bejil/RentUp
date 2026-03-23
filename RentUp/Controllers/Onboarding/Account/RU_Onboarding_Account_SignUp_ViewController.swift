@@ -19,7 +19,7 @@ public class RU_Onboarding_Account_SignUp_ViewController : RU_ViewController {
         
         let placeholderView = view.showPlaceholder()
         placeholderView.isCentered = false
-        placeholderView.image = UIImage(named: "placeholder_welcome")
+        placeholderView.image = UIImage(named: "placeholder_signUp")
         placeholderView.addLabel(String(key: "onboarding.signUp.label"))
         
         let emailTextField:RU_TextField = .init()

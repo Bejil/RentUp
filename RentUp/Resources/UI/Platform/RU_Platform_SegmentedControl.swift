@@ -39,10 +39,10 @@ public class RU_Platform_SegmentedControl : RU_SegmentedControl {
 		
 		addAction(.init(handler: { [weak self] _ in
 			
-			if let selectedSegmentIndex = self?.selectedSegmentIndex {
-				
-				self?.selectedSegmentTintColor = RU_Platform.all?[selectedSegmentIndex].type?.backgroundColor
-			}
+            if let platforms = self?.classified?.tarification.compactMap({ $0.platform }), let selectedSegmentIndex = self?.selectedSegmentIndex {
+                
+                self?.selectedSegmentTintColor = platforms[selectedSegmentIndex].type?.backgroundColor
+            }
 			
 		}), for: .valueChanged)
 	}

@@ -77,11 +77,11 @@ public class RU_ViewController: UIViewController {
 		tapGestureRecognizer.cancelsTouchesInView = false
 		view.addGestureRecognizer(tapGestureRecognizer)
         
-        view.addSubview(closeButton)
-        closeButton.snp.makeConstraints { make in
-            
-            make.top.left.equalTo(view.safeAreaLayoutGuide).inset(UI.Margins)
-        }
+//        view.addSubview(closeButton)
+//        closeButton.snp.makeConstraints { make in
+//            
+//            make.top.left.equalTo(view.safeAreaLayoutGuide).inset(UI.Margins)
+//        }
 	}
 	
 	public override func viewWillDisappear(_ animated: Bool) {
@@ -95,7 +95,7 @@ public class RU_ViewController: UIViewController {
         
         super.viewDidLayoutSubviews()
         
-        view.bringSubviewToFront(closeButton)
+        //view.bringSubviewToFront(closeButton)
     }
 	
 	public func close() {

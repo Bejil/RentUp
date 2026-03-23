@@ -129,7 +129,7 @@ public class RU_Classifieds_Comparator_ViewController : RU_ViewController {
 		} else if let best = results.max(by: { $0.hostTotal1 < $1.hostTotal1 }) {
 			let refName = best.platform.type?.name ?? ""
 			var hasGap = false
-			for r in results where r.platform.id != best.platform.id {
+			for r in results where r.platform.uuid != best.platform.uuid {
 				let diff = best.hostTotal1 - r.hostTotal1
 				if diff > 0.5 {
 					hasGap = true

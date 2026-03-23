@@ -17,8 +17,8 @@ public class RU_Firebase {
 		FirebaseApp.configure()
 	}
     
-    public func handle(_ url:URL) -> Bool {
+    public func handle(_ url:URL) {
         
-        return GIDSignIn.sharedInstance.handle(url)
+        GIDSignIn.sharedInstance.handle(url)
     }
 }
