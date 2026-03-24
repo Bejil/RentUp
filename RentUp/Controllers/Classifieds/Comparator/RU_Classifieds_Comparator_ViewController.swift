@@ -43,7 +43,7 @@ public class RU_Classifieds_Comparator_ViewController : RU_ViewController {
 		
 		view.addSubview(scrollView)
 		scrollView.snp.makeConstraints { make in
-			make.edges.equalTo(view.safeAreaLayoutGuide)
+			make.edges.equalToSuperview()
 		}
 		
 		scrollView.addSubview(contentStackView)

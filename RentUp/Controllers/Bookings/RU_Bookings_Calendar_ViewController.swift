@@ -13,6 +13,8 @@ public class RU_Bookings_Calendar_ViewController: RU_ViewController {
 	
 	// MARK: - Properties
 	
+    private let maxVisibleLanesPerDay = 3
+    
 	public var bookings: [RU_Booking]? {
 		didSet {
 			updateCalendar()
@@ -62,16 +64,41 @@ public class RU_Bookings_Calendar_ViewController: RU_ViewController {
 		
 		let calendar = Calendar.current
 		guard let selectedDate = calendar.date(from: DateComponents(year: day.month.year, month: day.month.month, day: day.day)) else { return }
+        let selectedDay = calendar.startOfDay(for: selectedDate)
 		
-		// Trouver la réservation correspondant à cette date
-		if let booking = bookings?.first(where: { booking in
+		// Trouver TOUTES les réservations correspondant à cette date
+        let bookingsForDay = bookings?.filter({ booking in
 			let start = calendar.startOfDay(for: booking.dates.start)
 			let end = calendar.startOfDay(for: booking.dates.end)
-			let selected = calendar.startOfDay(for: selectedDate)
-			return selected >= start && selected <= end
-		}) {
+			return selectedDay >= start && selectedDay <= end
+		}) ?? []
+        
+        guard !bookingsForDay.isEmpty else { return }
+        
+        if bookingsForDay.count == 1, let booking = bookingsForDay.first {
 			didSelectBooking?(booking)
+            return
 		}
+        
+        let formatter = DateFormatter()
+        formatter.locale = Locale(identifier: "fr_FR")
+        formatter.dateFormat = "dd/MM"
+        
+        let alert: RU_Alert_ViewController = .init()
+        alert.title = String(key: "bookings.calendar.overview.title")
+        
+        bookingsForDay.sorted(by: { $0.dates.start < $1.dates.start }).forEach { booking in
+            let platformName = booking.platform?.type?.name ?? "-"
+            let range = "\(formatter.string(from: booking.dates.start)) → \(formatter.string(from: booking.dates.end))"
+            alert.addButton(title: "\(platformName) • \(range)") { [weak self] _ in
+                alert.close {
+                    self?.didSelectBooking?(booking)
+                }
+            }
+        }
+        
+        alert.addCancelButton()
+        alert.present(as: .Sheet)
 	}
 	
 	internal func updateCalendar() {
@@ -82,10 +109,14 @@ public class RU_Bookings_Calendar_ViewController: RU_ViewController {
 	internal func makeContent() -> CalendarViewContent {
 		
 		let calendar = Calendar.current
+        let today = calendar.startOfDay(for: Date())
+        
+        let activeBookings = (bookings ?? []).filter { !$0.isCancelled }
+        let laneByBookingKey = makeLaneMapping(for: activeBookings, calendar: calendar)
 		
 		// Plages de dates des réservations (pour le fond coloré entre les jours)
 		let bookingRanges: Set<ClosedRange<Date>> = Set(
-			(bookings ?? []).filter { !$0.isCancelled }.map { booking in
+			activeBookings.map { booking in
 				let start = calendar.startOfDay(for: booking.dates.start)
 				let end = calendar.startOfDay(for: booking.dates.end)
 				return start...end
@@ -167,13 +198,22 @@ public class RU_Bookings_Calendar_ViewController: RU_ViewController {
 			}) ?? []
 			
 			// Créer les infos pour chaque réservation
-			let bookingInfos: [BookingBarInfo] = bookingsForDay.map { booking in
-				BookingBarInfo(
+            let sortedBookingsForDay = bookingsForDay.sorted {
+                let lhsKey = self?.bookingKey(for: $0) ?? ""
+                let rhsKey = self?.bookingKey(for: $1) ?? ""
+                return (laneByBookingKey[lhsKey] ?? .max) < (laneByBookingKey[rhsKey] ?? .max)
+            }
+			let bookingInfos: [BookingBarInfo] = Array(sortedBookingsForDay.prefix(self?.maxVisibleLanesPerDay ?? 3)).map { booking in
+                let key = self?.bookingKey(for: booking) ?? ""
+                return BookingBarInfo(
 					isStartDate: calendar.isDate(date, inSameDayAs: booking.dates.start),
 					isEndDate: calendar.isDate(date, inSameDayAs: booking.dates.end),
-                    color: booking.platform?.type?.backgroundColor ?? .red
+                    color: booking.platform?.type?.backgroundColor ?? .red,
+                    lane: laneByBookingKey[key] ?? 0,
+                    isCurrent: dayStart >= calendar.startOfDay(for: booking.dates.start) && dayStart <= calendar.startOfDay(for: booking.dates.end) && today >= calendar.startOfDay(for: booking.dates.start) && today <= calendar.startOfDay(for: booking.dates.end)
 				)
 			}
+            let hiddenCount = max(0, bookingsForDay.count - bookingInfos.count)
 			
 			return CalendarItemModel<BookingDayView>(
 				invariantViewProperties: .init(),
@@ -181,11 +221,56 @@ public class RU_Bookings_Calendar_ViewController: RU_ViewController {
 					day: day,
 					isToday: isToday,
                     isInSecondaryRange: isInSecondaryRange,
-					bookings: bookingInfos
+					bookings: bookingInfos,
+                    hiddenCount: hiddenCount
 				)
 			)
 		}
 	}
+    
+    private func bookingKey(for booking: RU_Booking) -> String {
+        if let id = booking.id, !id.isEmpty {
+            return id
+        }
+        
+        // Fallback stable si id absent
+        return "\(booking.dates.start.timeIntervalSince1970)|\(booking.dates.end.timeIntervalSince1970)|\(booking.platform?.type?.rawValue ?? "-")|\(booking.classified?.id ?? "-")"
+    }
+    
+    private func makeLaneMapping(for bookings: [RU_Booking], calendar: Calendar) -> [String: Int] {
+        var laneByKey: [String: Int] = [:]
+        var laneEndByIndex: [Int: Date] = [:]
+        
+        let sorted = bookings.sorted {
+            if $0.dates.start == $1.dates.start {
+                return $0.dates.end < $1.dates.end
+            }
+            return $0.dates.start < $1.dates.start
+        }
+        
+        for booking in sorted {
+            let start = calendar.startOfDay(for: booking.dates.start)
+            let end = calendar.startOfDay(for: booking.dates.end)
+            let key = bookingKey(for: booking)
+            
+            // Deux réservations qui se suivent (checkout/checkin le même jour) partagent la même lane
+            let existingLane = laneEndByIndex
+                .sorted(by: { $0.key < $1.key })
+                .first(where: { start >= $0.value })?.key
+            
+            let lane: Int
+            if let existingLane {
+                lane = existingLane
+            } else {
+                lane = (laneEndByIndex.keys.max() ?? -1) + 1
+            }
+            
+            laneByKey[key] = lane
+            laneEndByIndex[lane] = end
+        }
+        
+        return laneByKey
+    }
 }
 
 // MARK: - Month Header View
@@ -344,9 +429,14 @@ private struct BookingBarInfo: Equatable {
 	let isStartDate: Bool
 	let isEndDate: Bool
 	let color: UIColor
+    let lane: Int
+    let isCurrent: Bool
 
 	static func == (lhs: BookingBarInfo, rhs: BookingBarInfo) -> Bool {
-		lhs.isStartDate == rhs.isStartDate && lhs.isEndDate == rhs.isEndDate
+		lhs.isStartDate == rhs.isStartDate
+        && lhs.isEndDate == rhs.isEndDate
+        && lhs.lane == rhs.lane
+        && lhs.isCurrent == rhs.isCurrent
 	}
 }
 
@@ -360,12 +450,14 @@ private struct BookingDayViewContent: Equatable {
     /// Indique si le jour fait partie de la plage secondaire (sélection en cours)
     let isInSecondaryRange: Bool
 	let bookings: [BookingBarInfo]
+    let hiddenCount: Int
 	
 	static func == (lhs: BookingDayViewContent, rhs: BookingDayViewContent) -> Bool {
 		return lhs.day == rhs.day
         && lhs.isToday == rhs.isToday
         && lhs.isInSecondaryRange == rhs.isInSecondaryRange
         && lhs.bookings == rhs.bookings
+        && lhs.hiddenCount == rhs.hiddenCount
 	}
 }
 
@@ -376,51 +468,52 @@ private final class BookingDayView: UIView, CalendarItemViewRepresentable {
 
 	private let backgroundCircleView = UIView()
 	private let contentStackView = RU_StackView()
-	private let bulletsStackView = RU_StackView()
+    private let barsStackView = RU_StackView()
+    private let moreLabel = UILabel()
 	private let label = UILabel()
 
-    private static let bulletSize: CGFloat = UI.Margins/3
-	private static let bulletSpacing: CGFloat = 2
-	private static let bulletLabelSpacing: CGFloat = 3
+    private static let barHeight: CGFloat = 5
+	private static let barSpacing: CGFloat = 2
+	private static let barLabelSpacing: CGFloat = 3
 
 	init() {
 		super.init(frame: .zero)
 
         backgroundCircleView.backgroundColor = Colors.Secondary
 		backgroundCircleView.isHidden = true
+        backgroundCircleView.layer.cornerRadius = 6
 		addSubview(backgroundCircleView)
 		backgroundCircleView.snp.makeConstraints { make in
-			make.center.equalToSuperview()
-            make.size.equalTo(UI.Margins*2)
+            make.top.bottom.equalToSuperview().inset(UI.Margins/2)
+            make.left.right.equalToSuperview().inset(UI.Margins/4)
 		}
 
 		contentStackView.axis = .vertical
-		contentStackView.spacing = Self.bulletLabelSpacing
+		contentStackView.spacing = Self.barLabelSpacing
 		contentStackView.alignment = .center
 		addSubview(contentStackView)
 		contentStackView.snp.makeConstraints { make in
 			make.center.equalToSuperview()
 		}
 
-		bulletsStackView.axis = .horizontal
-		bulletsStackView.spacing = Self.bulletSpacing
-		bulletsStackView.alignment = .center
-		bulletsStackView.distribution = .equalSpacing
-		contentStackView.addArrangedSubview(bulletsStackView)
-		bulletsStackView.snp.makeConstraints { make in
-			make.height.equalTo(Self.bulletSize)
-		}
+        barsStackView.axis = .vertical
+        barsStackView.spacing = Self.barSpacing
+        barsStackView.alignment = .fill
+        contentStackView.addArrangedSubview(barsStackView)
+        barsStackView.snp.makeConstraints { make in
+            make.width.equalTo(UI.Margins * 1.4)
+        }
+        
+        moreLabel.font = Fonts.Content.Text.Bold.withSize(9)
+        moreLabel.textAlignment = .center
+        moreLabel.textColor = Colors.Content.Text.withAlphaComponent(0.6)
+        contentStackView.addArrangedSubview(moreLabel)
 
 		label.textAlignment = .center
 		label.font = Fonts.Content.Text.Regular
 		contentStackView.addArrangedSubview(label)
 
 		sendSubviewToBack(backgroundCircleView)
-	}
-
-	override func layoutSubviews() {
-		super.layoutSubviews()
-		backgroundCircleView.layer.cornerRadius = backgroundCircleView.bounds.width / 2
 	}
 
 	required init?(coder: NSCoder) {
@@ -440,22 +533,52 @@ private final class BookingDayView: UIView, CalendarItemViewRepresentable {
             view.backgroundCircleView.backgroundColor = content.isInSecondaryRange ? .white : Colors.Secondary
         }
 
-		// Bullets au-dessus du numéro : une par réservation
-        view.bulletsStackView.arrangedSubviews.forEach { $0.removeFromSuperview() }
+		// Barres au-dessus du numéro : une par réservation (max N), alignées par lane
+        view.barsStackView.arrangedSubviews.forEach { $0.removeFromSuperview() }
 		if !content.bookings.isEmpty {
-			view.bulletsStackView.isHidden = false
+			view.barsStackView.isHidden = false
 			for booking in content.bookings {
-				let bullet = UIView()
-                bullet.backgroundColor = content.isToday ? .white : booking.color
-				bullet.layer.cornerRadius = Self.bulletSize / 2
-				view.bulletsStackView.addArrangedSubview(bullet)
-				bullet.snp.makeConstraints { make in
-					make.size.equalTo(Self.bulletSize)
-				}
+                let bar = UIView()
+                // Conserver la couleur de plateforme même pour aujourd'hui
+                bar.backgroundColor = booking.color
+                
+                // Coins arrondis demandés:
+                // - début: haut gauche + haut droite
+                // - fin: haut droite + bas droite
+                if booking.isStartDate && booking.isEndDate {
+                    bar.layer.cornerRadius = Self.barHeight / 2
+                    bar.layer.maskedCorners = [.layerMinXMinYCorner, .layerMinXMaxYCorner, .layerMaxXMinYCorner, .layerMaxXMaxYCorner]
+                }
+                else if booking.isStartDate {
+                    bar.layer.cornerRadius = Self.barHeight / 2
+                    bar.layer.maskedCorners = [.layerMinXMinYCorner, .layerMinXMaxYCorner]
+                }
+                else if booking.isEndDate {
+                    bar.layer.cornerRadius = Self.barHeight / 2
+                    bar.layer.maskedCorners = [.layerMaxXMinYCorner, .layerMaxXMaxYCorner]
+                }
+                else {
+                    bar.layer.cornerRadius = 0
+                }
+                bar.layer.masksToBounds = true
+                
+                view.barsStackView.addArrangedSubview(bar)
+                bar.snp.makeConstraints { make in
+                    make.height.equalTo(Self.barHeight)
+                    make.width.equalTo(UI.Margins * 1.4)
+                }
 			}
 		} else {
-			view.bulletsStackView.isHidden = true
+			view.barsStackView.isHidden = true
 		}
+        
+        if content.hiddenCount > 0 {
+            view.moreLabel.isHidden = false
+            view.moreLabel.text = "+\(content.hiddenCount)"
+        } else {
+            view.moreLabel.isHidden = true
+            view.moreLabel.text = nil
+        }
 
         if content.isToday && content.isInSecondaryRange {
             // Aujourd'hui dans la plage sélectionnée : cercle blanc, texte Secondary

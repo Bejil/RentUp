@@ -164,7 +164,7 @@ public class RU_Booking_TableViewCell : RU_TableViewCell {
 		detailsStackView.axis = .vertical
 		detailsStackView.spacing = UI.Margins/3
 		
-		let label:RU_Label = .init(String(key: "Revenu estimé"))
+		let label:RU_Label = .init(String(key: "bookings.cell.estimatedRevenue"))
 		label.font = Fonts.Content.Text.Regular
 		label.textAlignment = .right
 		label.adjustsFontSizeToFitWidth = true

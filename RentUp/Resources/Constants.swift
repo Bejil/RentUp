@@ -223,7 +223,7 @@ public struct Fonts {
 		public struct Button {
 			
 			public static let Title:UIFont = UIFont(name: Name.Black, size: Fonts.Size+4)!
-			public static let Subtitle:UIFont = UIFont(name: Name.Regular, size: Fonts.Size)!
+			public static let Subtitle:UIFont = UIFont(name: Name.Bold, size: Fonts.Size)!
 		}
 		
 		public struct Title {

@@ -31,7 +31,7 @@ public class RU_Classified_Select_Alert_ViewController : RU_Alert_ViewController
         
         super.loadView()
         
-        title = String(key: "Sélectionnez une annonce")
+        title = String(key: "classified.select.title")
         add(tableView)
         addCancelButton()
     }

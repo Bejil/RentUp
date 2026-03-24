@@ -215,7 +215,7 @@ public class RU_Classified_Platform_Alert_ViewController : RU_Alert_ViewControll
         offersSectionStackView.addArrangedSubview(offerMonthTextFieldRowStack)
         add(offersSectionStackView)
         
-        saveButton = addButton(title: String(key: "Valider")) { [weak self] _ in
+        saveButton = addButton(title: String(key: "common.validate")) { [weak self] _ in
             
             if let platform = self?.platform {
                 

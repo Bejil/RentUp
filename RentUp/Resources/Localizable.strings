@@ -48,15 +48,12 @@
 "onboarding.signIn.password.reset.alert.content" = "Ça arrive à tout le monde. Entrez votre adresse, vous recevrez un email avec la marche à suivre 👍";
 "onboarding.signIn.password.reset.alert.email.placeholder" = "Email";
 "onboarding.signIn.password.reset.alert.button" = "Réinitialiser";
-"onboarding.signIn.password.reset.alert.success" = "Envoyé";
 "onboarding.signIn.button" = "Je me connecte";
-"onboarding.signIn.success.alert" = "Connecté";
 "onboarding.signUp.title" = "Créez votre compte";
 "onboarding.signUp.label" = "Créez votre compte pour retrouver toutes vos réservations en un clin d'oeil 😉";
 "onboarding.signUp.email.placeholder" = "Email";
 "onboarding.signUp.password.placeholder" = "Mot de passe";
 "onboarding.signUp.button" = "Je crée mon compte";
-"onboarding.signUp.success.alert" = "Connecté";
 
 //MARK: - Reporting
 "reporting.title" = "Vos statistiques";
@@ -103,6 +100,7 @@
 "classifieds.comparator.title" = "Comparateur de prix";
 "classifieds.comparator.tip" = "Comparez les différences de prix pour chaque bien selon les plateformes. Une nuit est simulée : le revenu net par bien et par plateforme s'affiche pour vous aider à ajuster vos tarifs et aligner le revenu net entre les 3 plateformes.";
 "classifieds.comparator.button" = "Vérifier les prix";
+"classified.select.title" = "Sélectionnez une annonce";
 //Create wizard
 "classified.create.step.1" = "Étape 1/4";
 "classified.create.step.2" = "Étape 2/4";
@@ -179,8 +177,6 @@
 "bookings.create.platform.section.subtitle" = "Sur quelle plateforme la réservation a t'elle été faite ?";
 "bookings.create.dates.section.title" = "Dates du séjour";
 "bookings.create.dates.section.subtitle" = "Quelles sont les dates d'arrivée et de départ des voyageurs ?";
-"bookings.create.dates.start" = "Arrivée";
-"bookings.create.dates.end" = "Départ";
 "bookings.create.dates.button" = "Sélectionner";
 "bookings.calendar.validate" = "Valider";
 "bookings.calendar.overview.title" = "Calendrier";
@@ -219,6 +215,7 @@
 "booking.status.upcoming.tomorrow" = "À venir dem";
 //Cell
 "bookings.cell.dates.format" = "Du %@ au %@";
+"bookings.cell.estimatedRevenue" = "Revenu estimé";
 "bookings.cell.edit.button" = "Modifier";
 "bookings.cell.delete.button" = "Supprimer";
 "bookings.cell.approve.button" = "Confirmer";
@@ -276,7 +273,6 @@
 "settings.platform.commission.vat" = "TVA";
 "settings.platform.value.amount" = "€";
 "settings.platform.value.percentage" = "%";
-"settings.platform.save.button" = "Appliquer";
 "settings.platform.cell.touristTax" = "Taxe %.2f€";
 "settings.platform.cell.commission.host" = "Hôte %.1f%%";
 "settings.platform.cell.commission.traveler" = "Voyageur %.1f%%";
@@ -307,7 +303,6 @@
 "settings.classified.platform.tarification.travelers.extra" = "Prix au delà";
 "settings.classified.platform.tarification.offers.section.title" = "Réductions";
 "settings.classified.platform.tarification.offers.section.subtitle" = "Appliquez des réductions pour les séjours longs";
-"settings.classified.platform.tarification.save.button" = "Enregistrer";
 
 "settings.classified.configuration.section.title" = "Configuration";
 "settings.classified.configuration.section.subtitle" = "Définissez les types de lits que vous mettez à disposition";
@@ -321,9 +316,6 @@
 "settings.classified.offer.month" = "-%i%% mois";
 "settings.classified.save.button" = "Enregistrer";
 "settings.classified.delete.button" = "Supprimer";
-"settings.classified.error.getAll" = "Une erreur est survenue pendant la récupération des biens";
-"settings.classified.error.save" = "Une erreur est survenue pendant la sauvegarde du bien";
-"settings.classified.error.delete" = "Une erreur est survenue pendant la suppression du bien";
 "settings.classified.delete.alert.title" = "Attention";
 "settings.classified.delete.alert.content" = "Voulez-vous vraiment supprimer ce bien ? Cette action est irréversible. Toutes les réservations qui en dépendent seront également supprimées.";
 "settings.classified.delete.alert.button" = "Supprimer";
@@ -344,6 +336,40 @@
 "settings.data.section.title" = "Données";
 "settings.data.section.subtitle" = "Gérez les données de l'application : vos annonces et vos réservation";
 "settings.data.import.button" = "Importer des réservations";
+"settings.data.import.conditions.title" = "Conditions d'import";
+"settings.data.import.conditions.file.section.title" = "Fichier";
+"settings.data.import.conditions.file.section.subtitle" = "Le fichier doit être lisible par l'application";
+"settings.data.import.conditions.file.type.title" = "Type";
+"settings.data.import.conditions.file.type.value" = "CSV (.csv)";
+"settings.data.import.conditions.columns.section.title" = "Colonnes obligatoires";
+"settings.data.import.conditions.columns.section.subtitle" = "Présentes dans n'importe quel ordre";
+"settings.data.import.conditions.column.arrival" = "Arrivée";
+"settings.data.import.conditions.column.departure" = "Départ";
+"settings.data.import.conditions.column.compensation" = "Indemnité";
+"settings.data.import.conditions.column.cleaning" = "Ménage";
+"settings.data.import.conditions.column.platform" = "Plateforme";
+"settings.data.import.conditions.column.people" = "Pers.";
+"settings.data.import.conditions.column.configuration" = "Configuration";
+"settings.data.import.conditions.column.comment" = "Commentaire";
+"settings.data.import.conditions.formats.section.title" = "Formats attendus";
+"settings.data.import.conditions.formats.section.subtitle" = "Les données seront ignorées si le format n'est pas respecté";
+"settings.data.import.conditions.format.date" = "Arrivée / Départ";
+"settings.data.import.conditions.format.amount" = "Indemnité / Ménage";
+"settings.data.import.conditions.format.amount.value" = "Montant en euros (ex: 45,00 €)";
+"settings.data.import.conditions.format.platform" = "Plateforme";
+"settings.data.import.conditions.format.platform.value" = "Airbnb, Booking ou Abritel";
+"settings.data.import.conditions.format.people" = "Pers.";
+"settings.data.import.conditions.format.people.value" = "Nombre entier";
+"settings.data.import.conditions.format.configuration" = "Configuration";
+"settings.data.import.conditions.format.configuration.value" = "Lits attendus (ex: 2 doubles, 3 simples, 1 bébé)";
+"settings.data.import.conditions.confirm" = "Choisir un fichier CSV";
+"settings.data.import.success.title" = "Félicitations";
+"settings.data.import.success.message" = "%d réservation(s) importée(s).";
+"settings.data.import.error.noClassified" = "Aucune annonce disponible pour l'import.";
+"settings.data.import.error.noValidBookings" = "Aucune réservation valide à importer.";
+"settings.data.import.error.read" = "Impossible de lire le fichier CSV.";
+"settings.data.import.error.empty" = "Le fichier CSV est vide.";
+"settings.data.import.error.format" = "Format CSV invalide. En-tête attendu: Arrivée,Départ,Indemnité,Ménage,Plateforme,Pers.,Configuration,Commentaire";
 "settings.reset.button" = "Réinitialiser les données";
 "settings.reset.alert.title" = "Attention";
 "settings.reset.alert.content" = "Voulez-vous vraiment réinitialiser toutes les données ? Cette action est irréversible.";
@@ -362,6 +388,7 @@
 "platform.abritel.priceFormula.host" = "Vous touchez le total des nuitées et du ménage, moins la commission de la plateforme et les frais bancaires.";
 
 //MARK: - TextField
+"common.validate" = "Valider";
 "textfield.done.button" = "Valider";
 
 //MARK: - TextView
@@ -375,12 +402,14 @@
 "onboarding.success.message" = "Votre premier bien est enregistré. Vous pouvez maintenant gérer vos réservations.";
 "onboarding.success.button.done" = "Terminer";
 
+//MARK: - User
 "user.passwordValidation.characters" = "Au moins 8 caractères";
 "user.passwordValidation.lowercase" = "Au moins une lettre minuscule";
 "user.passwordValidation.uppercase" = "Au moins une lettre majuscule";
 "user.passwordValidation.special" = "Au moins un caractère spécial";
 "user.passwordValidation.number" = "Au moins un chiffre";
 
+//MARK: - Account
 "account.placeholder.title" = "Votre compte";
 "account.placeholder.label" = "Vous pouvez modifier les informations de votre compte";
 "account.email.placeholder" = "Email";

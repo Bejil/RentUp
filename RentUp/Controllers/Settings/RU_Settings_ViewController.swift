@@ -77,12 +77,113 @@ public class RU_Settings_ViewController: RU_ViewController {
         dataSectionStackView.title = String(key: "settings.data.section.title")
         dataSectionStackView.subtitle = String(key: "settings.data.section.subtitle")
         
-        let importButton:RU_Button = .init(String(key: "settings.data.import.button")) { _ in
+        let importButton:RU_Button = .init(String(key: "settings.data.import.button")) { [weak self] _ in
             
-            let picker = UIDocumentPickerViewController(forOpeningContentTypes: [.commaSeparatedText, .plainText], asCopy: true)
-            picker.delegate = self
-            picker.allowsMultipleSelection = false
-            self.present(picker, animated: true)
+            let alertController: RU_Alert_ViewController = .init()
+            alertController.title = String(key: "settings.data.import.conditions.title")
+            
+            let fileSection: RU_Section_StackView = .init()
+            fileSection.title = String(key: "settings.data.import.conditions.file.section.title")
+            fileSection.subtitle = String(key: "settings.data.import.conditions.file.section.subtitle")
+            let fileTypeValue: RU_Label = .init(String(key: "settings.data.import.conditions.file.type.value"))
+            fileTypeValue.font = Fonts.Content.Text.Bold
+            fileTypeValue.textAlignment = .right
+            let fileTypeRow: RU_Section_Row_StackView = .init()
+            fileTypeRow.image = UIImage(systemName: "doc.text")
+            fileTypeRow.title = String(key: "settings.data.import.conditions.file.type.title")
+            fileTypeRow.view = fileTypeValue
+            fileSection.addArrangedSubview(fileTypeRow)
+            alertController.add(fileSection)
+            
+            let columnsAndFormatsSection: RU_Section_StackView = .init()
+            columnsAndFormatsSection.title = String(key: "settings.data.import.conditions.columns.section.title")
+            columnsAndFormatsSection.subtitle = String(key: "settings.data.import.conditions.formats.section.subtitle")
+            let dateFormatValue: RU_Label = .init("dd/MM/yyyy")
+            dateFormatValue.font = Fonts.Content.Text.Bold
+            dateFormatValue.textAlignment = .right
+            let arrivalRow: RU_Section_Row_StackView = .init()
+            arrivalRow.image = UIImage(systemName: "calendar")
+            arrivalRow.title = String(key: "settings.data.import.conditions.column.arrival")
+            arrivalRow.view = dateFormatValue
+            columnsAndFormatsSection.addArrangedSubview(arrivalRow)
+            
+            let departureValue: RU_Label = .init("dd/MM/yyyy")
+            departureValue.font = Fonts.Content.Text.Bold
+            departureValue.textAlignment = .right
+            let departureRow: RU_Section_Row_StackView = .init()
+            departureRow.image = UIImage(systemName: "calendar")
+            departureRow.title = String(key: "settings.data.import.conditions.column.departure")
+            departureRow.view = departureValue
+            columnsAndFormatsSection.addArrangedSubview(departureRow)
+            
+            let amountFormatValue: RU_Label = .init(String(key: "settings.data.import.conditions.format.amount.value"))
+            amountFormatValue.font = Fonts.Content.Text.Bold
+            amountFormatValue.textAlignment = .right
+            let compensationRow: RU_Section_Row_StackView = .init()
+            compensationRow.image = UIImage(systemName: "eurosign")
+            compensationRow.title = String(key: "settings.data.import.conditions.column.compensation")
+            compensationRow.view = amountFormatValue
+            columnsAndFormatsSection.addArrangedSubview(compensationRow)
+            
+            let cleaningValue: RU_Label = .init(String(key: "settings.data.import.conditions.format.amount.value"))
+            cleaningValue.font = Fonts.Content.Text.Bold
+            cleaningValue.textAlignment = .right
+            let cleaningRow: RU_Section_Row_StackView = .init()
+            cleaningRow.image = UIImage(systemName: "eurosign")
+            cleaningRow.title = String(key: "settings.data.import.conditions.column.cleaning")
+            cleaningRow.view = cleaningValue
+            columnsAndFormatsSection.addArrangedSubview(cleaningRow)
+            
+            let platformFormatValue: RU_Label = .init(String(key: "settings.data.import.conditions.format.platform.value"))
+            platformFormatValue.font = Fonts.Content.Text.Bold
+            platformFormatValue.textAlignment = .right
+            let platformRow: RU_Section_Row_StackView = .init()
+            platformRow.image = UIImage(systemName: "square.grid.2x2")
+            platformRow.title = String(key: "settings.data.import.conditions.column.platform")
+            platformRow.view = platformFormatValue
+            columnsAndFormatsSection.addArrangedSubview(platformRow)
+            
+            let peopleFormatValue: RU_Label = .init(String(key: "settings.data.import.conditions.format.people.value"))
+            peopleFormatValue.font = Fonts.Content.Text.Bold
+            peopleFormatValue.textAlignment = .right
+            let peopleRow: RU_Section_Row_StackView = .init()
+            peopleRow.image = UIImage(systemName: "person.2")
+            peopleRow.title = String(key: "settings.data.import.conditions.column.people")
+            peopleRow.view = peopleFormatValue
+            columnsAndFormatsSection.addArrangedSubview(peopleRow)
+            
+            let configurationFormatValue: RU_Label = .init(String(key: "settings.data.import.conditions.format.configuration.value"))
+            configurationFormatValue.font = Fonts.Content.Text.Bold
+            configurationFormatValue.numberOfLines = 0
+            configurationFormatValue.textAlignment = .right
+            let configurationRow: RU_Section_Row_StackView = .init()
+            configurationRow.image = UIImage(systemName: "bed.double")
+            configurationRow.title = String(key: "settings.data.import.conditions.column.configuration")
+            configurationRow.view = configurationFormatValue
+            columnsAndFormatsSection.addArrangedSubview(configurationRow)
+            
+            let commentValue: RU_Label = .init(String(key: "settings.data.import.conditions.column.comment"))
+            commentValue.font = Fonts.Content.Text.Bold
+            commentValue.textAlignment = .right
+            let commentRow: RU_Section_Row_StackView = .init()
+            commentRow.image = UIImage(systemName: "text.bubble")
+            commentRow.title = String(key: "settings.data.import.conditions.column.comment")
+            commentRow.view = commentValue
+            columnsAndFormatsSection.addArrangedSubview(commentRow)
+            
+            alertController.add(columnsAndFormatsSection)
+            alertController.addButton(title: String(key: "settings.data.import.conditions.confirm")) { [weak self] _ in
+                
+                alertController.close { [weak self] in
+                    
+                    let picker = UIDocumentPickerViewController(forOpeningContentTypes: [.commaSeparatedText, .plainText], asCopy: true)
+                    picker.delegate = self
+                    picker.allowsMultipleSelection = false
+                    UI.MainController.present(picker, animated: true)
+                }
+            }
+            alertController.addCancelButton()
+            alertController.present(as: .Sheet)
         }
         importButton.image = UIImage(systemName: "square.and.arrow.down")
         dataSectionStackView.addArrangedSubview(importButton)
@@ -221,7 +322,7 @@ public class RU_Settings_ViewController: RU_ViewController {
                 
                 guard !(self.importClassifieds?.isEmpty ?? true) else {
                     alertController?.close {
-                        RU_Alert_ViewController.present(RU_Error("Aucune annonce disponible pour l'import."))
+                        RU_Alert_ViewController.present(RU_Error(String(key: "settings.data.import.error.noClassified")))
                     }
                     return
                 }
@@ -254,7 +355,7 @@ public class RU_Settings_ViewController: RU_ViewController {
         
         let bookings = parseResult.bookings
         guard !bookings.isEmpty else {
-            RU_Alert_ViewController.present(RU_Error("Aucune réservation valide à importer."))
+            RU_Alert_ViewController.present(RU_Error(String(key: "settings.data.import.error.noValidBookings")))
             return
         }
         
@@ -278,8 +379,8 @@ public class RU_Settings_ViewController: RU_ViewController {
                     }
                     else {
                         NotificationCenter.post(.updateBookings)
-                        let alertController = RU_Alert_ViewController.present(RU_Error("\(bookings.count) réservation(s) importée(s)."))
-                        alertController.title = String(key: "Félicitations")
+                        let alertController = RU_Alert_ViewController.present(RU_Error(String(format: String(key: "settings.data.import.success.message"), bookings.count)))
+                        alertController.title = String(key: "settings.data.import.success.title")
                     }
                 }
             }
@@ -296,7 +397,7 @@ public class RU_Settings_ViewController: RU_ViewController {
         }
         
         guard let content = try? String(contentsOf: url, encoding: .utf8) else {
-            return ([], RU_Error("Impossible de lire le fichier CSV."))
+            return ([], RU_Error(String(key: "settings.data.import.error.read")))
         }
         
         let lines = content
@@ -307,13 +408,13 @@ public class RU_Settings_ViewController: RU_ViewController {
             .filter { !$0.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }
         
         guard let headerLine = lines.first else {
-            return ([], RU_Error("Le fichier CSV est vide."))
+            return ([], RU_Error(String(key: "settings.data.import.error.empty")))
         }
         
         let header = parseCSVRow(headerLine).map(normalizeHeader)
         let expected = ["arrivee", "depart", "indemnite", "menage", "plateforme", "pers.", "configuration", "commentaire"]
         guard header == expected else {
-            return ([], RU_Error("Format CSV invalide. En-tête attendu: Arrivée,Départ,Indemnité,Ménage,Plateforme,Pers.,Configuration,Commentaire"))
+            return ([], RU_Error(String(key: "settings.data.import.error.format")))
         }
         
         let dateFormatter = DateFormatter()

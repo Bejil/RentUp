@@ -358,6 +358,8 @@ public class RU_Bookings_Edit_ViewController : RU_ViewController {
 	public override func loadView() {
 		
 		super.loadView()
+        
+        isModal = true
 		
 		title = String(key: booking == nil ? "bookings.create.title.new" : "bookings.create.title.update")
 		
