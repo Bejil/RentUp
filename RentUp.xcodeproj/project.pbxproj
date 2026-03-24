@@ -208,6 +208,7 @@
 				DEVELOPMENT_TEAM = K73XJ748R3;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = "RentUp/Resources/Supporting Files/Info.plist";
+				INFOPLIST_KEY_CFBundleDisplayName = "BienGéré";
 				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.business";
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
@@ -243,6 +244,7 @@
 				DEVELOPMENT_TEAM = K73XJ748R3;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = "RentUp/Resources/Supporting Files/Info.plist";
+				INFOPLIST_KEY_CFBundleDisplayName = "BienGéré";
 				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.business";
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;

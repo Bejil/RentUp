@@ -269,7 +269,7 @@ public class RU_Account: NSObject {
     
     public func update(email:String?, _ completion:Error_Completion) {
         
-        Auth.auth().currentUser?.updateEmail(to: email ?? "") { error in
+        Auth.auth().currentUser?.sendEmailVerification(beforeUpdatingEmail: email ?? "", actionCodeSettings: nil) { error in
             
             if error == nil {
                 
