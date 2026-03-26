@@ -475,6 +475,7 @@ private final class BookingDayView: UIView, CalendarItemViewRepresentable {
     private static let barHeight: CGFloat = 5
 	private static let barSpacing: CGFloat = 2
 	private static let barLabelSpacing: CGFloat = 3
+    private static let horizontalInset: CGFloat = 2
 
 	init() {
 		super.init(frame: .zero)
@@ -493,7 +494,7 @@ private final class BookingDayView: UIView, CalendarItemViewRepresentable {
 		contentStackView.alignment = .center
 		addSubview(contentStackView)
 		contentStackView.snp.makeConstraints { make in
-			make.center.equalToSuperview()
+			make.edges.equalToSuperview()
 		}
 
         barsStackView.axis = .vertical
@@ -501,7 +502,7 @@ private final class BookingDayView: UIView, CalendarItemViewRepresentable {
         barsStackView.alignment = .fill
         contentStackView.addArrangedSubview(barsStackView)
         barsStackView.snp.makeConstraints { make in
-            make.width.equalTo(UI.Margins * 1.4)
+            make.left.right.equalToSuperview().inset(Self.horizontalInset)
         }
         
         moreLabel.font = Fonts.Content.Text.Bold.withSize(9)
@@ -565,7 +566,21 @@ private final class BookingDayView: UIView, CalendarItemViewRepresentable {
                 view.barsStackView.addArrangedSubview(bar)
                 bar.snp.makeConstraints { make in
                     make.height.equalTo(Self.barHeight)
-                    make.width.equalTo(UI.Margins * 1.4)
+                    if booking.isStartDate && booking.isEndDate {
+                        make.width.equalToSuperview().multipliedBy(0.5)
+                        make.centerX.equalToSuperview()
+                    }
+                    else if booking.isStartDate {
+                        make.width.equalToSuperview().multipliedBy(0.5)
+                        make.right.equalToSuperview()
+                    }
+                    else if booking.isEndDate {
+                        make.width.equalToSuperview().multipliedBy(0.5)
+                        make.left.equalToSuperview()
+                    }
+                    else {
+                        make.left.right.equalToSuperview()
+                    }
                 }
 			}
 		} else {
