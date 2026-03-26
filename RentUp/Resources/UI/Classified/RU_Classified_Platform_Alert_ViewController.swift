@@ -231,49 +231,44 @@ public class RU_Classified_Platform_Alert_ViewController : RU_Alert_ViewControll
                     self?.classified?.tarification.first(where: { $0.platform == platform })?.price = intValue
                 }
                 
-                if let value = self?.cleaningTextFieldRowStack.textField.text, let intValue = Int(value) {
+                let cleaningValue = self?.cleaningTextFieldRowStack.textField.text ?? ""
+                let cleaningIntValue = Int(cleaningValue)
+                self?.classified?.tarification.first(where: { $0.platform == platform })?.cleaning = (cleaningIntValue == 0 ? nil : cleaningIntValue)
+                
+                let travelersIncludedValue = self?.travelersIncludedTextFieldRowStack.value ?? ""
+                let travelersIncludedIntValue = Int(travelersIncludedValue)
+                self?.classified?.tarification.first(where: { $0.platform == platform })?.travelers.included = (travelersIncludedIntValue == 0 ? nil : travelersIncludedIntValue)
+                
+                let travelersExtraValue = self?.travelersExtraTextFieldRowStack.textField.text ?? ""
+                let travelersExtraIntValue = Int(travelersExtraValue)
+                self?.classified?.tarification.first(where: { $0.platform == platform })?.travelers.extraPrice = (travelersExtraIntValue == 0 ? nil : travelersExtraIntValue)
+                
+                let offerWeekValue = self?.offerWeekTextFieldRowStack.textField.text ?? ""
+                let offerWeekIntValue = Int(offerWeekValue)
+                if let offer = self?.classified?.tarification.first(where: { $0.platform == platform })?.offers.first(where: { $0.reductiontype == .week }) {
                     
-                    self?.classified?.tarification.first(where: { $0.platform == platform })?.cleaning = intValue
+                    offer.percent = (offerWeekIntValue == 0 ? nil : offerWeekIntValue)
+                }
+                else if let offerWeekIntValue, offerWeekIntValue != 0 {
+                    
+                    let offer:RU_Classified.Tarification.Offer = .init()
+                    offer.reductiontype = .week
+                    offer.percent = offerWeekIntValue
+                    self?.classified?.tarification.first(where: { $0.platform == platform })?.offers.append(offer)
                 }
                 
-                if let value = self?.travelersIncludedTextFieldRowStack.value, let intValue = Int(value) {
+                let offerMonthValue = self?.offerMonthTextFieldRowStack.textField.text ?? ""
+                let offerMonthIntValue = Int(offerMonthValue)
+                if let offer = self?.classified?.tarification.first(where: { $0.platform == platform })?.offers.first(where: { $0.reductiontype == .month }) {
                     
-                    self?.classified?.tarification.first(where: { $0.platform == platform })?.travelers.included = intValue
-                    
-                    if let value = self?.travelersExtraTextFieldRowStack.textField.text, let intValue = Int(value) {
-                        
-                        self?.classified?.tarification.first(where: { $0.platform == platform })?.travelers.extraPrice = intValue
-                    }
+                    offer.percent = (offerMonthIntValue == 0 ? nil : offerMonthIntValue)
                 }
-                
-                if let value = self?.offerWeekTextFieldRowStack.textField.text, let intValue = Int(value) {
+                else if let offerMonthIntValue, offerMonthIntValue != 0 {
                     
-                    if let offer = self?.classified?.tarification.first(where: { $0.platform == platform })?.offers.first(where: { $0.reductiontype == .week }) {
-                        
-                        offer.percent = intValue
-                    }
-                    else {
-                        
-                        let offer:RU_Classified.Tarification.Offer = .init()
-                        offer.reductiontype = .week
-                        offer.percent = intValue
-                        self?.classified?.tarification.first(where: { $0.platform == platform })?.offers.append(offer)
-                    }
-                }
-                
-                if let value = self?.offerMonthTextFieldRowStack.textField.text, let intValue = Int(value) {
-                    
-                    if let offer = self?.classified?.tarification.first(where: { $0.platform == platform })?.offers.first(where: { $0.reductiontype == .month }) {
-                        
-                        offer.percent = intValue
-                    }
-                    else {
-                        
-                        let offer:RU_Classified.Tarification.Offer = .init()
-                        offer.reductiontype = .month
-                        offer.percent = intValue
-                        self?.classified?.tarification.first(where: { $0.platform == platform })?.offers.append(offer)
-                    }
+                    let offer:RU_Classified.Tarification.Offer = .init()
+                    offer.reductiontype = .month
+                    offer.percent = offerMonthIntValue
+                    self?.classified?.tarification.first(where: { $0.platform == platform })?.offers.append(offer)
                 }
             }
             
