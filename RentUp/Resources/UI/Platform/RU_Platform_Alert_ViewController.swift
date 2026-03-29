@@ -32,51 +32,51 @@ public class RU_Platform_Alert_ViewController : RU_Alert_ViewController {
                 tipStackView.add(hostTipLabel)
             }
             
-            commissionTouristTaxRow.isHidden = platform?.commission.touristTax == nil
+            commissionTouristTaxRow.isHidden = platform?.commission?.touristTax == nil
             
-            if let commissionTouristTax = platform?.commission.touristTax?.amount {
+            if let commissionTouristTax = platform?.commission?.touristTax?.amount {
                 
-                commissionTouristTaxRow.suffix = String(key: platform?.commission.touristTax?.type == .percentage ? "settings.platform.value.percentage" : "settings.platform.value.amount")
+                commissionTouristTaxRow.suffix = String(key: platform?.commission?.touristTax?.type == .percentage ? "settings.platform.value.percentage" : "settings.platform.value.amount")
                 commissionTouristTaxRow.textField.text = "\(commissionTouristTax)"
             }
             
-            commissionHostRow.isHidden = platform?.commission.host == nil
+            commissionHostRow.isHidden = platform?.commission?.host == nil
             
-            if let commissionHost = platform?.commission.host?.amount {
+            if let commissionHost = platform?.commission?.host?.amount {
                 
-                commissionHostRow.suffix = String(key: platform?.commission.host?.type == .percentage ? "settings.platform.value.percentage" : "settings.platform.value.amount")
+                commissionHostRow.suffix = String(key: platform?.commission?.host?.type == .percentage ? "settings.platform.value.percentage" : "settings.platform.value.amount")
                 commissionHostRow.textField.text = "\(commissionHost)"
             }
             
-            commissionTravelerRow.isHidden = platform?.commission.traveler == nil
+            commissionTravelerRow.isHidden = platform?.commission?.traveler == nil
             
-            if let commissionTraveler = platform?.commission.traveler?.amount {
+            if let commissionTraveler = platform?.commission?.traveler?.amount {
                 
-                commissionTravelerRow.suffix = String(key: platform?.commission.traveler?.type == .percentage ? "settings.platform.value.percentage" : "settings.platform.value.amount")
+                commissionTravelerRow.suffix = String(key: platform?.commission?.traveler?.type == .percentage ? "settings.platform.value.percentage" : "settings.platform.value.amount")
                 commissionTravelerRow.textField.text = "\(commissionTraveler)"
             }
             
-            commissionPlatformRow.isHidden = platform?.commission.platform == nil
+            commissionPlatformRow.isHidden = platform?.commission?.platform == nil
             
-            if let commissionPlatform = platform?.commission.platform?.amount {
+            if let commissionPlatform = platform?.commission?.platform?.amount {
                 
-                commissionPlatformRow.suffix = String(key: platform?.commission.platform?.type == .percentage ? "settings.platform.value.percentage" : "settings.platform.value.amount")
+                commissionPlatformRow.suffix = String(key: platform?.commission?.platform?.type == .percentage ? "settings.platform.value.percentage" : "settings.platform.value.amount")
                 commissionPlatformRow.textField.text = "\(commissionPlatform)"
             }
             
-            commissionBankRow.isHidden = platform?.commission.bank == nil
+            commissionBankRow.isHidden = platform?.commission?.bank == nil
             
-            if let commissionBank = platform?.commission.bank?.amount {
+            if let commissionBank = platform?.commission?.bank?.amount {
                 
-                commissionBankRow.suffix = String(key: platform?.commission.bank?.type == .percentage ? "settings.platform.value.percentage" : "settings.platform.value.amount")
+                commissionBankRow.suffix = String(key: platform?.commission?.bank?.type == .percentage ? "settings.platform.value.percentage" : "settings.platform.value.amount")
                 commissionBankRow.textField.text = "\(commissionBank)"
             }
             
-            commissionVatRow.isHidden = platform?.commission.vat == nil
+            commissionVatRow.isHidden = platform?.commission?.vat == nil
             
-            if let commissionVat = platform?.commission.vat?.amount {
+            if let commissionVat = platform?.commission?.vat?.amount {
                 
-                commissionVatRow.suffix = String(key: platform?.commission.vat?.type == .percentage ? "settings.platform.value.percentage" : "settings.platform.value.amount")
+                commissionVatRow.suffix = String(key: platform?.commission?.vat?.type == .percentage ? "settings.platform.value.percentage" : "settings.platform.value.amount")
                 commissionVatRow.textField.text = "\(commissionVat)"
             }
         }

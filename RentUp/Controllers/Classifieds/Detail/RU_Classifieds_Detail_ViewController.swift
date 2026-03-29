@@ -71,6 +71,8 @@ public class RU_Classifieds_Detail_ViewController: RU_ViewController {
 			configurationSectionStackView.isHidden = !hasAnyBed
             
             comparatorTipStackView.isHidden = classified?.tarification.count ?? 0 <= 1
+            
+            tarificationTableView.reloadData()
 		}
 	}
 

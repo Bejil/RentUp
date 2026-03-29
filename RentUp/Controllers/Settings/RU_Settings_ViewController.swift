@@ -564,14 +564,16 @@ extension RU_Settings_ViewController : UITableViewDelegate, UITableViewDataSourc
 	
 	public func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
 		
-		return RU_Platform.all?.count ?? 0
+        return RU_Platform.all?.filter({ $0.commission != nil }).count ?? 0
 	}
 	
 	public func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
+        
+        let platform = RU_Platform.all?.filter({ $0.commission != nil })[indexPath.row]
 		
 		let cell = tableView.dequeueReusableCell(withIdentifier: RU_Platform_TableViewCell.identifier, for: indexPath) as! RU_Platform_TableViewCell
-		cell.platform = RU_Platform.all?[indexPath.row]
-		cell.detailsLabel.text = RU_Platform.all?[indexPath.row].detail
+		cell.platform = platform
+		cell.detailsLabel.text = platform?.detail
 		return cell
 	}
 	
@@ -579,8 +581,10 @@ extension RU_Settings_ViewController : UITableViewDelegate, UITableViewDataSourc
 		
 		tableView.deselectRow(at: indexPath, animated: true)
         
+        let platform = RU_Platform.all?.filter({ $0.commission != nil })[indexPath.row]
+        
         let alertController:RU_Platform_Alert_ViewController = .init()
-        alertController.platform = RU_Platform.all?[indexPath.row]
+        alertController.platform = platform
         alertController.present(as: .Sheet)
 	}
     

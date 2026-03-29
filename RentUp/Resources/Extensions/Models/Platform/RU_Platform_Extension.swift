@@ -45,19 +45,19 @@ extension RU_Platform {
 		
 		var details:[String] = []
 		
-		if let touristTax = commission.touristTax?.amount {
+		if let touristTax = commission?.touristTax?.amount {
 			details.append(String(format: String(key: "settings.platform.cell.touristTax"), touristTax))
 		}
 		
-		if let host = commission.host?.amount {
+		if let host = commission?.host?.amount {
 			details.append(String(format: String(key: "settings.platform.cell.commission.host"), host))
 		}
 		
-		if let traveler = commission.traveler?.amount {
+		if let traveler = commission?.traveler?.amount {
 			details.append(String(format: String(key: "settings.platform.cell.commission.traveler"), traveler))
 		}
 		
-		if let platformCommission = commission.platform?.amount {
+		if let platformCommission = commission?.platform?.amount {
 			details.append(String(format: String(key: "settings.platform.cell.commission.platform"), platformCommission))
 		}
 		
@@ -108,19 +108,19 @@ extension RU_Platform {
 			
 		case .airbnb:
 			// Frais voyageur : pourcentage sur (nuitées + ménage)
-			if let travelerPercent = commission.traveler?.amount {
+			if let travelerPercent = commission?.traveler?.amount {
 				travelerFees = totalNightsCleaning * (travelerPercent / 100)
 			}
 			
 			// Taxe de séjour : montant par personne par nuit
-			if let taxAmount = commission.touristTax?.amount {
+			if let taxAmount = commission?.touristTax?.amount {
 				touristTax = taxAmount * Double(totalTravelers) * Double(nights)
 			}
 			
 			// Frais hôte : pourcentage sur (nuitées + ménage) + TVA sur ces frais
-			if let hostPercent = commission.host?.amount {
+			if let hostPercent = commission?.host?.amount {
 				var fees = totalNightsCleaning * (hostPercent / 100)
-				if let vatPercent = commission.vat?.amount {
+				if let vatPercent = commission?.vat?.amount {
 					fees = fees * (1 + vatPercent / 100)
 				}
 				hostFees = fees
@@ -131,37 +131,37 @@ extension RU_Platform {
 			travelerFees = 0
 			
 			// Taxe de séjour : montant par personne par nuit
-			if let taxAmount = commission.touristTax?.amount {
+			if let taxAmount = commission?.touristTax?.amount {
 				touristTax = taxAmount * Double(totalTravelers) * Double(nights)
 			}
 			
 			// Frais hôte : commission plateforme + frais bancaires
 			var fees: Double = 0
-			if let platformPercent = commission.platform?.amount {
+			if let platformPercent = commission?.platform?.amount {
 				fees += totalNightsCleaning * (platformPercent / 100)
 			}
-			if let bankPercent = commission.bank?.amount {
+			if let bankPercent = commission?.bank?.amount {
 				fees += totalNightsCleaning * (bankPercent / 100)
 			}
 			hostFees = fees
 			
 		case .abritel:
 			// Frais voyageur : pourcentage sur (nuitées + ménage)
-			if let travelerPercent = commission.traveler?.amount {
+			if let travelerPercent = commission?.traveler?.amount {
 				travelerFees = totalNightsCleaning * (travelerPercent / 100)
 			}
 			
 			// Taxe de séjour : montant par personne par nuit
-			if let taxAmount = commission.touristTax?.amount {
+			if let taxAmount = commission?.touristTax?.amount {
 				touristTax = taxAmount * Double(totalTravelers) * Double(nights)
 			}
 			
 			// Frais hôte : commission plateforme + frais bancaires
 			var fees: Double = 0
-			if let platformPercent = commission.platform?.amount {
+			if let platformPercent = commission?.platform?.amount {
 				fees += totalNightsCleaning * (platformPercent / 100)
 			}
-			if let bankPercent = commission.bank?.amount {
+			if let bankPercent = commission?.bank?.amount {
 				fees += totalNightsCleaning * (bankPercent / 100)
 			}
 			hostFees = fees
@@ -211,6 +211,8 @@ extension RU_Platform.PlatformType {
             return Colors.Platform.Background.Booking
         case .abritel:
             return Colors.Platform.Background.Abritel
+        case .direct:
+            return Colors.Platform.Background.Direct
         }
     }
     
@@ -228,6 +230,8 @@ extension RU_Platform.PlatformType {
             return Colors.Platform.Text.Booking
         case .abritel:
             return Colors.Platform.Text.Abritel
+        case .direct:
+            return Colors.Platform.Text.Direct
         }
     }
     
