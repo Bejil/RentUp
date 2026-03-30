@@ -25,13 +25,7 @@ public class RU_Bookings_ViewController: RU_ViewController {
 			bookingsTableView.dismissPlaceholder()
 			bookingsTableView.reloadData()
 			
-			if let index = filteredBookings?.lastIndex(where: { $0.status == .current || $0.status == .upcoming }) {
-				
-				DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) { [weak self] in
-					
-                    self?.bookingsTableView.selectRow(at: IndexPath(row: index, section: 0), animated: true, scrollPosition: .middle)
-				}
-			}
+            scrollToClosestBooking()
 			
 			if filteredBookings?.isEmpty ?? true {
 				
@@ -115,10 +109,6 @@ public class RU_Bookings_ViewController: RU_ViewController {
 	}(RU_Label())
     private lazy var bottomStackView:RU_StackView = {
         
-        $0.layer.shadowOffset = .zero
-        $0.layer.shadowOpacity = 0.05
-        $0.layer.shadowRadius = UI.CornerRadius
-        $0.layer.shadowColor = Colors.Content.Text.cgColor
         $0.axis = .horizontal
         $0.spacing = UI.Margins
         $0.alignment = .center
@@ -147,6 +137,24 @@ public class RU_Bookings_ViewController: RU_ViewController {
         return $0
         
     }(RU_StackView())
+    private lazy var currentButton:RU_Button = {
+        
+        $0.type = .tertiary
+        $0.image = UIImage(systemName: "chevron.down")
+        
+        let size = 4*UI.Margins
+        
+        $0.configuration?.background.cornerRadius = size/2
+        $0.snp.remakeConstraints { make in
+            make.size.equalTo(size)
+        }
+        
+        return $0
+        
+    }(RU_Button() { [weak self] _ in
+        
+        self?.scrollToClosestBooking()
+    })
     private lazy var calendarButton:RU_Button = {
         
         $0.type = .secondary
@@ -264,8 +272,16 @@ public class RU_Bookings_ViewController: RU_ViewController {
             make.edges.equalToSuperview()
         }
         
-        let buttonsStackView:RU_StackView = .init(arrangedSubviews: [bottomStackView,deleteButton])
+        let currentStackView:RU_StackView = .init(arrangedSubviews: [.init(),currentButton])
+        currentStackView.axis = .horizontal
+        
+        let buttonsStackView:RU_StackView = .init(arrangedSubviews: [currentStackView,bottomStackView,deleteButton])
+        buttonsStackView.layer.shadowOffset = .zero
+        buttonsStackView.layer.shadowOpacity = 0.05
+        buttonsStackView.layer.shadowRadius = UI.CornerRadius
+        buttonsStackView.layer.shadowColor = Colors.Content.Text.cgColor
         buttonsStackView.axis = .vertical
+        buttonsStackView.spacing = UI.Margins
         view.addSubview(buttonsStackView)
         buttonsStackView.snp.makeConstraints { make in
             make.bottom.equalTo(view.safeAreaLayoutGuide).inset(UI.Margins)
@@ -347,6 +363,17 @@ public class RU_Bookings_ViewController: RU_ViewController {
 			}
 		}
 	}
+    
+    private func scrollToClosestBooking() {
+        
+        if let index = filteredBookings?.lastIndex(where: { $0.status == .current || $0.status == .upcoming }) {
+            
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) { [weak self] in
+                
+                self?.bookingsTableView.selectRow(at: IndexPath(row: index, section: 0), animated: true, scrollPosition: .middle)
+            }
+        }
+    }
 	
 	private func updateFilterNavigationItem() {
 		
@@ -437,34 +464,34 @@ public class RU_Bookings_ViewController: RU_ViewController {
 }
 
 extension RU_Bookings_ViewController: UITableViewDelegate, UITableViewDataSource {
-	
-	public func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-		
-		return filteredBookings?.count ?? 0
-	}
-	
-	public func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-		
-		let cell:RU_Booking_TableViewCell = tableView.dequeueReusableCell(withIdentifier: RU_Booking_TableViewCell.identifier, for: indexPath) as! RU_Booking_TableViewCell
-		cell.booking = filteredBookings?[indexPath.row]
-		cell.deleteHandler = { booking in
-			
-			let alertController:RU_Booking_Delete_Alert_ViewController = .init()
-			alertController.booking = booking
-			alertController.present()
-		}
-		cell.editHandler = { [weak self] booking in
-			
-			let viewController:RU_Bookings_Edit_ViewController = .init()
-			viewController.booking = booking
-			self?.navigationController?.pushViewController(viewController, animated: true)
-		}
+    
+    public func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
+        
+        return filteredBookings?.count ?? 0
+    }
+    
+    public func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
+        
+        let cell:RU_Booking_TableViewCell = tableView.dequeueReusableCell(withIdentifier: RU_Booking_TableViewCell.identifier, for: indexPath) as! RU_Booking_TableViewCell
+        cell.booking = filteredBookings?[indexPath.row]
+        cell.deleteHandler = { booking in
+            
+            let alertController:RU_Booking_Delete_Alert_ViewController = .init()
+            alertController.booking = booking
+            alertController.present()
+        }
+        cell.editHandler = { [weak self] booking in
+            
+            let viewController:RU_Bookings_Edit_ViewController = .init()
+            viewController.booking = booking
+            self?.navigationController?.pushViewController(viewController, animated: true)
+        }
         cell.cancelHandler = { [weak self] booking, state in
             
             booking?.isCancelled = state
             
             RU_Alert_ViewController.presentLoading { [weak self] alertController in
-              
+                
                 booking?.save { [weak self] error in
                     
                     alertController?.close { [weak self] in
@@ -481,11 +508,11 @@ extension RU_Bookings_ViewController: UITableViewDelegate, UITableViewDataSource
                 }
             }
         }
-		return cell
-	}
-	
-	public func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
-		
+        return cell
+    }
+    
+    public func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
+        
         if !tableView.isEditing {
             
             tableView.deselectRow(at: indexPath, animated: true)
@@ -507,9 +534,9 @@ extension RU_Bookings_ViewController: UITableViewDelegate, UITableViewDataSource
             updateSelection()
         }
     }
-	
-	public func tableView(_ tableView: UITableView, contextMenuConfigurationForRowAt indexPath: IndexPath, point: CGPoint) -> UIContextMenuConfiguration? {
-		
+    
+    public func tableView(_ tableView: UITableView, contextMenuConfigurationForRowAt indexPath: IndexPath, point: CGPoint) -> UIContextMenuConfiguration? {
+        
         if !tableView.isEditing {
             
             return UIContextMenuConfiguration.init(identifier: indexPath as NSIndexPath, previewProvider: { () -> UIViewController? in
@@ -524,22 +551,55 @@ extension RU_Bookings_ViewController: UITableViewDelegate, UITableViewDataSource
         }
         
         return nil
-	}
-	
-	public func tableView(_ tableView: UITableView, willPerformPreviewActionForMenuWith configuration: UIContextMenuConfiguration, animator: UIContextMenuInteractionCommitAnimating) {
-		
-		guard let indexPath = configuration.identifier as? IndexPath else { return }
-		
-		animator.addCompletion {
-			
-			tableView.delegate?.tableView?(tableView, didSelectRowAt: indexPath)
-		}
-	}
-	
-	public func tableView(_ tableView: UITableView, trailingSwipeActionsConfigurationForRowAt indexPath: IndexPath) -> UISwipeActionsConfiguration? {
-		
-		let cell = tableView.cellForRow(at: indexPath) as? RU_Booking_TableViewCell
-		return cell?.trailingSwipeActionsConfiguration
-	}
+    }
+    
+    public func tableView(_ tableView: UITableView, willPerformPreviewActionForMenuWith configuration: UIContextMenuConfiguration, animator: UIContextMenuInteractionCommitAnimating) {
+        
+        guard let indexPath = configuration.identifier as? IndexPath else { return }
+        
+        animator.addCompletion {
+            
+            tableView.delegate?.tableView?(tableView, didSelectRowAt: indexPath)
+        }
+    }
+    
+    public func tableView(_ tableView: UITableView, trailingSwipeActionsConfigurationForRowAt indexPath: IndexPath) -> UISwipeActionsConfiguration? {
+        
+        let cell = tableView.cellForRow(at: indexPath) as? RU_Booking_TableViewCell
+        return cell?.trailingSwipeActionsConfiguration
+    }
+    
+    public func scrollViewDidScroll(_ scrollView: UIScrollView) {
+        
+        UIView.animation {
+            
+            self.currentButton.alpha = 0
+            
+            guard let index = self.filteredBookings?.lastIndex(where: { $0.status == .current || $0.status == .upcoming }) else { return }
+            
+            let target = IndexPath(row: index, section: 0)
+            
+            if self.bookingsTableView.indexPathsForVisibleRows?.contains(target) ?? false {
+                
+                return
+            }
+            
+            let visibleRows = self.bookingsTableView.indexPathsForVisibleRows?.filter { $0.section == target.section }.map(\.row).sorted() ?? []
+            
+            if let minVisible = visibleRows.first, index < minVisible {
+                
+                self.currentButton.image = UIImage(systemName: "chevron.up")
+            }
+            else if let maxVisible = visibleRows.last, index > maxVisible {
+                
+                self.currentButton.image = UIImage(systemName: "chevron.down")
+            }
+            else {
+                
+                self.currentButton.image = UIImage(systemName: "chevron.down")
+            }
+            
+            self.currentButton.alpha = 1
+        }
+    }
 }
-
