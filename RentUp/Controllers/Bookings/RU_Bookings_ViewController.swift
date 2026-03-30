@@ -13,9 +13,7 @@ public class RU_Bookings_ViewController: RU_ViewController {
 	private var bookings:[RU_Booking]? {
 		
 		didSet {
-            
-            let sortedBookings = bookings?.sorted { $0.dates.start > $1.dates.start }
-			filteredBookings = sortedBookings
+            applyFilters()
 		}
 	}
 	private var filteredBookings:[RU_Booking]? {
@@ -45,21 +43,60 @@ public class RU_Bookings_ViewController: RU_ViewController {
                 button.image = UIImage(systemName: "plus")
 			}
 			
-            let total = filteredBookings?.filter({
-                
-                currentFilterName == RU_Booking.Status.cancelled.text ? $0.status == .cancelled : $0.status != .cancelled
-                
-            }).compactMap { $0.platform?.calculatePrice(for: $0)?.hostTotal }.reduce(0, +) ?? 0
+            // Historique : quand aucun filtre statut n'est actif, on exclut les réservations annulées du total.
+            // Dès qu'un filtre statut est actif (y compris "cancelled"), on laisse le total refléter le filtre.
+            let totalBookings = activeFilters.status == nil
+                ? filteredBookings?.filter { $0.status != .cancelled } ?? []
+                : filteredBookings ?? []
+            let total = totalBookings.compactMap { $0.platform?.calculatePrice(for: $0)?.hostTotal }.reduce(0, +)
+            
 			totalValueLabel.text = String(format: "%.2f €", total)
 		}
 	}
-	private var currentFilterName:String? {
-		
-		didSet {
-			
-			updateFilterNavigationItem()
-		}
-	}
+
+    private struct ActiveFilters {
+        var status: RU_Booking.Status?
+        var platform: RU_Platform?
+        var classified: RU_Classified?
+    }
+    
+    private var activeFilters = ActiveFilters(status: nil, platform: nil, classified: nil)
+    
+    private var activeFiltersTitle: String? {
+        var parts: [String] = []
+        
+        if let status = activeFilters.status {
+            parts.append(status.text)
+        }
+        if let platform = activeFilters.platform, let name = platform.type?.name {
+            parts.append(name)
+        }
+        if let classified = activeFilters.classified, let name = classified.name {
+            parts.append(name)
+        }
+        
+        return parts.isEmpty ? nil : parts.joined(separator: " + ")
+    }
+    
+    private func applyFilters() {
+        let base = bookings?.sorted { $0.dates.start > $1.dates.start } ?? []
+        
+        filteredBookings = base.filter { b in
+            if let s = activeFilters.status, b.status != s { return false }
+            
+            if let p = activeFilters.platform {
+                guard let bp = b.platform else { return false }
+                if bp != p { return false }
+            }
+            
+            if let c = activeFilters.classified {
+                guard let bc = b.classified else { return false }
+                if bc != c { return false }
+            }
+            
+            return true
+        }
+    }
     private lazy var bookingsTableView:RU_TableView = {
 		
         $0.allowsMultipleSelectionDuringEditing = true
@@ -312,15 +349,17 @@ public class RU_Bookings_ViewController: RU_ViewController {
                 var children:[UIMenuElement] = .init()
                 
                 children.append(UIAction(title: String(key: "bookings.filter.reset"), image: UIImage(systemName: "arrow.counterclockwise"), attributes: .destructive, handler: { [weak self] _ in
-                    
-                    self?.currentFilterName = nil
-                    self?.filteredBookings = self?.bookings
+                    guard let self else { return }
+                    self.activeFilters = .init(status: nil, platform: nil, classified: nil)
+                    self.applyFilters()
                 }))
                 
                 children.append(UIMenu(title: String(key: "bookings.filter.status"), children: RU_Booking.Status.allCases.map({ status in
                     UIAction(title: status.text, handler: { [weak self] _ in
-                        self?.currentFilterName = status.text
-                        self?.filteredBookings = self?.bookings?.filter { $0.status == status }
+                        guard let self else { return }
+                        let isSame = self.activeFilters.status == status
+                        self.activeFilters.status = isSame ? nil : status
+                        self.applyFilters()
                     })
                 })))
                 
@@ -331,9 +370,10 @@ public class RU_Bookings_ViewController: RU_ViewController {
                         if let name = platform.type?.name {
                             
                             return UIAction(title: name, handler: { [weak self] _ in
-                                
-                                self?.currentFilterName = name
-                                self?.filteredBookings = self?.bookings?.filter({ $0.platform == platform })
+                                guard let self else { return }
+                                let isSame = self.activeFilters.platform == platform
+                                self.activeFilters.platform = isSame ? nil : platform
+                                self.applyFilters()
                             })
                         }
                         
@@ -350,9 +390,10 @@ public class RU_Bookings_ViewController: RU_ViewController {
                             if let name = classified.name {
                                 
                                 return UIAction(title: name, handler: { [weak self] _ in
-                                    
-                                    self?.currentFilterName = name
-                                    self?.filteredBookings = self?.bookings?.filter({ $0.classified == classified })
+                                    guard let self else { return }
+                                    let isSame = self.activeFilters.classified == classified
+                                    self.activeFilters.classified = isSame ? nil : classified
+                                    self.applyFilters()
                                 })
                             }
                             
@@ -363,8 +404,8 @@ public class RU_Bookings_ViewController: RU_ViewController {
                     if !children.isEmpty {
                         
                         let buttonTitle:String
-                        if let filterName = self?.currentFilterName {
-                            buttonTitle = String(key: "bookings.filter.active") + filterName
+                        if let title = self?.activeFiltersTitle {
+                            buttonTitle = String(key: "bookings.filter.active") + title
                         }
                         else {
                             buttonTitle = String(key: "bookings.filter.button")

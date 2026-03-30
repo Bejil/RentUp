@@ -13,8 +13,7 @@ public class RU_Reporting_ViewController : RU_ViewController {
     private var bookings:[RU_Booking]? {
         
         didSet {
-            
-            filteredBookings = bookings
+            applyFilters()
         }
     }
     private var filteredBookings:[RU_Booking]? {
@@ -22,6 +21,8 @@ public class RU_Reporting_ViewController : RU_ViewController {
         didSet {
             
             view.dismissPlaceholder()
+            
+            updateFilterNavigationItem()
             
             if filteredBookings?.isEmpty ?? true {
                 
@@ -238,13 +239,53 @@ public class RU_Reporting_ViewController : RU_ViewController {
             }
         }
     }
-    private var currentFilterName:String? {
-        
-        didSet {
-            
-            updateFilterNavigationItem()
+
+    private struct ActiveFilters {
+        var status: RU_Booking.Status?
+        var platform: RU_Platform?
+        var classified: RU_Classified?
+    }
+
+    private var activeFilters = ActiveFilters(status: nil, platform: nil, classified: nil)
+
+    private var activeFiltersTitle: String? {
+        var parts: [String] = []
+
+        if let status = activeFilters.status {
+            parts.append(status.text)
+        }
+
+        if let platform = activeFilters.platform, let name = platform.type?.name {
+            parts.append(name)
+        }
+
+        if let classified = activeFilters.classified, let name = classified.name {
+            parts.append(name)
+        }
+
+        return parts.isEmpty ? nil : parts.joined(separator: " + ")
+    }
+
+    private func applyFilters() {
+        let base = bookings ?? []
+
+        filteredBookings = base.filter { b in
+            if let s = activeFilters.status, b.status.text != s.text { return false }
+
+            if let p = activeFilters.platform {
+                guard let bp = b.platform else { return false }
+                if bp != p { return false }
+            }
+
+            if let c = activeFilters.classified {
+                guard let bc = b.classified else { return false }
+                if bc != c { return false }
+            }
+
+            return true
         }
     }
+
     private lazy var contentScrollView:RU_ScrollView = .init()
     private lazy var occupationCurrentMonthLabel: RU_Label = .init()
     private lazy var occupationPreviousMonthLabel: RU_Label = .init()
@@ -383,30 +424,37 @@ public class RU_Reporting_ViewController : RU_ViewController {
     
     private func updateFilterNavigationItem() {
         
-        if filteredBookings?.isEmpty ?? true {
-            
-            navigationItem.rightBarButtonItem = nil
-        }
-        else {
+        navigationItem.rightBarButtonItem = nil
+        
+        if !(bookings?.isEmpty ?? true) {
             
             var children:[UIMenuElement] = .init()
             
-            children.append(UIAction(title: String(key: "reporting.filter.reset"), image: UIImage(systemName: "arrow.counterclockwise"), attributes: .destructive, handler: { [weak self] _ in
-                
-                self?.currentFilterName = nil
-                self?.filteredBookings = self?.bookings
+            children.append(UIAction(title: String(key: "bookings.filter.reset"), image: UIImage(systemName: "arrow.counterclockwise"), attributes: .destructive, handler: { [weak self] _ in
+                guard let self else { return }
+                self.activeFilters = .init(status: nil, platform: nil, classified: nil)
+                self.applyFilters()
             }))
+            
+            children.append(UIMenu(title: String(key: "bookings.filter.status"), children: RU_Booking.Status.allCases.map({ status in
+                UIAction(title: status.text, handler: { [weak self] _ in
+                    guard let self else { return }
+                    let isSame = self.activeFilters.status?.text == status.text
+                    self.activeFilters.status = isSame ? nil : status
+                    self.applyFilters()
+                })
+            })))
             
             if let platforms = RU_Platform.all, !platforms.isEmpty {
                 
-                children.append(UIMenu(title: String(key: "reporting.filter.platform"), children: platforms.compactMap({ platform in
+                children.append(UIMenu(title: String(key: "bookings.filter.platform"), children: platforms.compactMap({ platform in
                     
                     if let name = platform.type?.name {
                         
                         return UIAction(title: name, handler: { [weak self] _ in
-                            
-                            self?.currentFilterName = name
-                            self?.filteredBookings = self?.bookings?.filter({ $0.platform == platform })
+                            guard let self else { return }
+                            self.activeFilters.platform = (self.activeFilters.platform == platform) ? nil : platform
+                            self.applyFilters()
                         })
                     }
                     
@@ -418,14 +466,14 @@ public class RU_Reporting_ViewController : RU_ViewController {
                 
                 if let classifieds, !classifieds.isEmpty {
                     
-                    children.append(UIMenu(title: String(key: "reporting.filter.classified"), children: classifieds.compactMap({ classified in
+                    children.append(UIMenu(title: String(key: "bookings.filter.classified"), children: classifieds.compactMap({ classified in
                         
                         if let name = classified.name {
                             
                             return UIAction(title: name, handler: { [weak self] _ in
-                                
-                                self?.currentFilterName = name
-                                self?.filteredBookings = self?.bookings?.filter({ $0.classified == classified })
+                                guard let self else { return }
+                                self.activeFilters.classified = (self.activeFilters.classified == classified) ? nil : classified
+                                self.applyFilters()
                             })
                         }
                         
@@ -436,14 +484,14 @@ public class RU_Reporting_ViewController : RU_ViewController {
                 if !children.isEmpty {
                     
                     let buttonTitle:String
-                    if let filterName = self?.currentFilterName {
-                        buttonTitle = String(key: "reporting.filter.active") + filterName
+                    if let title = self?.activeFiltersTitle {
+                        buttonTitle = String(key: "bookings.filter.active") + title
                     }
                     else {
-                        buttonTitle = String(key: "reporting.filter.button")
+                        buttonTitle = String(key: "bookings.filter.button")
                     }
                     
-                    self?.navigationItem.rightBarButtonItem = .init(title: buttonTitle, menu: .init(title: String(key: "reporting.filter.menu.title"), children: children))
+                    self?.navigationItem.rightBarButtonItem = .init(title: buttonTitle, menu: .init(title: String(key: "bookings.filter.menu.title"), children: children))
                 }
             }
         }
