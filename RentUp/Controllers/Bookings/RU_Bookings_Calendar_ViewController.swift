@@ -15,6 +15,15 @@ public class RU_Bookings_Calendar_ViewController: RU_ViewController {
 	
     private let maxVisibleLanesPerDay = 3
     
+    /// Calendrier aligné ISO / France : semaine du lundi au dimanche (idem que `weekdayIndex` d’HorizonCalendar : 0 = dimanche … 6 = samedi).
+    private let displayedCalendar: Calendar = {
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.locale = Locale(identifier: "fr_FR")
+        calendar.firstWeekday = 2
+        calendar.minimumDaysInFirstWeek = 4
+        return calendar
+    }()
+    
 	public var bookings: [RU_Booking]? {
 		didSet {
 			updateCalendar()
@@ -62,7 +71,7 @@ public class RU_Bookings_Calendar_ViewController: RU_ViewController {
 	
 	internal func handleDaySelection(_ day: DayComponents) {
 		
-		let calendar = Calendar.current
+		let calendar = displayedCalendar
 		guard let selectedDate = calendar.date(from: DateComponents(year: day.month.year, month: day.month.month, day: day.day)) else { return }
         let selectedDay = calendar.startOfDay(for: selectedDate)
 		
@@ -108,7 +117,7 @@ public class RU_Bookings_Calendar_ViewController: RU_ViewController {
 	
 	internal func makeContent() -> CalendarViewContent {
 		
-		let calendar = Calendar.current
+		let calendar = displayedCalendar
         let today = calendar.startOfDay(for: Date())
         
         let activeBookings = (bookings ?? []).filter { !$0.isCancelled }
@@ -171,10 +180,11 @@ public class RU_Bookings_Calendar_ViewController: RU_ViewController {
 			)
 		}
 		
-		// Day of week header
-		.dayOfWeekItemProvider { _, dayOfWeek in
-			let weekdaySymbols = ["L", "M", "M", "J", "V", "S", "D"]
-			let text = weekdaySymbols[dayOfWeek]
+		// Day of week header — `weekdayIndex` HorizonCalendar = indice Apple (0 = dimanche … 6 = samedi), comme les symboles du calendrier.
+		.dayOfWeekItemProvider { _, weekdayIndex in
+			let weekdaySymbols = ["D", "L", "M", "M", "J", "V", "S"]
+			let index = max(0, min(weekdaySymbols.count - 1, weekdayIndex))
+			let text = weekdaySymbols[index]
 			
 			return CalendarItemModel<DayOfWeekView>(
 				invariantViewProperties: .init(font: Fonts.Content.Text.Bold, textColor: Colors.Content.Text.withAlphaComponent(0.5)),
@@ -475,6 +485,7 @@ private final class BookingDayView: UIView, CalendarItemViewRepresentable {
     private static let barHeight: CGFloat = 5
 	private static let barSpacing: CGFloat = 2
 	private static let barLabelSpacing: CGFloat = 3
+    private static let horizontalInset: CGFloat = 2
 
 	init() {
 		super.init(frame: .zero)
@@ -493,7 +504,7 @@ private final class BookingDayView: UIView, CalendarItemViewRepresentable {
 		contentStackView.alignment = .center
 		addSubview(contentStackView)
 		contentStackView.snp.makeConstraints { make in
-			make.center.equalToSuperview()
+			make.edges.equalToSuperview()
 		}
 
         barsStackView.axis = .vertical
@@ -501,7 +512,7 @@ private final class BookingDayView: UIView, CalendarItemViewRepresentable {
         barsStackView.alignment = .fill
         contentStackView.addArrangedSubview(barsStackView)
         barsStackView.snp.makeConstraints { make in
-            make.width.equalTo(UI.Margins * 1.4)
+            make.left.right.equalToSuperview().inset(Self.horizontalInset)
         }
         
         moreLabel.font = Fonts.Content.Text.Bold.withSize(9)
@@ -565,7 +576,21 @@ private final class BookingDayView: UIView, CalendarItemViewRepresentable {
                 view.barsStackView.addArrangedSubview(bar)
                 bar.snp.makeConstraints { make in
                     make.height.equalTo(Self.barHeight)
-                    make.width.equalTo(UI.Margins * 1.4)
+                    if booking.isStartDate && booking.isEndDate {
+                        make.width.equalToSuperview().multipliedBy(0.5)
+                        make.centerX.equalToSuperview()
+                    }
+                    else if booking.isStartDate {
+                        make.width.equalToSuperview().multipliedBy(0.5)
+                        make.right.equalToSuperview()
+                    }
+                    else if booking.isEndDate {
+                        make.width.equalToSuperview().multipliedBy(0.5)
+                        make.left.equalToSuperview()
+                    }
+                    else {
+                        make.left.right.equalToSuperview()
+                    }
                 }
 			}
 		} else {

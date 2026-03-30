@@ -386,6 +386,9 @@
 "platform.abritel.name" = "Abritel";
 "platform.abritel.priceFormula.traveler" = "Le voyageur paie le total des nuitées et du ménage, auquel s'ajoutent la taxe de séjour et les frais de service voyageur calculés en pourcentage.";
 "platform.abritel.priceFormula.host" = "Vous touchez le total des nuitées et du ménage, moins la commission de la plateforme et les frais bancaires.";
+"platform.direct.name" = "Direct";
+"platform.direct.priceFormula.traveler" = "Le voyageur paie le total des nuitées directement à l'hôte, sans intermédiaire.";
+"platform.direct.priceFormula.host" = "Vous touchez le total des nuitées sans intermédiaire ni frais cachés.";
 
 //MARK: - TextField
 "common.validate" = "Valider";

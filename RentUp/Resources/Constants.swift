@@ -137,6 +137,7 @@ public struct Colors {
 			public static let Airbnb:UIColor = UIColor(named: "PlatformBackgroundAirbnb")!
 			public static let Booking:UIColor = UIColor(named: "PlatformBackgroundBooking")!
 			public static let Abritel:UIColor = UIColor(named: "PlatformBackgroundAbritel")!
+            public static let Direct:UIColor = UIColor(named: "PlatformBackgroundDirect")!
 		}
 		
 		public struct Text {
@@ -144,6 +145,7 @@ public struct Colors {
 			public static let Airbnb:UIColor = UIColor(named: "PlatformTextAirbnb")!
 			public static let Booking:UIColor = UIColor(named: "PlatformTextBooking")!
 			public static let Abritel:UIColor = UIColor(named: "PlatformTextAbritel")!
+            public static let Direct:UIColor = UIColor(named: "PlatformTextDirect")!
 		}
 	}
 	
