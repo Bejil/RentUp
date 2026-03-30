@@ -108,8 +108,8 @@ public class RU_Bookings_ViewController: RU_ViewController {
 	}(RU_TableView(frame: .zero, style: .plain))
 	private lazy var totalValueLabel:RU_Label = {
 		
-		$0.font = Fonts.Content.Title.H2
-		$0.textAlignment = .right
+		$0.font = Fonts.Content.Title.H3
+		$0.textAlignment = .center
 		return $0
 		
 	}(RU_Label())
@@ -123,23 +123,23 @@ public class RU_Bookings_ViewController: RU_ViewController {
         $0.spacing = UI.Margins
         $0.alignment = .center
         
+        $0.addArrangedSubview(calendarButton)
+        
         let visualEffectView:UIVisualEffectView = .init(effect: UIGlassEffect(style: .regular))
         visualEffectView.layer.cornerRadius = UI.CornerRadius
         $0.addArrangedSubview(visualEffectView)
         
         let totalLabel:RU_Label = .init(String(key: "bookings.total.label"))
         totalLabel.font = Fonts.Content.Text.Bold.withSize(Fonts.Size-1)
-        totalLabel.textAlignment = .left
+        totalLabel.textAlignment = .center
         totalLabel.setContentHuggingPriority(.required, for: .horizontal)
         totalLabel.setContentCompressionResistancePriority(.required, for: .horizontal)
         
         let totalStackView:RU_StackView = .init(arrangedSubviews: [totalLabel,totalValueLabel])
-        totalStackView.axis = .horizontal
-        totalStackView.alignment = .center
-        totalStackView.spacing = UI.Margins/2
+        totalStackView.axis = .vertical
         visualEffectView.contentView.addSubview(totalStackView)
         totalStackView.snp.makeConstraints { make in
-            make.edges.equalToSuperview().inset(UI.Margins)
+            make.edges.equalToSuperview().inset(3*UI.Margins/4)
         }
         
         $0.addArrangedSubview(addButton)
@@ -147,12 +147,47 @@ public class RU_Bookings_ViewController: RU_ViewController {
         return $0
         
     }(RU_StackView())
+    private lazy var calendarButton:RU_Button = {
+        
+        $0.type = .secondary
+        $0.image = UIImage(systemName: "calendar")
+        
+        let size = 4*UI.Margins
+        
+        $0.configuration?.background.cornerRadius = size/2
+        $0.snp.remakeConstraints { make in
+            make.size.equalTo(size)
+        }
+        
+        return $0
+        
+    }(RU_Button() { [weak self] _ in
+        
+        let calendarViewController = RU_Bookings_Calendar_ViewController()
+        calendarViewController.bookings = self?.bookings?.filter({ $0.status != .cancelled })
+        calendarViewController.didSelectBooking = { [weak self] booking in
+            
+            calendarViewController.dismiss {
+                
+                let detailViewController = RU_Bookings_Detail_ViewController()
+                detailViewController.booking = booking
+                self?.navigationController?.pushViewController(detailViewController, animated: true)
+            }
+        }
+        
+        UI.MainController.present(RU_NavigationController(rootViewController: calendarViewController), animated: true)
+    })
     private lazy var addButton:RU_Button = {
         
         $0.image = UIImage(systemName: "plus")
-        $0.snp.removeConstraints()
-        $0.setContentHuggingPriority(.required, for: .horizontal)
-        $0.setContentCompressionResistancePriority(.required, for: .horizontal)
+        
+        let size = 4*UI.Margins
+        
+        $0.configuration?.background.cornerRadius = size/2
+        $0.snp.remakeConstraints { make in
+            make.size.equalTo(size)
+        }
+        
         return $0
         
     }(RU_Button() { _ in
@@ -254,10 +289,6 @@ public class RU_Bookings_ViewController: RU_ViewController {
         
         super.viewDidLayoutSubviews()
         
-        addButton.configuration?.background.cornerRadius = bottomStackView.frame.size.height/2
-        addButton.snp.remakeConstraints { make in
-            make.size.equalTo(bottomStackView.frame.size.height)
-        }
         bookingsTableView.contentInset.bottom = bottomStackView.frame.size.height + (2*UI.Margins)
         bookingsTableView.verticalScrollIndicatorInsets.bottom = bookingsTableView.contentInset.bottom
     }
@@ -320,31 +351,15 @@ public class RU_Bookings_ViewController: RU_ViewController {
 	private func updateFilterNavigationItem() {
 		
         navigationItem.leftBarButtonItem = nil
+        navigationItem.rightBarButtonItem = nil
         
         bottomStackView.isHidden = true
         
         if !(bookings?.isEmpty ?? true) {
             
-            navigationItem.rightBarButtonItems = [editButtonItem]
+            navigationItem.rightBarButtonItem = editButtonItem
             
             if !isEditing {
-                
-                navigationItem.leftBarButtonItem = .init(title: String(key: "bookings.calendar.button"), primaryAction: .init(handler: { [weak self] _ in
-                    
-                    let calendarViewController = RU_Bookings_Calendar_ViewController()
-                    calendarViewController.bookings = self?.bookings?.filter({ $0.status != .cancelled })
-                    calendarViewController.didSelectBooking = { [weak self] booking in
-                        
-                        calendarViewController.dismiss {
-                            
-                            let detailViewController = RU_Bookings_Detail_ViewController()
-                            detailViewController.booking = booking
-                            self?.navigationController?.pushViewController(detailViewController, animated: true)
-                        }
-                    }
-                    
-                    UI.MainController.present(RU_NavigationController(rootViewController: calendarViewController), animated: true)
-                }))
                 
                 var children:[UIMenuElement] = .init()
                 
@@ -411,9 +426,7 @@ public class RU_Bookings_ViewController: RU_ViewController {
                             buttonTitle = String(key: "bookings.filter.button")
                         }
                         
-                        var rightBarButtonItems = self?.navigationItem.rightBarButtonItems ?? []
-                        rightBarButtonItems.append(.init(title: buttonTitle, menu: .init(title: String(key: "bookings.filter.menu.title"), children: children)))
-                        self?.navigationItem.rightBarButtonItems = rightBarButtonItems
+                        self?.navigationItem.leftBarButtonItem = .init(title: buttonTitle, menu: .init(title: String(key: "bookings.filter.menu.title"), children: children))
                     }
                 }
                 

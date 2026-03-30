@@ -184,7 +184,7 @@ public class RU_Booking_TableViewCell : RU_TableViewCell {
 		
 		let containerStackView:RU_StackView = .init(arrangedSubviews: [tagsStackView,contentStackView])
 		containerStackView.axis = .vertical
-		containerStackView.spacing = 3*UI.Margins/4
+		containerStackView.spacing = UI.Margins/2
 		contentView.addSubview(containerStackView)
 		containerStackView.snp.makeConstraints { make in
 			make.edges.equalToSuperview().inset(UI.Margins)

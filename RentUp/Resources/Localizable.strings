@@ -162,8 +162,7 @@
 "bookings.filter.classified" = "Biens";
 "bookings.filter.reset" = "Réinitialiser";
 "bookings.filter.active" = "Filtré par : ";
-"bookings.calendar.button" = "Calendrier";
-"bookings.total.label" = "Revenu total:";
+"bookings.total.label" = "Revenu total";
 "bookings.create.button" = "Ajouter une réservation";
 "bookings.delete.button" = "Supprimer";
 //Create
