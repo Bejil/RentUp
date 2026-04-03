@@ -13,6 +13,8 @@ public class RU_Reporting_ViewController : RU_ViewController {
     private var bookings:[RU_Booking]? {
         
         didSet {
+            
+            reportingTipStackView.bookings = bookings
             applyFilters()
         }
     }
@@ -239,15 +241,12 @@ public class RU_Reporting_ViewController : RU_ViewController {
             }
         }
     }
-
     private struct ActiveFilters {
         var status: RU_Booking.Status?
         var platform: RU_Platform?
         var classified: RU_Classified?
     }
-
     private var activeFilters = ActiveFilters(status: nil, platform: nil, classified: nil)
-
     private var activeFiltersTitle: String? {
         var parts: [String] = []
 
@@ -285,7 +284,7 @@ public class RU_Reporting_ViewController : RU_ViewController {
             return true
         }
     }
-
+    private lazy var reportingTipStackView: RU_Reporting_Tip_StackView = .init()
     private lazy var contentScrollView:RU_ScrollView = .init()
     private lazy var occupationCurrentMonthLabel: RU_Label = .init()
     private lazy var occupationPreviousMonthLabel: RU_Label = .init()
@@ -355,6 +354,8 @@ public class RU_Reporting_ViewController : RU_ViewController {
         contentStackView.snp.makeConstraints { make in
             make.edges.width.equalToSuperview()
         }
+        
+        contentStackView.addArrangedSubview(reportingTipStackView)
         
         let mainSectionStackView:RU_Section_StackView = .init()
         mainSectionStackView.title = String(key: "reporting.section.main")

@@ -21,6 +21,7 @@ extension UserDefaults {
 		case vibrationsEnabled = "vibrationsEnabled"
 		case soundsEnabled = "soundsEnabled"
 		case platforms = "platforms"
+        case reportingAlertLastShownMonthKey = "reportingAlertLastShownMonthKey"
 	}
 
 	public static func set(_ value: Any?, _ key: Keys) {

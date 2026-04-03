@@ -17,7 +17,15 @@ public class RU_Liquid_View: UIView {
     private var completion: (() -> Void)?
     private var didFinish: Bool = false
     
-    private var fillProgress: CGFloat = 0 // 0...1
+    private enum AnimationDirection {
+        case fill
+        case drain
+    }
+    
+    private var animationDirection: AnimationDirection = .fill
+    
+    /// 0 = vide, 1 = plein (interpolation selon `animationDirection` dans `step`).
+    private var fillProgress: CGFloat = 0
     private var phase1: CGFloat = 0
     private var phase2: CGFloat = 0
     private var phase3: CGFloat = 0
@@ -47,10 +55,34 @@ public class RU_Liquid_View: UIView {
         fatalError("init(coder:) has not been implemented")
     }
     
-    func startFill(duration: CFTimeInterval, completion: @escaping () -> Void) {
+    func startFill(duration: CFTimeInterval, _ completion:(()->Void)? = nil) {
+        
+        self.animationDirection = .fill
         self.duration = max(0.1, duration)
         self.startTime = CACurrentMediaTime()
         self.fillProgress = 0
+        self.phase1 = 0
+        self.phase2 = 1.2
+        self.phase3 = 2.4
+        self.sloshPhase = 0
+        self.completion = completion
+        self.didFinish = false
+        
+        bubblesLayer.birthRate = 0
+        dropletsLayer.birthRate = 0
+        
+        displayLink?.invalidate()
+        let displayLink = CADisplayLink(target: self, selector: #selector(step))
+        self.displayLink = displayLink
+        displayLink.add(to: .main, forMode: .common)
+    }
+
+    /// Inverse de `startFill` : vide la vue avec la même animation ondulante.
+    func startDrain(duration: CFTimeInterval, _ completion:(()->Void)? = nil) {
+        self.animationDirection = .drain
+        self.duration = max(0.1, duration)
+        self.startTime = CACurrentMediaTime()
+        self.fillProgress = 1
         self.phase1 = 0
         self.phase2 = 1.2
         self.phase3 = 2.4
@@ -80,7 +112,12 @@ public class RU_Liquid_View: UIView {
         
         // Ease-out pour un rendu plus "liquide"
         let eased = 1 - pow(1 - p, 3)
-        fillProgress = CGFloat(eased)
+        switch animationDirection {
+        case .fill:
+            fillProgress = CGFloat(eased)
+        case .drain:
+            fillProgress = 1 - CGFloat(eased)
+        }
         
         // La vague ralentit/atténue en fin d’animation
         let speed = (1 - CGFloat(p) * 0.35)
@@ -108,7 +145,12 @@ public class RU_Liquid_View: UIView {
         let h = bounds.height
         guard w > 0, h > 0 else { return }
         
-        let progress = final ? CGFloat(1) : fillProgress
+        let progress: CGFloat = {
+            if final {
+                return animationDirection == .fill ? 1 : 0
+            }
+            return fillProgress
+        }()
         let sloshAmount = final ? 0 : (1 - progress) * 1.0
         let sloshY = sin(sloshPhase) * (h * 0.012) * sloshAmount
         let sloshX = cos(sloshPhase * 0.9) * (w * 0.018) * sloshAmount
