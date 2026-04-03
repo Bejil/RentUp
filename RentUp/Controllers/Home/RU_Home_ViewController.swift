@@ -9,6 +9,8 @@ import UIKit
 import SnapKit
 
 public class RU_Home_ViewController: RU_ViewController {
+    
+    private let reportingAlertLastShownMonthKey = "home.reporting.alert.lastShownMonth"
 	
 	private var bookings: [RU_Booking]? {
 		
@@ -28,6 +30,18 @@ public class RU_Home_ViewController: RU_ViewController {
                 }
                 button.image = UIImage(systemName: "plus")
 			}
+            
+            navigationItem.leftBarButtonItem = nil
+            
+            if !(bookings?.isEmpty ?? true) && RU_Booking.shouldPresentReporting {
+                
+                reportingTipStackView.isHidden = false
+                reportingTipStackView.bookings = bookings
+                
+                let alertController:RU_Reporting_Alert_ViewController = .init()
+                alertController.bookings = bookings
+                alertController.present()
+            }
 		}
 	}
 	private lazy var currentBookingSectionStackView: RU_Booking_Card_Section_StackView = {
@@ -42,6 +56,12 @@ public class RU_Home_ViewController: RU_ViewController {
 		return $0
 		
 	}(RU_Booking_Card_Section_StackView())
+    private lazy var reportingTipStackView:RU_Reporting_Tip_StackView = {
+        
+        $0.isHidden = true
+        return $0
+        
+    }(RU_Reporting_Tip_StackView())
 	private lazy var promoTipStackView: RU_Tip_StackView = {
         
 		$0.icon = UIImage(systemName: "tag.fill")
@@ -74,7 +94,7 @@ public class RU_Home_ViewController: RU_ViewController {
             make.edges.equalToSuperview()
         }
         
-        let contentStackView: RU_StackView = .init(arrangedSubviews: [promoTipStackView, currentBookingSectionStackView, nextBookingSectionStackView])
+        let contentStackView: RU_StackView = .init(arrangedSubviews: [reportingTipStackView, promoTipStackView, currentBookingSectionStackView, nextBookingSectionStackView])
         contentStackView.axis = .vertical
         contentStackView.spacing = 2 * UI.Margins
         contentStackView.isLayoutMarginsRelativeArrangement = true

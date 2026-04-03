@@ -162,8 +162,7 @@
 "bookings.filter.classified" = "Biens";
 "bookings.filter.reset" = "Réinitialiser";
 "bookings.filter.active" = "Filtré par : ";
-"bookings.calendar.button" = "Calendrier";
-"bookings.total.label" = "Revenu total:";
+"bookings.total.label" = "Revenu total";
 "bookings.create.button" = "Ajouter une réservation";
 "bookings.delete.button" = "Supprimer";
 //Create
@@ -431,3 +430,15 @@
 "account.reautenticate.delete.alert.label" = "Pour supprimer votre compte nous avons besoin de confirmer votre identité. Entrez votre mot de passe actuel.";
 "account.reautenticate.delete.alert.password.placeholder" = "Mot de passe";
 "account.reautenticate.delete.alert.button" = "Confirmer";
+
+//MARK: - Reporting Alert
+"reporting.alert.title.congrats" = "Félicitations";
+"reporting.alert.title.monthlyReview" = "Bilan du mois";
+"reporting.alert.content.better" = "Le mois de %@ est terminé !\nBravo, comparé à %@ vous avez surperformé ce mois-ci !";
+"reporting.alert.content.worse" = "Le mois de %@ est terminé.\nComparé à %@, le résultat est en retrait.";
+"reporting.alert.content.equal" = "Le mois de %@ est terminé.\nComparé à %@, le résultat est équivalent.";
+"reporting.alert.row.nights" = "Nombre de nuitées";
+"reporting.alert.row.featuredPlatform" = "Plateforme phare";
+"reporting.alert.row.occupation" = "Occupation";
+"reporting.alert.row.profitability" = "Rentabilité";
+"reporting.alert.row.total" = "TOTAL";

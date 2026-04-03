@@ -1,0 +1,49 @@
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+Icon?
+._*
+.DocumentRevisions-V100
+.fseventsd
+.Spotlight-V100
+.TemporaryItems
+.Trashes
+
+# Xcode / iOS
+DerivedData/
+build/
+Build/
+
+# Artefacts
+*.xcarchive
+*.xcresult
+*.ipa
+*.dSYM/
+
+# User-specific Xcode files
+*.xcuserstate
+xcuserdata/
+.xcode/
+
+# SwiftPM (si utilisé)
+.build/
+.swiftpm/
+
+# CocoaPods (au cas où)
+Pods/
+Podfile.lock
+
+# Carthage (au cas où)
+Carthage/Build/
+$(SRCROOT)/Carthage/Build/
+
+# IDEs
+.idea/
+.vscode/
+
+# Misc
+*.swp
+*.tmp
+*.log
+

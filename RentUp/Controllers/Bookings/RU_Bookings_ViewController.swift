@@ -13,9 +13,7 @@ public class RU_Bookings_ViewController: RU_ViewController {
 	private var bookings:[RU_Booking]? {
 		
 		didSet {
-            
-            let sortedBookings = bookings?.sorted { $0.dates.start > $1.dates.start }
-			filteredBookings = sortedBookings
+            applyFilters()
 		}
 	}
 	private var filteredBookings:[RU_Booking]? {
@@ -27,13 +25,7 @@ public class RU_Bookings_ViewController: RU_ViewController {
 			bookingsTableView.dismissPlaceholder()
 			bookingsTableView.reloadData()
 			
-			if let index = filteredBookings?.lastIndex(where: { $0.status == .current || $0.status == .upcoming }) {
-				
-				DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) { [weak self] in
-					
-                    self?.bookingsTableView.selectRow(at: IndexPath(row: index, section: 0), animated: true, scrollPosition: .middle)
-				}
-			}
+            scrollToClosestBooking()
 			
 			if filteredBookings?.isEmpty ?? true {
 				
@@ -45,21 +37,60 @@ public class RU_Bookings_ViewController: RU_ViewController {
                 button.image = UIImage(systemName: "plus")
 			}
 			
-            let total = filteredBookings?.filter({
-                
-                currentFilterName == RU_Booking.Status.cancelled.text ? $0.status == .cancelled : $0.status != .cancelled
-                
-            }).compactMap { $0.platform?.calculatePrice(for: $0)?.hostTotal }.reduce(0, +) ?? 0
+            // Historique : quand aucun filtre statut n'est actif, on exclut les réservations annulées du total.
+            // Dès qu'un filtre statut est actif (y compris "cancelled"), on laisse le total refléter le filtre.
+            let totalBookings = activeFilters.status == nil
+                ? filteredBookings?.filter { $0.status != .cancelled } ?? []
+                : filteredBookings ?? []
+            let total = totalBookings.compactMap { $0.platform?.calculatePrice(for: $0)?.hostTotal }.reduce(0, +)
+            
 			totalValueLabel.text = String(format: "%.2f €", total)
 		}
 	}
-	private var currentFilterName:String? {
-		
-		didSet {
-			
-			updateFilterNavigationItem()
-		}
-	}
+
+    private struct ActiveFilters {
+        var status: RU_Booking.Status?
+        var platform: RU_Platform?
+        var classified: RU_Classified?
+    }
+    
+    private var activeFilters = ActiveFilters(status: nil, platform: nil, classified: nil)
+    
+    private var activeFiltersTitle: String? {
+        var parts: [String] = []
+        
+        if let status = activeFilters.status {
+            parts.append(status.text)
+        }
+        if let platform = activeFilters.platform, let name = platform.type?.name {
+            parts.append(name)
+        }
+        if let classified = activeFilters.classified, let name = classified.name {
+            parts.append(name)
+        }
+        
+        return parts.isEmpty ? nil : parts.joined(separator: " + ")
+    }
+    
+    private func applyFilters() {
+        let base = bookings?.sorted { $0.dates.start > $1.dates.start } ?? []
+        
+        filteredBookings = base.filter { b in
+            if let s = activeFilters.status, b.status != s { return false }
+            
+            if let p = activeFilters.platform {
+                guard let bp = b.platform else { return false }
+                if bp != p { return false }
+            }
+            
+            if let c = activeFilters.classified {
+                guard let bc = b.classified else { return false }
+                if bc != c { return false }
+            }
+            
+            return true
+        }
+    }
     private lazy var bookingsTableView:RU_TableView = {
 		
         $0.allowsMultipleSelectionDuringEditing = true
@@ -71,20 +102,18 @@ public class RU_Bookings_ViewController: RU_ViewController {
 	}(RU_TableView(frame: .zero, style: .plain))
 	private lazy var totalValueLabel:RU_Label = {
 		
-		$0.font = Fonts.Content.Title.H2
-		$0.textAlignment = .right
+		$0.font = Fonts.Content.Title.H3
+		$0.textAlignment = .center
 		return $0
 		
 	}(RU_Label())
     private lazy var bottomStackView:RU_StackView = {
         
-        $0.layer.shadowOffset = .zero
-        $0.layer.shadowOpacity = 0.05
-        $0.layer.shadowRadius = UI.CornerRadius
-        $0.layer.shadowColor = Colors.Content.Text.cgColor
         $0.axis = .horizontal
         $0.spacing = UI.Margins
         $0.alignment = .center
+        
+        $0.addArrangedSubview(calendarButton)
         
         let visualEffectView:UIVisualEffectView = .init(effect: UIGlassEffect(style: .regular))
         visualEffectView.layer.cornerRadius = UI.CornerRadius
@@ -92,17 +121,15 @@ public class RU_Bookings_ViewController: RU_ViewController {
         
         let totalLabel:RU_Label = .init(String(key: "bookings.total.label"))
         totalLabel.font = Fonts.Content.Text.Bold.withSize(Fonts.Size-1)
-        totalLabel.textAlignment = .left
+        totalLabel.textAlignment = .center
         totalLabel.setContentHuggingPriority(.required, for: .horizontal)
         totalLabel.setContentCompressionResistancePriority(.required, for: .horizontal)
         
         let totalStackView:RU_StackView = .init(arrangedSubviews: [totalLabel,totalValueLabel])
-        totalStackView.axis = .horizontal
-        totalStackView.alignment = .center
-        totalStackView.spacing = UI.Margins/2
+        totalStackView.axis = .vertical
         visualEffectView.contentView.addSubview(totalStackView)
         totalStackView.snp.makeConstraints { make in
-            make.edges.equalToSuperview().inset(UI.Margins)
+            make.edges.equalToSuperview().inset(3*UI.Margins/4)
         }
         
         $0.addArrangedSubview(addButton)
@@ -110,12 +137,65 @@ public class RU_Bookings_ViewController: RU_ViewController {
         return $0
         
     }(RU_StackView())
+    private lazy var currentButton:RU_Button = {
+        
+        $0.type = .tertiary
+        $0.image = UIImage(systemName: "chevron.down")
+        
+        let size = 4*UI.Margins
+        
+        $0.configuration?.background.cornerRadius = size/2
+        $0.snp.remakeConstraints { make in
+            make.size.equalTo(size)
+        }
+        
+        return $0
+        
+    }(RU_Button() { [weak self] _ in
+        
+        self?.scrollToClosestBooking()
+    })
+    private lazy var calendarButton:RU_Button = {
+        
+        $0.type = .secondary
+        $0.image = UIImage(systemName: "calendar")
+        
+        let size = 4*UI.Margins
+        
+        $0.configuration?.background.cornerRadius = size/2
+        $0.snp.remakeConstraints { make in
+            make.size.equalTo(size)
+        }
+        
+        return $0
+        
+    }(RU_Button() { [weak self] _ in
+        
+        let calendarViewController = RU_Bookings_Calendar_ViewController()
+        calendarViewController.bookings = self?.bookings?.filter({ $0.status != .cancelled })
+        calendarViewController.didSelectBooking = { [weak self] booking in
+            
+            calendarViewController.dismiss {
+                
+                let detailViewController = RU_Bookings_Detail_ViewController()
+                detailViewController.booking = booking
+                self?.navigationController?.pushViewController(detailViewController, animated: true)
+            }
+        }
+        
+        UI.MainController.present(RU_NavigationController(rootViewController: calendarViewController), animated: true)
+    })
     private lazy var addButton:RU_Button = {
         
         $0.image = UIImage(systemName: "plus")
-        $0.snp.removeConstraints()
-        $0.setContentHuggingPriority(.required, for: .horizontal)
-        $0.setContentCompressionResistancePriority(.required, for: .horizontal)
+        
+        let size = 4*UI.Margins
+        
+        $0.configuration?.background.cornerRadius = size/2
+        $0.snp.remakeConstraints { make in
+            make.size.equalTo(size)
+        }
+        
         return $0
         
     }(RU_Button() { _ in
@@ -192,8 +272,16 @@ public class RU_Bookings_ViewController: RU_ViewController {
             make.edges.equalToSuperview()
         }
         
-        let buttonsStackView:RU_StackView = .init(arrangedSubviews: [bottomStackView,deleteButton])
+        let currentStackView:RU_StackView = .init(arrangedSubviews: [.init(),currentButton])
+        currentStackView.axis = .horizontal
+        
+        let buttonsStackView:RU_StackView = .init(arrangedSubviews: [currentStackView,bottomStackView,deleteButton])
+        buttonsStackView.layer.shadowOffset = .zero
+        buttonsStackView.layer.shadowOpacity = 0.05
+        buttonsStackView.layer.shadowRadius = UI.CornerRadius
+        buttonsStackView.layer.shadowColor = Colors.Content.Text.cgColor
         buttonsStackView.axis = .vertical
+        buttonsStackView.spacing = UI.Margins
         view.addSubview(buttonsStackView)
         buttonsStackView.snp.makeConstraints { make in
             make.bottom.equalTo(view.safeAreaLayoutGuide).inset(UI.Margins)
@@ -217,10 +305,6 @@ public class RU_Bookings_ViewController: RU_ViewController {
         
         super.viewDidLayoutSubviews()
         
-        addButton.configuration?.background.cornerRadius = bottomStackView.frame.size.height/2
-        addButton.snp.remakeConstraints { make in
-            make.size.equalTo(bottomStackView.frame.size.height)
-        }
         bookingsTableView.contentInset.bottom = bottomStackView.frame.size.height + (2*UI.Margins)
         bookingsTableView.verticalScrollIndicatorInsets.bottom = bookingsTableView.contentInset.bottom
     }
@@ -279,48 +363,45 @@ public class RU_Bookings_ViewController: RU_ViewController {
 			}
 		}
 	}
+    
+    private func scrollToClosestBooking() {
+        
+        if let index = filteredBookings?.lastIndex(where: { $0.status == .current || $0.status == .upcoming }) {
+            
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) { [weak self] in
+                
+                self?.bookingsTableView.selectRow(at: IndexPath(row: index, section: 0), animated: true, scrollPosition: .middle)
+            }
+        }
+    }
 	
 	private func updateFilterNavigationItem() {
 		
         navigationItem.leftBarButtonItem = nil
+        navigationItem.rightBarButtonItem = nil
         
         bottomStackView.isHidden = true
         
         if !(bookings?.isEmpty ?? true) {
             
-            navigationItem.rightBarButtonItems = [editButtonItem]
+            navigationItem.rightBarButtonItem = editButtonItem
             
             if !isEditing {
-                
-                navigationItem.leftBarButtonItem = .init(title: String(key: "bookings.calendar.button"), primaryAction: .init(handler: { [weak self] _ in
-                    
-                    let calendarViewController = RU_Bookings_Calendar_ViewController()
-                    calendarViewController.bookings = self?.bookings?.filter({ $0.status != .cancelled })
-                    calendarViewController.didSelectBooking = { [weak self] booking in
-                        
-                        calendarViewController.dismiss {
-                            
-                            let detailViewController = RU_Bookings_Detail_ViewController()
-                            detailViewController.booking = booking
-                            self?.navigationController?.pushViewController(detailViewController, animated: true)
-                        }
-                    }
-                    
-                    UI.MainController.present(RU_NavigationController(rootViewController: calendarViewController), animated: true)
-                }))
                 
                 var children:[UIMenuElement] = .init()
                 
                 children.append(UIAction(title: String(key: "bookings.filter.reset"), image: UIImage(systemName: "arrow.counterclockwise"), attributes: .destructive, handler: { [weak self] _ in
-                    
-                    self?.currentFilterName = nil
-                    self?.filteredBookings = self?.bookings
+                    guard let self else { return }
+                    self.activeFilters = .init(status: nil, platform: nil, classified: nil)
+                    self.applyFilters()
                 }))
                 
                 children.append(UIMenu(title: String(key: "bookings.filter.status"), children: RU_Booking.Status.allCases.map({ status in
                     UIAction(title: status.text, handler: { [weak self] _ in
-                        self?.currentFilterName = status.text
-                        self?.filteredBookings = self?.bookings?.filter { $0.status == status }
+                        guard let self else { return }
+                        let isSame = self.activeFilters.status == status
+                        self.activeFilters.status = isSame ? nil : status
+                        self.applyFilters()
                     })
                 })))
                 
@@ -331,9 +412,10 @@ public class RU_Bookings_ViewController: RU_ViewController {
                         if let name = platform.type?.name {
                             
                             return UIAction(title: name, handler: { [weak self] _ in
-                                
-                                self?.currentFilterName = name
-                                self?.filteredBookings = self?.bookings?.filter({ $0.platform == platform })
+                                guard let self else { return }
+                                let isSame = self.activeFilters.platform == platform
+                                self.activeFilters.platform = isSame ? nil : platform
+                                self.applyFilters()
                             })
                         }
                         
@@ -350,9 +432,10 @@ public class RU_Bookings_ViewController: RU_ViewController {
                             if let name = classified.name {
                                 
                                 return UIAction(title: name, handler: { [weak self] _ in
-                                    
-                                    self?.currentFilterName = name
-                                    self?.filteredBookings = self?.bookings?.filter({ $0.classified == classified })
+                                    guard let self else { return }
+                                    let isSame = self.activeFilters.classified == classified
+                                    self.activeFilters.classified = isSame ? nil : classified
+                                    self.applyFilters()
                                 })
                             }
                             
@@ -363,16 +446,14 @@ public class RU_Bookings_ViewController: RU_ViewController {
                     if !children.isEmpty {
                         
                         let buttonTitle:String
-                        if let filterName = self?.currentFilterName {
-                            buttonTitle = String(key: "bookings.filter.active") + filterName
+                        if let title = self?.activeFiltersTitle {
+                            buttonTitle = String(key: "bookings.filter.active") + title
                         }
                         else {
                             buttonTitle = String(key: "bookings.filter.button")
                         }
                         
-                        var rightBarButtonItems = self?.navigationItem.rightBarButtonItems ?? []
-                        rightBarButtonItems.append(.init(title: buttonTitle, menu: .init(title: String(key: "bookings.filter.menu.title"), children: children)))
-                        self?.navigationItem.rightBarButtonItems = rightBarButtonItems
+                        self?.navigationItem.leftBarButtonItem = .init(title: buttonTitle, menu: .init(title: String(key: "bookings.filter.menu.title"), children: children))
                     }
                 }
                 
@@ -383,34 +464,34 @@ public class RU_Bookings_ViewController: RU_ViewController {
 }
 
 extension RU_Bookings_ViewController: UITableViewDelegate, UITableViewDataSource {
-	
-	public func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-		
-		return filteredBookings?.count ?? 0
-	}
-	
-	public func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-		
-		let cell:RU_Booking_TableViewCell = tableView.dequeueReusableCell(withIdentifier: RU_Booking_TableViewCell.identifier, for: indexPath) as! RU_Booking_TableViewCell
-		cell.booking = filteredBookings?[indexPath.row]
-		cell.deleteHandler = { booking in
-			
-			let alertController:RU_Booking_Delete_Alert_ViewController = .init()
-			alertController.booking = booking
-			alertController.present()
-		}
-		cell.editHandler = { [weak self] booking in
-			
-			let viewController:RU_Bookings_Edit_ViewController = .init()
-			viewController.booking = booking
-			self?.navigationController?.pushViewController(viewController, animated: true)
-		}
+    
+    public func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
+        
+        return filteredBookings?.count ?? 0
+    }
+    
+    public func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
+        
+        let cell:RU_Booking_TableViewCell = tableView.dequeueReusableCell(withIdentifier: RU_Booking_TableViewCell.identifier, for: indexPath) as! RU_Booking_TableViewCell
+        cell.booking = filteredBookings?[indexPath.row]
+        cell.deleteHandler = { booking in
+            
+            let alertController:RU_Booking_Delete_Alert_ViewController = .init()
+            alertController.booking = booking
+            alertController.present()
+        }
+        cell.editHandler = { [weak self] booking in
+            
+            let viewController:RU_Bookings_Edit_ViewController = .init()
+            viewController.booking = booking
+            self?.navigationController?.pushViewController(viewController, animated: true)
+        }
         cell.cancelHandler = { [weak self] booking, state in
             
             booking?.isCancelled = state
             
             RU_Alert_ViewController.presentLoading { [weak self] alertController in
-              
+                
                 booking?.save { [weak self] error in
                     
                     alertController?.close { [weak self] in
@@ -427,11 +508,11 @@ extension RU_Bookings_ViewController: UITableViewDelegate, UITableViewDataSource
                 }
             }
         }
-		return cell
-	}
-	
-	public func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
-		
+        return cell
+    }
+    
+    public func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
+        
         if !tableView.isEditing {
             
             tableView.deselectRow(at: indexPath, animated: true)
@@ -453,9 +534,9 @@ extension RU_Bookings_ViewController: UITableViewDelegate, UITableViewDataSource
             updateSelection()
         }
     }
-	
-	public func tableView(_ tableView: UITableView, contextMenuConfigurationForRowAt indexPath: IndexPath, point: CGPoint) -> UIContextMenuConfiguration? {
-		
+    
+    public func tableView(_ tableView: UITableView, contextMenuConfigurationForRowAt indexPath: IndexPath, point: CGPoint) -> UIContextMenuConfiguration? {
+        
         if !tableView.isEditing {
             
             return UIContextMenuConfiguration.init(identifier: indexPath as NSIndexPath, previewProvider: { () -> UIViewController? in
@@ -470,22 +551,55 @@ extension RU_Bookings_ViewController: UITableViewDelegate, UITableViewDataSource
         }
         
         return nil
-	}
-	
-	public func tableView(_ tableView: UITableView, willPerformPreviewActionForMenuWith configuration: UIContextMenuConfiguration, animator: UIContextMenuInteractionCommitAnimating) {
-		
-		guard let indexPath = configuration.identifier as? IndexPath else { return }
-		
-		animator.addCompletion {
-			
-			tableView.delegate?.tableView?(tableView, didSelectRowAt: indexPath)
-		}
-	}
-	
-	public func tableView(_ tableView: UITableView, trailingSwipeActionsConfigurationForRowAt indexPath: IndexPath) -> UISwipeActionsConfiguration? {
-		
-		let cell = tableView.cellForRow(at: indexPath) as? RU_Booking_TableViewCell
-		return cell?.trailingSwipeActionsConfiguration
-	}
+    }
+    
+    public func tableView(_ tableView: UITableView, willPerformPreviewActionForMenuWith configuration: UIContextMenuConfiguration, animator: UIContextMenuInteractionCommitAnimating) {
+        
+        guard let indexPath = configuration.identifier as? IndexPath else { return }
+        
+        animator.addCompletion {
+            
+            tableView.delegate?.tableView?(tableView, didSelectRowAt: indexPath)
+        }
+    }
+    
+    public func tableView(_ tableView: UITableView, trailingSwipeActionsConfigurationForRowAt indexPath: IndexPath) -> UISwipeActionsConfiguration? {
+        
+        let cell = tableView.cellForRow(at: indexPath) as? RU_Booking_TableViewCell
+        return cell?.trailingSwipeActionsConfiguration
+    }
+    
+    public func scrollViewDidScroll(_ scrollView: UIScrollView) {
+        
+        UIView.animation {
+            
+            self.currentButton.alpha = 0
+            
+            guard let index = self.filteredBookings?.lastIndex(where: { $0.status == .current || $0.status == .upcoming }) else { return }
+            
+            let target = IndexPath(row: index, section: 0)
+            
+            if self.bookingsTableView.indexPathsForVisibleRows?.contains(target) ?? false {
+                
+                return
+            }
+            
+            let visibleRows = self.bookingsTableView.indexPathsForVisibleRows?.filter { $0.section == target.section }.map(\.row).sorted() ?? []
+            
+            if let minVisible = visibleRows.first, index < minVisible {
+                
+                self.currentButton.image = UIImage(systemName: "chevron.up")
+            }
+            else if let maxVisible = visibleRows.last, index > maxVisible {
+                
+                self.currentButton.image = UIImage(systemName: "chevron.down")
+            }
+            else {
+                
+                self.currentButton.image = UIImage(systemName: "chevron.down")
+            }
+            
+            self.currentButton.alpha = 1
+        }
+    }
 }
-

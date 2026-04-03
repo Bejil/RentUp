@@ -118,10 +118,13 @@ public class RU_Tip_StackView: RU_StackView {
 		updateContent()
 	}
 	
-	public func add(_ string:String) {
+	@discardableResult public func add(_ string:String) -> RU_Label {
 		
-		contentStackView.addArrangedSubview(RU_Label(string))
+        let label:RU_Label = .init(string)
+		contentStackView.addArrangedSubview(label)
 		updateContent()
+        
+        return label
 	}
 	
 	private func updateContent() {

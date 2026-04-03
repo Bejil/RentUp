@@ -38,6 +38,26 @@ extension RU_Booking {
 		
 		return platform != nil && dates.end > dates.start && travelers.adults ?? 0 >= 1 && (beds.doubles ?? 0 >= 1 || beds.singles ?? 0 >= 1)
 	}
+    public static var shouldPresentReporting:Bool {
+        
+        let calendar = Calendar.current
+        let now = Date()
+        let year = calendar.component(.year, from: now)
+        let month = calendar.component(.month, from: now)
+        let day = calendar.component(.day, from: now)
+        let isWithinFirstDays = day <= 5
+        let monthKey = String(format: "%04d-%02d", year, month)
+        
+        let state = UserDefaults.get(.reportingAlertLastShownMonthKey) as? String != monthKey
+        let shouldPresent = isWithinFirstDays && state
+        
+        if shouldPresent {
+            
+            UserDefaults.set(monthKey, .reportingAlertLastShownMonthKey)
+        }
+        
+        return shouldPresent
+    }
 	
 	public static func getAll(_ completion:((Error?,[RU_Booking]?)->Void)?) {
 		

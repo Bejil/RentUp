@@ -1,5 +1,5 @@
 {
-  "originHash" : "89f22ede875acfd39aace33ef97826a707a947a928c7cbafc6e9d56c5db8478a",
+  "originHash" : "2b7f1042396505c3d9368531c8f3b735c844fe0f0b0fd463b5a3c40466cc6b1a",
   "pins" : [
     {
       "identity" : "abseil-cpp-binary",
@@ -233,6 +233,15 @@
       "state" : {
         "revision" : "2842e6e84e82eb9a8dac0100ca90d9444b0307f4",
         "version" : "5.7.1"
+      }
+    },
+    {
+      "identity" : "spconfetti",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/ivanvorobei/SPConfetti",
+      "state" : {
+        "revision" : "0896bbf9ec20eaf125598d0f36ee5f1049117e18",
+        "version" : "1.4.2"
       }
     }
   ],
