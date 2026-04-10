@@ -25,7 +25,10 @@ public class RU_Bookings_ViewController: RU_ViewController {
 			bookingsTableView.dismissPlaceholder()
 			bookingsTableView.reloadData()
 			
-            scrollToClosestBooking()
+            if oldValue == nil {
+                
+                scrollToClosestBooking()
+            }
 			
 			if filteredBookings?.isEmpty ?? true {
 				
