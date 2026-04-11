@@ -275,10 +275,9 @@ public class RU_Bookings_ViewController: RU_ViewController {
             make.edges.equalToSuperview()
         }
         
-        let currentStackView:RU_StackView = .init(arrangedSubviews: [.init(),currentButton])
-        currentStackView.axis = .horizontal
+        view.addSubview(currentButton)
         
-        let buttonsStackView:RU_StackView = .init(arrangedSubviews: [currentStackView,bottomStackView,deleteButton])
+        let buttonsStackView:RU_StackView = .init(arrangedSubviews: [bottomStackView,deleteButton])
         buttonsStackView.layer.shadowOffset = .zero
         buttonsStackView.layer.shadowOpacity = 0.05
         buttonsStackView.layer.shadowRadius = UI.CornerRadius
@@ -289,6 +288,11 @@ public class RU_Bookings_ViewController: RU_ViewController {
         buttonsStackView.snp.makeConstraints { make in
             make.bottom.equalTo(view.safeAreaLayoutGuide).inset(UI.Margins)
             make.left.right.equalToSuperview().inset(1.5 * UI.Margins)
+        }
+        
+        currentButton.snp.makeConstraints { make in
+            make.right.right.equalToSuperview().inset(1.5 * UI.Margins)
+            make.bottom.equalTo(buttonsStackView.snp.top).inset(-1.5 * UI.Margins)
         }
 		
 		NotificationCenter.add(.updateBookings) { [weak self] _ in

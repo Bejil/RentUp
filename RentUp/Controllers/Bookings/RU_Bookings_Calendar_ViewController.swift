@@ -13,6 +13,7 @@ public class RU_Bookings_Calendar_ViewController: RU_ViewController {
 	
 	// MARK: - Properties
 	
+    /// Nombre max de lignes de barres (un logement = une ligne, plusieurs résas le même jour = segments sur la même ligne).
     private let maxVisibleLanesPerDay = 3
     
     /// Calendrier aligné ISO / France : semaine du lundi au dimanche (idem que `weekdayIndex` d’HorizonCalendar : 0 = dimanche … 6 = samedi).
@@ -99,11 +100,12 @@ public class RU_Bookings_Calendar_ViewController: RU_ViewController {
         bookingsForDay.sorted(by: { $0.dates.start < $1.dates.start }).forEach { booking in
             let platformName = booking.platform?.type?.name ?? "-"
             let range = "\(formatter.string(from: booking.dates.start)) → \(formatter.string(from: booking.dates.end))"
-            alert.addButton(title: "\(platformName) • \(range)") { [weak self] _ in
+            let button = alert.addButton(title: "\(platformName) • \(range)") { [weak self] _ in
                 alert.close {
                     self?.didSelectBooking?(booking)
                 }
             }
+            button.configuration?.baseBackgroundColor = booking.platform?.type?.backgroundColor
         }
         
         alert.addCancelButton()
@@ -144,8 +146,8 @@ public class RU_Bookings_Calendar_ViewController: RU_ViewController {
 			monthsLayout: .vertical(options: VerticalMonthsLayoutOptions())
 		)
 		.interMonthSpacing(24)
-		.verticalDayMargin(8)
-		.horizontalDayMargin(8)
+		.verticalDayMargin(2)
+		.horizontalDayMargin(2)
 		
 		// Un seul provider : chaque plage est dessinée en Primary ou Secondary selon secondaryHighlightRanges
 		if !allRanges.isEmpty {
@@ -207,23 +209,18 @@ public class RU_Bookings_Calendar_ViewController: RU_ViewController {
 				return dayStart >= start && dayStart <= end
 			}) ?? []
 			
-			// Créer les infos pour chaque réservation
-            let sortedBookingsForDay = bookingsForDay.sorted {
-                let lhsKey = self?.bookingKey(for: $0) ?? ""
-                let rhsKey = self?.bookingKey(for: $1) ?? ""
-                return (laneByBookingKey[lhsKey] ?? .max) < (laneByBookingKey[rhsKey] ?? .max)
-            }
-			let bookingInfos: [BookingBarInfo] = Array(sortedBookingsForDay.prefix(self?.maxVisibleLanesPerDay ?? 3)).map { booking in
-                let key = self?.bookingKey(for: booking) ?? ""
-                return BookingBarInfo(
-					isStartDate: calendar.isDate(date, inSameDayAs: booking.dates.start),
-					isEndDate: calendar.isDate(date, inSameDayAs: booking.dates.end),
-                    color: booking.platform?.type?.backgroundColor ?? .red,
-                    lane: laneByBookingKey[key] ?? 0,
-                    isCurrent: dayStart >= calendar.startOfDay(for: booking.dates.start) && dayStart <= calendar.startOfDay(for: booking.dates.end) && today >= calendar.startOfDay(for: booking.dates.start) && today <= calendar.startOfDay(for: booking.dates.end)
-				)
-			}
-            let hiddenCount = max(0, bookingsForDay.count - bookingInfos.count)
+			// Une ligne horizontale par bien ; plusieurs résas le même jour (ex. checkout + checkin) = segments côte à côte.
+            let barRows = self?.makeBarRows(
+                for: date,
+                dayStart: dayStart,
+                today: today,
+                bookingsForDay: bookingsForDay,
+                calendar: calendar,
+                laneByBookingKey: laneByBookingKey,
+                maxRows: self?.maxVisibleLanesPerDay ?? 3
+            ) ?? []
+            let allRowCount = self?.countPropertyRows(for: bookingsForDay) ?? 0
+            let hiddenCount = max(0, allRowCount - barRows.count)
 			
 			return CalendarItemModel<BookingDayView>(
 				invariantViewProperties: .init(),
@@ -231,7 +228,7 @@ public class RU_Bookings_Calendar_ViewController: RU_ViewController {
 					day: day,
 					isToday: isToday,
                     isInSecondaryRange: isInSecondaryRange,
-					bookings: bookingInfos,
+					barRows: barRows,
                     hiddenCount: hiddenCount
 				)
 			)
@@ -245,6 +242,54 @@ public class RU_Bookings_Calendar_ViewController: RU_ViewController {
         
         // Fallback stable si id absent
         return "\(booking.dates.start.timeIntervalSince1970)|\(booking.dates.end.timeIntervalSince1970)|\(booking.platform?.type?.rawValue ?? "-")|\(booking.classified?.id ?? "-")"
+    }
+    
+    /// Identifiant du logement : les résas du même bien partagent une ligne de barres.
+    private func propertyKey(for booking: RU_Booking) -> String {
+        if let uuid = booking.classified?.uuid, !uuid.isEmpty {
+            return "classified:\(uuid)"
+        }
+        return "booking:\(booking.id)"
+    }
+    
+    private func countPropertyRows(for bookings: [RU_Booking]) -> Int {
+        Set(bookings.map { propertyKey(for: $0) }).count
+    }
+    
+    private func makeBarRows(
+        for date: Date,
+        dayStart: Date,
+        today: Date,
+        bookingsForDay: [RU_Booking],
+        calendar: Calendar,
+        laneByBookingKey: [String: Int],
+        maxRows: Int
+    ) -> [BookingBarRowModel] {
+        let grouped = Dictionary(grouping: bookingsForDay, by: { propertyKey(for: $0) })
+        var keys = Array(grouped.keys)
+        keys.sort { a, b in
+            let laneA = grouped[a]!.map { laneByBookingKey[bookingKey(for: $0)] ?? .max }.min() ?? .max
+            let laneB = grouped[b]!.map { laneByBookingKey[bookingKey(for: $0)] ?? .max }.min() ?? .max
+            if laneA != laneB { return laneA < laneB }
+            return a < b
+        }
+        keys = Array(keys.prefix(maxRows))
+        
+        return keys.map { key in
+            let list = grouped[key]!.sorted { $0.dates.start < $1.dates.start }
+            let segments: [BookingBarSegment] = list.map { booking in
+                BookingBarSegment(
+                    isStartDate: calendar.isDate(date, inSameDayAs: booking.dates.start),
+                    isEndDate: calendar.isDate(date, inSameDayAs: booking.dates.end),
+                    color: booking.platform?.type?.backgroundColor ?? .red,
+                    isCurrent: dayStart >= calendar.startOfDay(for: booking.dates.start)
+                        && dayStart <= calendar.startOfDay(for: booking.dates.end)
+                        && today >= calendar.startOfDay(for: booking.dates.start)
+                        && today <= calendar.startOfDay(for: booking.dates.end)
+                )
+            }
+            return BookingBarRowModel(segments: segments)
+        }
     }
     
     private func makeLaneMapping(for bookings: [RU_Booking], calendar: Calendar) -> [String: Int] {
@@ -433,21 +478,17 @@ private final class BookingRangeBackgroundView: UIView, CalendarItemViewRepresen
 	}
 }
 
-// MARK: - Booking Bar Info (conservé pour savoir si le jour a une résa)
+// MARK: - Barres par bien (une ligne = un logement, segments alignés horizontalement)
 
-private struct BookingBarInfo: Equatable {
+private struct BookingBarSegment: Equatable {
 	let isStartDate: Bool
 	let isEndDate: Bool
 	let color: UIColor
-    let lane: Int
-    let isCurrent: Bool
+	let isCurrent: Bool
+}
 
-	static func == (lhs: BookingBarInfo, rhs: BookingBarInfo) -> Bool {
-		lhs.isStartDate == rhs.isStartDate
-        && lhs.isEndDate == rhs.isEndDate
-        && lhs.lane == rhs.lane
-        && lhs.isCurrent == rhs.isCurrent
-	}
+private struct BookingBarRowModel: Equatable {
+	let segments: [BookingBarSegment]
 }
 
 // MARK: - Booking Day View
@@ -459,14 +500,14 @@ private struct BookingDayViewContent: Equatable {
 	let isToday: Bool
     /// Indique si le jour fait partie de la plage secondaire (sélection en cours)
     let isInSecondaryRange: Bool
-	let bookings: [BookingBarInfo]
+	let barRows: [BookingBarRowModel]
     let hiddenCount: Int
 	
 	static func == (lhs: BookingDayViewContent, rhs: BookingDayViewContent) -> Bool {
 		return lhs.day == rhs.day
         && lhs.isToday == rhs.isToday
         && lhs.isInSecondaryRange == rhs.isInSecondaryRange
-        && lhs.bookings == rhs.bookings
+        && lhs.barRows == rhs.barRows
         && lhs.hiddenCount == rhs.hiddenCount
 	}
 }
@@ -476,8 +517,10 @@ private final class BookingDayView: UIView, CalendarItemViewRepresentable {
 	typealias InvariantViewProperties = BookingDayViewProperties
 	typealias Content = BookingDayViewContent
 
+	private let daySurfaceView = UIView()
 	private let backgroundCircleView = UIView()
 	private let contentStackView = RU_StackView()
+    private let barsTopSpacer = UIView()
     private let barsStackView = RU_StackView()
     private let moreLabel = UILabel()
 	private let label = UILabel()
@@ -485,10 +528,27 @@ private final class BookingDayView: UIView, CalendarItemViewRepresentable {
     private static let barHeight: CGFloat = 5
 	private static let barSpacing: CGFloat = 2
 	private static let barLabelSpacing: CGFloat = 3
-    private static let horizontalInset: CGFloat = 2
+    private static let horizontalInset: CGFloat = 0
+    /// Espace au-dessus des barres de réservation.
+    private static let barsTopInset: CGFloat = 2
+    /// Entre fin de séjour et début suivant le même jour (effet « -- »).
+    private static let barGapBetweenSegments: CGFloat = 3
 
 	init() {
 		super.init(frame: .zero)
+
+        daySurfaceView.clipsToBounds = false
+        daySurfaceView.layer.shadowColor = UIColor.black.cgColor
+        daySurfaceView.layer.shadowOffset = CGSize(width: 0, height: 4)
+        daySurfaceView.layer.shadowRadius = UI.CornerRadius
+        daySurfaceView.layer.shadowOpacity = 0.1
+        daySurfaceView.backgroundColor = Colors.Background.View
+        daySurfaceView.layer.cornerRadius = UI.Margins/2
+		addSubview(daySurfaceView)
+		daySurfaceView.snp.makeConstraints { make in
+			make.top.bottom.equalToSuperview().inset(UI.Margins / 2)
+			make.left.right.equalToSuperview().inset(UI.Margins / 4)
+		}
 
         backgroundCircleView.backgroundColor = Colors.Secondary
 		backgroundCircleView.isHidden = true
@@ -504,8 +564,15 @@ private final class BookingDayView: UIView, CalendarItemViewRepresentable {
 		contentStackView.alignment = .center
 		addSubview(contentStackView)
 		contentStackView.snp.makeConstraints { make in
-			make.edges.equalToSuperview()
+			make.top.bottom.equalToSuperview().inset(UI.Margins / 2)
+			make.left.right.equalToSuperview().inset(UI.Margins / 4)
 		}
+
+        contentStackView.addArrangedSubview(barsTopSpacer)
+        barsTopSpacer.snp.makeConstraints { make in
+            make.height.equalTo(Self.barsTopInset)
+        }
+        barsTopSpacer.isHidden = true
 
         barsStackView.axis = .vertical
         barsStackView.spacing = Self.barSpacing
@@ -523,12 +590,79 @@ private final class BookingDayView: UIView, CalendarItemViewRepresentable {
 		label.textAlignment = .center
 		label.font = Fonts.Content.Text.Regular
 		contentStackView.addArrangedSubview(label)
-
-		sendSubviewToBack(backgroundCircleView)
 	}
 
 	required init?(coder: NSCoder) {
 		fatalError("init(coder:) has not been implemented")
+	}
+
+	private static func applyBarCorners(to bar: UIView, segment: BookingBarSegment) {
+		bar.backgroundColor = segment.color
+		if segment.isStartDate && segment.isEndDate {
+			bar.layer.cornerRadius = Self.barHeight / 2
+			bar.layer.maskedCorners = [.layerMinXMinYCorner, .layerMinXMaxYCorner, .layerMaxXMinYCorner, .layerMaxXMaxYCorner]
+		} else if segment.isStartDate {
+			bar.layer.cornerRadius = Self.barHeight / 2
+			bar.layer.maskedCorners = [.layerMinXMinYCorner, .layerMinXMaxYCorner]
+		} else if segment.isEndDate {
+			bar.layer.cornerRadius = Self.barHeight / 2
+			bar.layer.maskedCorners = [.layerMaxXMinYCorner, .layerMaxXMaxYCorner]
+		} else {
+			bar.layer.cornerRadius = 0
+		}
+		bar.layer.masksToBounds = true
+	}
+
+	private static func addBarRow(_ row: BookingBarRowModel, to verticalStack: RU_StackView) {
+		let segments = row.segments
+		guard let first = segments.first else { return }
+		if segments.count == 1 {
+			let host = UIView()
+			verticalStack.addArrangedSubview(host)
+			host.snp.makeConstraints { make in
+				make.height.equalTo(Self.barHeight)
+			}
+			let bar = UIView()
+			applyBarCorners(to: bar, segment: first)
+			host.addSubview(bar)
+			bar.snp.makeConstraints { make in
+				make.height.equalTo(Self.barHeight)
+				make.centerY.equalToSuperview()
+				if first.isStartDate && first.isEndDate {
+					make.width.equalTo(host.snp.width).multipliedBy(0.5)
+					make.centerX.equalToSuperview()
+				} else if first.isStartDate {
+					make.width.equalTo(host.snp.width).multipliedBy(0.5)
+					make.right.equalToSuperview()
+				} else if first.isEndDate {
+					make.width.equalTo(host.snp.width).multipliedBy(0.5)
+					make.left.equalToSuperview()
+				} else {
+					make.left.right.equalToSuperview()
+				}
+			}
+		} else {
+			let hStack = UIStackView()
+			hStack.axis = .horizontal
+			hStack.spacing = Self.barGapBetweenSegments
+			hStack.distribution = .fillEqually
+			hStack.alignment = .fill
+			verticalStack.addArrangedSubview(hStack)
+			hStack.snp.makeConstraints { make in
+				make.height.equalTo(Self.barHeight)
+			}
+			for segment in segments {
+				let cell = UIView()
+				let bar = UIView()
+				applyBarCorners(to: bar, segment: segment)
+				cell.addSubview(bar)
+				hStack.addArrangedSubview(cell)
+				bar.snp.makeConstraints { make in
+					make.height.equalTo(Self.barHeight)
+					make.left.right.top.bottom.equalToSuperview()
+				}
+			}
+		}
 	}
 
 	static func makeView(withInvariantViewProperties invariantViewProperties: BookingDayViewProperties) -> BookingDayView {
@@ -544,56 +678,16 @@ private final class BookingDayView: UIView, CalendarItemViewRepresentable {
             view.backgroundCircleView.backgroundColor = content.isInSecondaryRange ? .white : Colors.Secondary
         }
 
-		// Barres au-dessus du numéro : une par réservation (max N), alignées par lane
+		// Une ligne verticale par bien ; plusieurs segments = une ligne horizontale (ex. checkout | checkin).
         view.barsStackView.arrangedSubviews.forEach { $0.removeFromSuperview() }
-		if !content.bookings.isEmpty {
+		if !content.barRows.isEmpty {
+			view.barsTopSpacer.isHidden = false
 			view.barsStackView.isHidden = false
-			for booking in content.bookings {
-                let bar = UIView()
-                // Conserver la couleur de plateforme même pour aujourd'hui
-                bar.backgroundColor = booking.color
-                
-                // Coins arrondis demandés:
-                // - début: haut gauche + haut droite
-                // - fin: haut droite + bas droite
-                if booking.isStartDate && booking.isEndDate {
-                    bar.layer.cornerRadius = Self.barHeight / 2
-                    bar.layer.maskedCorners = [.layerMinXMinYCorner, .layerMinXMaxYCorner, .layerMaxXMinYCorner, .layerMaxXMaxYCorner]
-                }
-                else if booking.isStartDate {
-                    bar.layer.cornerRadius = Self.barHeight / 2
-                    bar.layer.maskedCorners = [.layerMinXMinYCorner, .layerMinXMaxYCorner]
-                }
-                else if booking.isEndDate {
-                    bar.layer.cornerRadius = Self.barHeight / 2
-                    bar.layer.maskedCorners = [.layerMaxXMinYCorner, .layerMaxXMaxYCorner]
-                }
-                else {
-                    bar.layer.cornerRadius = 0
-                }
-                bar.layer.masksToBounds = true
-                
-                view.barsStackView.addArrangedSubview(bar)
-                bar.snp.makeConstraints { make in
-                    make.height.equalTo(Self.barHeight)
-                    if booking.isStartDate && booking.isEndDate {
-                        make.width.equalToSuperview().multipliedBy(0.5)
-                        make.centerX.equalToSuperview()
-                    }
-                    else if booking.isStartDate {
-                        make.width.equalToSuperview().multipliedBy(0.5)
-                        make.right.equalToSuperview()
-                    }
-                    else if booking.isEndDate {
-                        make.width.equalToSuperview().multipliedBy(0.5)
-                        make.left.equalToSuperview()
-                    }
-                    else {
-                        make.left.right.equalToSuperview()
-                    }
-                }
-			}
+            for row in content.barRows {
+                Self.addBarRow(row, to: view.barsStackView)
+            }
 		} else {
+			view.barsTopSpacer.isHidden = true
 			view.barsStackView.isHidden = true
 		}
         
@@ -615,7 +709,7 @@ private final class BookingDayView: UIView, CalendarItemViewRepresentable {
             view.label.textColor = .white
             view.label.font = content.isToday ? Fonts.Content.Text.Bold : Fonts.Content.Text.Regular
         }
-        else if !content.bookings.isEmpty {
+        else if !content.barRows.isEmpty {
             view.label.textColor = content.isToday ? .white : Colors.Primary
 			view.label.font = content.isToday ? Fonts.Content.Text.Bold : Fonts.Content.Text.Regular
 		}
