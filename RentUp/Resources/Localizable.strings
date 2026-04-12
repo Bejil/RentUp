@@ -86,6 +86,8 @@
 "reporting.filter.active" = "Filtré par : ";
 "reporting.detail.occupation.title" = "Occupation";
 "reporting.detail.profitability.title" = "Rentabilité";
+"reporting.cell.occupancyLine" = "Occupation: %1$.0f %% · %2$d/%3$d j · prév. %4$.0f %% (%5$d j)";
+"reporting.cell.netLine" = "Revenus: Net actuel %1$@ · Net mois %2$@";
 
 //MARK: - Classifieds
 "classifieds.title" = "Vos biens";

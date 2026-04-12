@@ -25,6 +25,8 @@ public class RU_Reporting_Detail_Occupation_ViewController : RU_Reporting_Detail
             monthes = .init()
             actualValues = []
             forecastValues = []
+            var occupancySummaries: [String] = []
+            var netSummaries: [String] = []
             
             let calendar = Calendar.current
             let now = Date()
@@ -63,7 +65,32 @@ public class RU_Reporting_Detail_Occupation_ViewController : RU_Reporting_Detail
                 let allNights = filteredBookings.reduce(0) { $0 + nights($1) }
                 let forecastValue = daysInMonth > 0 ? Double(allNights) / Double(daysInMonth) * 100 : 0
                 forecastValues?.append(forecastValue)
+                
+                occupancySummaries.append(String(
+                    format: String(key: "reporting.cell.occupancyLine"),
+                    actualValue, pastNights, daysInMonth, forecastValue, allNights
+                ))
+                
+                let isInActualPeriod = calendar.compare(month, to: currentMonthStart, toGranularity: .month) != .orderedDescending
+                var revenueActual: Double = 0
+                if isInActualPeriod {
+                    for b in pastBookings {
+                        revenueActual += RU_Reporting_Detail_ViewController.ReportingMonthMetrics.proratedHostTotal(booking: b, monthStart: month, calendar: calendar)
+                    }
+                }
+                var revenueForecast: Double = 0
+                for b in filteredBookings {
+                    revenueForecast += RU_Reporting_Detail_ViewController.ReportingMonthMetrics.proratedHostTotal(booking: b, monthStart: month, calendar: calendar)
+                }
+                netSummaries.append(String(
+                    format: String(key: "reporting.cell.netLine"),
+                    RU_Reporting_Detail_ViewController.ReportingMonthMetrics.formatNetEUR(revenueActual),
+                    RU_Reporting_Detail_ViewController.ReportingMonthMetrics.formatNetEUR(revenueForecast)
+                ))
             })
+            
+            reportingCellOccupancySummaries = occupancySummaries
+            reportingCellNetSummaries = netSummaries
             
             let months = monthes ?? []
             var chartData: [RU_Chart_View.Point] = []

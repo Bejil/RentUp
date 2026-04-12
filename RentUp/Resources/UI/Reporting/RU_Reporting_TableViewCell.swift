@@ -14,7 +14,8 @@ public class RU_Reporting_TableViewCell : RU_TableViewCell {
         
         return "reportingTableViewCellIdentifier"
     }
-    public var date:Date? {
+    
+    public var date: Date? {
         
         didSet {
             
@@ -22,34 +23,82 @@ public class RU_Reporting_TableViewCell : RU_TableViewCell {
                 
                 let dateFormatter = DateFormatter()
                 dateFormatter.dateFormat = "MMMM yyyy"
-                label.text = dateFormatter.string(from: date)
+                label.text = dateFormatter.string(from: date).capitalized
             }
         }
     }
-    private lazy var label:RU_Label = .init()
-    public var actualValue:Double? {
+    
+    private lazy var label: RU_Label = {
+        
+        $0.font = Fonts.Content.Text.Bold
+        return $0
+        
+    }(RU_Label())
+    
+    public var actualValue: Double? {
         
         didSet {
             
             actualValueLabel.text = String(format: "%.0f%%", actualValue ?? 0)
         }
     }
-    private lazy var actualValueLabel:RU_Label = {
+    
+    private lazy var actualValueLabel: RU_Label = {
         
         $0.font = Fonts.Content.Title.H4
         return $0
         
     }(RU_Label())
-    public var forecastValue:Double? {
+    
+    public var forecastValue: Double? {
         
         didSet {
             
             forecastValueLabel.text = String(format: "%.0f%%", forecastValue ?? 0)
         }
     }
-    private lazy var forecastValueLabel:RU_Label = {
+    
+    private lazy var forecastValueLabel: RU_Label = {
         
         $0.font = Fonts.Content.Text.Regular
+        return $0
+        
+    }(RU_Label())
+    
+    public var occupancyDetailText: String? {
+        
+        didSet {
+            
+            occupancyDetailLabel.text = occupancyDetailText
+            occupancyDetailLabel.isHidden = occupancyDetailText?.isEmpty ?? true
+        }
+    }
+    
+    public var netDetailText: String? {
+        
+        didSet {
+            
+            netDetailLabel.text = netDetailText
+            netDetailLabel.isHidden = netDetailText?.isEmpty ?? true
+        }
+    }
+    
+    private lazy var occupancyDetailLabel: RU_Label = {
+        
+        $0.font = Fonts.Content.Text.Regular.withSize(Fonts.Size - 2)
+        $0.textColor = Colors.Content.Text.withAlphaComponent(0.72)
+        $0.numberOfLines = 0
+        $0.isHidden = true
+        return $0
+        
+    }(RU_Label())
+    
+    private lazy var netDetailLabel: RU_Label = {
+        
+        $0.font = Fonts.Content.Text.Regular.withSize(Fonts.Size - 2)
+        $0.textColor = Colors.Content.Text.withAlphaComponent(0.72)
+        $0.numberOfLines = 0
+        $0.isHidden = true
         return $0
         
     }(RU_Label())
@@ -58,19 +107,27 @@ public class RU_Reporting_TableViewCell : RU_TableViewCell {
         
         super.init(style: style, reuseIdentifier: reuseIdentifier)
         
-        let imageView:UIImageView = .init(image: UIImage(systemName: "arrow.right"))
+        accessoryType = .disclosureIndicator
+        
+        let imageView: UIImageView = .init(image: UIImage(systemName: "arrow.right"))
         imageView.contentMode = .scaleAspectFit
         imageView.tintColor = Colors.Primary
         imageView.snp.makeConstraints { make in
             make.size.equalTo(UI.Margins)
         }
         
-        let stackView:RU_StackView = .init(arrangedSubviews: [label,.init(),actualValueLabel,imageView,forecastValueLabel])
-        stackView.axis = .horizontal
-        stackView.alignment = .center
-        stackView.spacing = UI.Margins/2
-        contentView.addSubview(stackView)
-        stackView.snp.makeConstraints { (make) in
+        let headerStackView: RU_StackView = .init(arrangedSubviews: [label, .init(), actualValueLabel, imageView, forecastValueLabel])
+        headerStackView.axis = .horizontal
+        headerStackView.alignment = .center
+        headerStackView.spacing = UI.Margins / 2
+        
+        let contentStackView: RU_StackView = .init(arrangedSubviews: [headerStackView, occupancyDetailLabel, netDetailLabel])
+        contentStackView.axis = .vertical
+        contentStackView.alignment = .fill
+        contentStackView.spacing = UI.Margins / 4
+        
+        contentView.addSubview(contentStackView)
+        contentStackView.snp.makeConstraints { make in
             make.edges.equalToSuperview().inset(UI.Margins)
         }
     }

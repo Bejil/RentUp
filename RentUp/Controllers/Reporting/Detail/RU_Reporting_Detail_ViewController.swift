@@ -36,6 +36,10 @@ public class RU_Reporting_Detail_ViewController : RU_ViewController {
     public var monthes:[Date]?
     public var actualValues: [Double]?
     public var forecastValues: [Double]?
+    /// Texte secondaire : occupation (réel + prévisionnel) avec nuitées / jours du mois.
+    public var reportingCellOccupancySummaries: [String]?
+    /// Texte secondaire : total net hôte proratisé (passé du mois · mois complet).
+    public var reportingCellNetSummaries: [String]?
     private var currentFilterName:String? {
         
         didSet {
@@ -260,11 +264,68 @@ extension RU_Reporting_Detail_ViewController: UITableViewDelegate, UITableViewDa
         cell.date = monthes?[indexPath.row]
         cell.actualValue = actualValues?[indexPath.row]
         cell.forecastValue = forecastValues?[indexPath.row]
+        let row = indexPath.row
+        if let lines = reportingCellOccupancySummaries, row < lines.count {
+            cell.occupancyDetailText = lines[row]
+        } else {
+            cell.occupancyDetailText = nil
+        }
+        if let nets = reportingCellNetSummaries, row < nets.count {
+            cell.netDetailText = nets[row]
+        } else {
+            cell.netDetailText = nil
+        }
         return cell
     }
     
     public func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         
         scrollChart(to: indexPath.row)
+    }
+}
+
+// MARK: - Métriques mois (occupation / CA net proratisé)
+
+extension RU_Reporting_Detail_ViewController {
+    
+    enum ReportingMonthMetrics {
+        
+        static func daysInMonth(monthStart: Date, calendar: Calendar) -> Int {
+            calendar.range(of: .day, in: .month, for: monthStart)?.count ?? 30
+        }
+        
+        static func monthEnd(monthStart: Date, calendar: Calendar) -> Date {
+            let days = daysInMonth(monthStart: monthStart, calendar: calendar)
+            return calendar.date(byAdding: .day, value: days, to: monthStart) ?? monthStart
+        }
+        
+        static func nightsInMonth(booking: RU_Booking, monthStart: Date, calendar: Calendar) -> Int {
+            let end = monthEnd(monthStart: monthStart, calendar: calendar)
+            let start = max(booking.dates.start, monthStart)
+            let last = min(booking.dates.end, end)
+            return max(0, calendar.dateComponents([.day], from: start, to: last).day ?? 0)
+        }
+        
+        static func bookingNights(_ booking: RU_Booking, calendar: Calendar) -> Int {
+            max(0, calendar.dateComponents([.day], from: booking.dates.start, to: booking.dates.end).day ?? 0)
+        }
+        
+        static func proratedHostTotal(booking: RU_Booking, monthStart: Date, calendar: Calendar) -> Double {
+            let monthNights = nightsInMonth(booking: booking, monthStart: monthStart, calendar: calendar)
+            guard monthNights > 0 else { return 0 }
+            let totalNights = bookingNights(booking, calendar: calendar)
+            guard totalNights > 0 else { return 0 }
+            guard let hostTotal = booking.platform?.calculatePrice(for: booking)?.hostTotal else { return 0 }
+            return hostTotal * Double(monthNights) / Double(totalNights)
+        }
+        
+        static func formatNetEUR(_ value: Double) -> String {
+            let formatter = NumberFormatter()
+            formatter.numberStyle = .currency
+            formatter.locale = Locale(identifier: "fr_FR")
+            formatter.currencyCode = "EUR"
+            formatter.maximumFractionDigits = 0
+            return formatter.string(from: NSNumber(value: value)) ?? "—"
+        }
     }
 }
