@@ -279,7 +279,7 @@ public class RU_Bookings_Edit_ViewController : RU_ViewController {
             
             if let value = self?.costsCleaningTextFieldRowStack.textField.text {
                 
-                self?.booking?.costs.cleaning = Int(value)
+                self?.booking?.costs.cleaning = Double(value)
                 self?.updateSaveButton()
             }
             
@@ -299,7 +299,7 @@ public class RU_Bookings_Edit_ViewController : RU_ViewController {
             
             if let value = self?.costsCompensationTextFieldRowStack.textField.text {
                 
-                self?.booking?.costs.compensation = Int(value)
+                self?.booking?.costs.compensation = Double(value)
                 self?.updateSaveButton()
             }
             
