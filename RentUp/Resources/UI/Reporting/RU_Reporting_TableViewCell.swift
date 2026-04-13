@@ -31,6 +31,7 @@ public class RU_Reporting_TableViewCell : RU_TableViewCell {
     private lazy var label: RU_Label = {
         
         $0.font = Fonts.Content.Text.Bold
+        $0.setContentCompressionResistancePriority(.required, for: .horizontal)
         return $0
         
     }(RU_Label())
@@ -46,6 +47,7 @@ public class RU_Reporting_TableViewCell : RU_TableViewCell {
     private lazy var actualValueLabel: RU_Label = {
         
         $0.font = Fonts.Content.Title.H4
+        $0.textAlignment = .center
         return $0
         
     }(RU_Label())
@@ -54,13 +56,14 @@ public class RU_Reporting_TableViewCell : RU_TableViewCell {
         
         didSet {
             
-            forecastValueLabel.text = String(format: "%.0f%%", forecastValue ?? 0)
+            forecastValueLabel.text = String(format: "→ %.0f%%", forecastValue ?? 0)
         }
     }
     
     private lazy var forecastValueLabel: RU_Label = {
         
         $0.font = Fonts.Content.Text.Regular
+        $0.textAlignment = .center
         return $0
         
     }(RU_Label())
@@ -89,6 +92,7 @@ public class RU_Reporting_TableViewCell : RU_TableViewCell {
         $0.textColor = Colors.Content.Text.withAlphaComponent(0.72)
         $0.numberOfLines = 0
         $0.isHidden = true
+        $0.setContentCompressionResistancePriority(.required, for: .horizontal)
         return $0
         
     }(RU_Label())
@@ -99,6 +103,7 @@ public class RU_Reporting_TableViewCell : RU_TableViewCell {
         $0.textColor = Colors.Content.Text.withAlphaComponent(0.72)
         $0.numberOfLines = 0
         $0.isHidden = true
+        $0.setContentCompressionResistancePriority(.required, for: .horizontal)
         return $0
         
     }(RU_Label())
@@ -107,27 +112,22 @@ public class RU_Reporting_TableViewCell : RU_TableViewCell {
         
         super.init(style: style, reuseIdentifier: reuseIdentifier)
         
-        accessoryType = .disclosureIndicator
+        accessoryType = .detailButton
         
-        let imageView: UIImageView = .init(image: UIImage(systemName: "arrow.right"))
-        imageView.contentMode = .scaleAspectFit
-        imageView.tintColor = Colors.Primary
-        imageView.snp.makeConstraints { make in
-            make.size.equalTo(UI.Margins)
-        }
-        
-        let headerStackView: RU_StackView = .init(arrangedSubviews: [label, .init(), actualValueLabel, imageView, forecastValueLabel])
-        headerStackView.axis = .horizontal
-        headerStackView.alignment = .center
-        headerStackView.spacing = UI.Margins / 2
-        
-        let contentStackView: RU_StackView = .init(arrangedSubviews: [headerStackView, occupancyDetailLabel, netDetailLabel])
+        let contentStackView: RU_StackView = .init(arrangedSubviews: [label, occupancyDetailLabel, netDetailLabel])
         contentStackView.axis = .vertical
-        contentStackView.alignment = .fill
         contentStackView.spacing = UI.Margins / 4
         
-        contentView.addSubview(contentStackView)
-        contentStackView.snp.makeConstraints { make in
+        let valuesStackView: RU_StackView = .init(arrangedSubviews: [actualValueLabel, forecastValueLabel])
+        valuesStackView.axis = .vertical
+        valuesStackView.spacing = UI.Margins / 4
+        
+        let stackView: RU_StackView = .init(arrangedSubviews: [contentStackView, valuesStackView])
+        stackView.axis = .horizontal
+        stackView.alignment = .center
+        stackView.spacing = UI.Margins / 2
+        contentView.addSubview(stackView)
+        stackView.snp.makeConstraints { make in
             make.edges.equalToSuperview().inset(UI.Margins)
         }
     }

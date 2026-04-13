@@ -249,6 +249,17 @@ public class RU_Reporting_Detail_ViewController : RU_ViewController {
         offsetX = max(0, min(offsetX + UI.Margins, contentWidth - visibleWidth))
         chartScrollView.setContentOffset(CGPoint(x: offsetX, y: 0), animated: true)
     }
+    
+    /// Résas qui chevauchent le mois (même critère que les nuitées comptées au reporting).
+    private func filteredBookings(intersectingMonthAt indexPath: IndexPath) -> [RU_Booking] {
+        
+        guard let monthStart = monthes?[indexPath.row], let list = filteredBookings else { return [] }
+        let calendar = Calendar.current
+        return list.filter {
+            ReportingMonthMetrics.nightsInMonth(booking: $0, monthStart: monthStart, calendar: calendar) > 0
+        }
+        .sorted { $0.dates.start > $1.dates.start }
+    }
 }
 
 extension RU_Reporting_Detail_ViewController: UITableViewDelegate, UITableViewDataSource {
@@ -281,6 +292,13 @@ extension RU_Reporting_Detail_ViewController: UITableViewDelegate, UITableViewDa
     public func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         
         scrollChart(to: indexPath.row)
+    }
+    
+    public func tableView(_ tableView: UITableView, accessoryButtonTappedForRowWith indexPath: IndexPath) {
+        
+        let viewController: RU_Bookings_List_ViewController = .init()
+        viewController.bookings = filteredBookings(intersectingMonthAt: indexPath)
+        navigationController?.pushViewController(viewController, animated: true)
     }
 }
 
