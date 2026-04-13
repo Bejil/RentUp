@@ -31,7 +31,7 @@ public class RU_Classifieds_Create_Tarification_ViewController : RU_Classifieds_
         
         super.loadView()
         
-navigationItem.title = String(key: "classified.create.step.3")
+        navigationItem.title = String(key: "classified.create.step.3")
 
         let placeholderView = view.showPlaceholder()
         placeholderView.title = String(key: "classified.create.placeholder.platforms")
@@ -75,6 +75,9 @@ navigationItem.title = String(key: "classified.create.step.3")
         let label:RU_Label = .init(platform.type?.name)
         label.textColor = platform.type?.textColor
         label.textAlignment = .center
+        label.numberOfLines = 1
+        label.adjustsFontSizeToFitWidth = true
+        label.minimumScaleFactor = 0.5
         label.font = Fonts.Content.Text.Bold
         
         let stackView:RU_StackView = .init(arrangedSubviews: [imageView,label])
