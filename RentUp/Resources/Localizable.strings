@@ -181,6 +181,8 @@
 "bookings.create.dates.button" = "Sélectionner";
 "bookings.calendar.validate" = "Valider";
 "bookings.calendar.overview.title" = "Calendrier";
+"bookings.calendar.overview.range.0" = "Du";
+"bookings.calendar.overview.range.1" = "au";
 "bookings.create.travelers.section.title" = "Voyageurs";
 "bookings.create.travelers.section.subtitle" = "Le nombre et le type de voyageur aidera à définir le prix ainsi que la configuration du logement";
 "bookings.create.configuration.section.title" = "Configuration";

@@ -92,13 +92,17 @@ public class RU_Bookings_Calendar_ViewController: RU_ViewController {
         alert.title = String(key: "bookings.calendar.overview.title")
         
         bookingsForDay.sorted(by: { $0.dates.start < $1.dates.start }).forEach { booking in
+            
             let platformName = booking.platform?.type?.name ?? "-"
-            let range = "\(formatter.string(from: booking.dates.start)) → \(formatter.string(from: booking.dates.end))"
-            let button = alert.addButton(title: "\(platformName) • \(range)") { [weak self] _ in
+            let classifiedName = booking.classified?.name ?? "-"
+            
+            let button = alert.addButton(title: "\(platformName) • \(classifiedName)") { [weak self] _ in
                 alert.close {
                     self?.didSelectBooking?(booking)
                 }
             }
+            let range = String(key: "bookings.calendar.overview.range.0") + " \(formatter.string(from: booking.dates.start)) " + String(key: "bookings.calendar.overview.range.1") + " \(formatter.string(from: booking.dates.end))"
+            button.subtitle = range
             button.configuration?.baseBackgroundColor = booking.platform?.type?.backgroundColor
         }
         
