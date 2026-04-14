@@ -7,7 +7,7 @@
 
 import UIKit
 import FirebaseFirestore
-import FirebaseAuth
+import FirebaseAuth 
 
 extension RU_Classified {
 	

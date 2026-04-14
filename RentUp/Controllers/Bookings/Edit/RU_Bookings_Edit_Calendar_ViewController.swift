@@ -7,7 +7,6 @@
 
 import UIKit
 import SnapKit
-import HorizonCalendar
 
 public class RU_Bookings_Edit_Calendar_ViewController: RU_Bookings_Calendar_ViewController {
 
@@ -50,9 +49,8 @@ public class RU_Bookings_Edit_Calendar_ViewController: RU_Bookings_Calendar_View
         }
     }
 
-    internal override func handleDaySelection(_ day: DayComponents) {
+    internal override func handleDaySelection(date tappedDate: Date) {
         let calendar = Calendar.current
-        guard let tappedDate = calendar.date(from: DateComponents(year: day.month.year, month: day.month.month, day: day.day)) else { return }
         let tappedStart = calendar.startOfDay(for: tappedDate)
 
         if let start = selectedStartDate {

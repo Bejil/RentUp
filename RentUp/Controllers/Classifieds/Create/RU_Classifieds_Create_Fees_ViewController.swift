@@ -36,11 +36,12 @@ public class RU_Classifieds_Create_Fees_ViewController : RU_Classifieds_Create_V
         return $0
         
     }(RU_Section_TextFieldRow_StackView())
+    
     public override func loadView() {
         
         super.loadView()
         
-navigationItem.title = String(key: "classified.create.step.4")
+        navigationItem.title = String(key: "classified.create.step.4")
 
         let placeholderView = view.showPlaceholder()
         placeholderView.title = String(key: "classified.create.placeholder.profitability")

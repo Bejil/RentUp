@@ -12,7 +12,6 @@
 		7A60A82F2F65DFE500393CE9 /* GoogleSignIn in Frameworks */ = {isa = PBXBuildFile; productRef = 7A60A82E2F65DFE500393CE9 /* GoogleSignIn */; };
 		7A60A8312F65DFE500393CE9 /* GoogleSignInSwift in Frameworks */ = {isa = PBXBuildFile; productRef = 7A60A8302F65DFE500393CE9 /* GoogleSignInSwift */; };
 		7A6F96D92F7B1B9800BF45A0 /* SPConfetti in Frameworks */ = {isa = PBXBuildFile; productRef = 7A6F96D82F7B1B9800BF45A0 /* SPConfetti */; };
-		D44F09852F2CAEB9001832DF /* HorizonCalendar in Frameworks */ = {isa = PBXBuildFile; productRef = D44F09842F2CAEB9001832DF /* HorizonCalendar */; };
 		D466785E2F1FC1690079C4AA /* SnapKit in Frameworks */ = {isa = PBXBuildFile; productRef = D466785D2F1FC1690079C4AA /* SnapKit */; };
 		D4A9543E2F23DAB90038CAA3 /* IQKeyboardManagerSwift in Frameworks */ = {isa = PBXBuildFile; productRef = D4A9543D2F23DAB90038CAA3 /* IQKeyboardManagerSwift */; };
 /* End PBXBuildFile section */
@@ -67,7 +66,6 @@
 				7A6F96D92F7B1B9800BF45A0 /* SPConfetti in Frameworks */,
 				D466785E2F1FC1690079C4AA /* SnapKit in Frameworks */,
 				7A60A8312F65DFE500393CE9 /* GoogleSignInSwift in Frameworks */,
-				D44F09852F2CAEB9001832DF /* HorizonCalendar in Frameworks */,
 				D4A9543E2F23DAB90038CAA3 /* IQKeyboardManagerSwift in Frameworks */,
 				7A60A8292F65DC1000393CE9 /* FirebaseFirestore in Frameworks */,
 				7A60A82F2F65DFE500393CE9 /* GoogleSignIn in Frameworks */,
@@ -127,7 +125,6 @@
 			packageProductDependencies = (
 				D466785D2F1FC1690079C4AA /* SnapKit */,
 				D4A9543D2F23DAB90038CAA3 /* IQKeyboardManagerSwift */,
-				D44F09842F2CAEB9001832DF /* HorizonCalendar */,
 				7A60A8262F65DC1000393CE9 /* FirebaseAuth */,
 				7A60A8282F65DC1000393CE9 /* FirebaseFirestore */,
 				7A60A82E2F65DFE500393CE9 /* GoogleSignIn */,
@@ -165,7 +162,6 @@
 			packageReferences = (
 				D466785C2F1FC1690079C4AA /* XCRemoteSwiftPackageReference "SnapKit" */,
 				D4A9543C2F23DAB90038CAA3 /* XCRemoteSwiftPackageReference "IQKeyboardManager" */,
-				D44F09832F2CAEB9001832DF /* XCRemoteSwiftPackageReference "HorizonCalendar" */,
 				7A60A8252F65DC1000393CE9 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */,
 				7A60A82D2F65DFE500393CE9 /* XCRemoteSwiftPackageReference "GoogleSignIn-iOS" */,
 				7A6F96D72F7B1B9800BF45A0 /* XCRemoteSwiftPackageReference "SPConfetti" */,
@@ -224,7 +220,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.0.2;
+				MARKETING_VERSION = 1.0.3;
 				PRODUCT_BUNDLE_IDENTIFIER = com.michaelblin.RentUp;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
@@ -260,7 +256,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.0.2;
+				MARKETING_VERSION = 1.0.3;
 				PRODUCT_BUNDLE_IDENTIFIER = com.michaelblin.RentUp;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
@@ -444,14 +440,6 @@
 				minimumVersion = 1.4.2;
 			};
 		};
-		D44F09832F2CAEB9001832DF /* XCRemoteSwiftPackageReference "HorizonCalendar" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/airbnb/HorizonCalendar.git";
-			requirement = {
-				branch = master;
-				kind = branch;
-			};
-		};
 		D466785C2F1FC1690079C4AA /* XCRemoteSwiftPackageReference "SnapKit" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/SnapKit/SnapKit.git";
@@ -495,11 +483,6 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 7A6F96D72F7B1B9800BF45A0 /* XCRemoteSwiftPackageReference "SPConfetti" */;
 			productName = SPConfetti;
-		};
-		D44F09842F2CAEB9001832DF /* HorizonCalendar */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = D44F09832F2CAEB9001832DF /* XCRemoteSwiftPackageReference "HorizonCalendar" */;
-			productName = HorizonCalendar;
 		};
 		D466785D2F1FC1690079C4AA /* SnapKit */ = {
 			isa = XCSwiftPackageProductDependency;

@@ -493,7 +493,7 @@ public class RU_Settings_ViewController: RU_ViewController {
             .lowercased()
     }
     
-    private func parseCurrency(_ value: String) -> Int {
+    private func parseCurrency(_ value: String) -> Double {
         
         let cleaned = value
             .replacingOccurrences(of: "\u{00A0}", with: " ")
@@ -503,7 +503,7 @@ public class RU_Settings_ViewController: RU_ViewController {
         let normalized = cleaned.replacingOccurrences(of: ",", with: ".")
         let filtered = normalized.filter { "0123456789.-".contains($0) }
         let amount = Double(filtered) ?? 0
-        return Int(amount.rounded())
+        return Double(amount.rounded())
     }
     
     private func platformFromString(_ value: String) -> RU_Platform? {

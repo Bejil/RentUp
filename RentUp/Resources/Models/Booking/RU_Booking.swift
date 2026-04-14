@@ -39,8 +39,8 @@ public class RU_Booking : Codable, Equatable {
     
     public class Costs : Codable {
         
-        public var cleaning:Int?
-        public var compensation:Int?
+        public var cleaning:Double?
+        public var compensation:Double?
     }
 	
     @DocumentID public var id: String?

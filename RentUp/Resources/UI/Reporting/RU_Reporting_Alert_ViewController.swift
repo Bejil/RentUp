@@ -182,7 +182,7 @@ public class RU_Reporting_Alert_ViewController : RU_Alert_ViewController {
             }
         }
     }
-    private lazy var liquidView:RU_Liquid_View = .init(color: Colors.Secondary)
+    private lazy var liquidView:RU_Liquid_View = .init(color: Colors.Primary)
     private lazy var emojiLabel:RU_Label = {
         
         $0.font = Fonts.Content.Title.H1.withSize(Fonts.Size+75)
@@ -217,7 +217,7 @@ public class RU_Reporting_Alert_ViewController : RU_Alert_ViewController {
             
             make.edges.equalToSuperview()
         }
-        liquidView.startFill(duration: 1.0)
+        liquidView.startFill(duration: 1.5)
         
         containerView.addSubview(emojiLabel)
         emojiLabel.snp.makeConstraints { make in

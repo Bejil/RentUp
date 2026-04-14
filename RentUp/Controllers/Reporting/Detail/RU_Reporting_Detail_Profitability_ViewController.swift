@@ -33,6 +33,8 @@ public class RU_Reporting_Detail_Profitability_ViewController: RU_Reporting_Deta
         monthes = []
         actualValues = []
         forecastValues = []
+        var occupancySummaries: [String] = []
+        var netSummaries: [String] = []
         
         while monthStart <= lastMonthStart {
             monthes?.append(monthStart)
@@ -96,8 +98,25 @@ public class RU_Reporting_Detail_Profitability_ViewController: RU_Reporting_Deta
             let forecast = chargesForecast > 0 ? revenueForecast / chargesForecast * 100 : (revenueForecast > 0 ? 100 : 0)
             forecastValues?.append(forecast)
             
+            let pastNightsOcc = pastBookings.reduce(0) { $0 + nightsInMonth($1) }
+            let forecastNightsOcc = filteredBookings.reduce(0) { $0 + nightsInMonth($1) }
+            let occPctActual = daysInMonth > 0 ? Double(pastNightsOcc) / Double(daysInMonth) * 100 : 0
+            let occPctForecast = daysInMonth > 0 ? Double(forecastNightsOcc) / Double(daysInMonth) * 100 : 0
+            occupancySummaries.append(String(
+                format: String(key: "reporting.cell.occupancyLine"),
+                occPctActual, pastNightsOcc, daysInMonth, occPctForecast, forecastNightsOcc
+            ))
+            netSummaries.append(String(
+                format: String(key: "reporting.cell.netLine"),
+                RU_Reporting_Detail_ViewController.ReportingMonthMetrics.formatNetEUR(revenueActual),
+                RU_Reporting_Detail_ViewController.ReportingMonthMetrics.formatNetEUR(revenueForecast)
+            ))
+            
             monthStart = calendar.date(byAdding: .month, value: 1, to: monthStart) ?? monthStart
         }
+        
+        reportingCellOccupancySummaries = occupancySummaries
+        reportingCellNetSummaries = netSummaries
         
         let months = monthes ?? []
         var chartData: [RU_Chart_View.Point] = []
