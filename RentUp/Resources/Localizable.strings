@@ -183,6 +183,8 @@
 "bookings.calendar.overview.title" = "Calendrier";
 "bookings.calendar.overview.range.0" = "Du";
 "bookings.calendar.overview.range.1" = "au";
+"bookings.calendar.edit.selection.error" = "Cette période chevauche une ou plusieurs réservations existantes. Choisissez une date d’arrivée libre ou en fin de séjour, et une date de départ libre ou en début de séjour.";
+"bookings.calendar.edit.pastDate.error" = "Vous ne pouvez pas sélectionner une date antérieure à aujourd’hui.";
 "bookings.create.travelers.section.title" = "Voyageurs";
 "bookings.create.travelers.section.subtitle" = "Le nombre et le type de voyageur aidera à définir le prix ainsi que la configuration du logement";
 "bookings.create.configuration.section.title" = "Configuration";
