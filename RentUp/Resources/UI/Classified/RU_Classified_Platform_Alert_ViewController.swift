@@ -21,6 +21,7 @@ public class RU_Classified_Platform_Alert_ViewController : RU_Alert_ViewControll
             travelersExtraTextFieldRowStack.textField.isEnabled = isEditing
             offerWeekTextFieldRowStack.textField.isEnabled = isEditing
             offerMonthTextFieldRowStack.textField.isEnabled = isEditing
+            saveButton?.isHidden = !isEditing
         }
     }
     public var classified:RU_Classified?
