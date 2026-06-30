@@ -48,6 +48,15 @@ public class RU_Bookings_Edit_Calendar_ViewController: RU_Bookings_Calendar_View
             make.right.bottom.left.equalTo(view.safeAreaLayoutGuide).inset(UI.Margins)
         }
     }
+    
+    public override func viewDidLayoutSubviews() {
+        super.viewDidLayoutSubviews()
+        let bottomInset = button.bounds.height + 2 * UI.Margins
+        if let collectionView = view as? UICollectionView {
+            collectionView.contentInset.bottom = bottomInset
+            collectionView.verticalScrollIndicatorInsets.bottom = bottomInset
+        }
+    }
 
     internal override func handleDaySelection(date tappedDate: Date) {
         let calendar = Calendar.current

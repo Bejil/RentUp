@@ -51,7 +51,11 @@ public class RU_ViewController: UIViewController {
 	public override func loadView() {
 		
 		super.loadView()
-		
+		installDefaultViewChrome()
+	}
+    
+    func installDefaultViewChrome() {
+        
         view.backgroundColor = Colors.Background.View
         
         let tapGestureRecognizer:UITapGestureRecognizer = .init { [weak self] sender in
@@ -76,13 +80,7 @@ public class RU_ViewController: UIViewController {
 		}
 		tapGestureRecognizer.cancelsTouchesInView = false
 		view.addGestureRecognizer(tapGestureRecognizer)
-        
-//        view.addSubview(closeButton)
-//        closeButton.snp.makeConstraints { make in
-//            
-//            make.top.left.equalTo(view.safeAreaLayoutGuide).inset(UI.Margins)
-//        }
-	}
+    }
 	
 	public override func viewWillDisappear(_ animated: Bool) {
 		

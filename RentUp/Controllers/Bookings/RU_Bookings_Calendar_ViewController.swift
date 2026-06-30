@@ -26,41 +26,43 @@ public class RU_Bookings_Calendar_ViewController: RU_ViewController {
     
 	public var bookings: [RU_Booking]? {
 		didSet {
-			updateCalendar()
+			guard isViewLoaded else { return }
+			weeksScrollHostView.applyBookingsChange()
 		}
 	}
 	
 	/// Plages à afficher en Colors.Secondary (ex. résa en cours d’édition). Dessinées au-dessus des résas Primary.
 	public var secondaryHighlightRanges: Set<ClosedRange<Date>>? {
 		didSet {
-			updateCalendar()
+			guard isViewLoaded else { return }
+			weeksScrollHostView.applySecondaryHighlightChange()
 		}
 	}
 	
 	public var didSelectBooking: ((RU_Booking) -> Void)?
 	
-	private lazy var weeksScrollHostView: WeeksScrollHostView = {
-		WeeksScrollHostView(owner: self)
-	}()
+	private var weeksScrollHostView: WeeksScrollHostView!
 	
 	// MARK: - Lifecycle
 	
 	public override func loadView() {
 		
-		super.loadView()
+		weeksScrollHostView = WeeksScrollHostView(owner: self)
+		view = weeksScrollHostView
+		installDefaultViewChrome()
 		
 		isModal = true
         navigationItem.title = String(key: "bookings.calendar.overview.title")
-		
-		view.addSubview(weeksScrollHostView)
-		weeksScrollHostView.snp.makeConstraints { make in
-            make.edges.equalToSuperview()
-		}
-        // Ne pas construire toute la grille dans loadView (bloque le thread UI) : chargement différé + mois asynchrones.
+        navigationItem.largeTitleDisplayMode = .always
+        
         DispatchQueue.main.async { [weak self] in
-            self?.weeksScrollHostView.reload(animated: false)
-            self?.weeksScrollHostView.scrollToMonthContaining(Date(), animated: false)
+            self?.weeksScrollHostView.performInitialLoad()
         }
+	}
+	
+	public override func viewWillAppear(_ animated: Bool) {
+		super.viewWillAppear(animated)
+		navigationController?.navigationBar.prefersLargeTitles = true
 	}
 	
 	// MARK: - Selection
@@ -111,7 +113,8 @@ public class RU_Bookings_Calendar_ViewController: RU_ViewController {
 	}
 	
 	internal func updateCalendar() {
-		weeksScrollHostView.reload(animated: false)
+		guard isViewLoaded else { return }
+		weeksScrollHostView.applyBookingsChange()
 	}
 	
 	/// Contenu d’une cellule jour (grille maison : pas de `DayComponents` Horizon).
@@ -289,86 +292,196 @@ public class RU_Bookings_Calendar_ViewController: RU_ViewController {
         }
     }
     
-    /// Grille verticale scrollable : hauteur de **ligne** = ratio(max bandes sur **cette** semaine uniquement).
-    private final class WeeksScrollHostView: UIView {
-        
-        private let scrollView = UIScrollView()
-        private let contentContainer = UIView()
-        private let rangeOverlay = UIView()
-        private let rangeLayerSecondary = CAShapeLayer()
-        private let contentStack = UIStackView()
-        
-        unowned let owner: RU_Bookings_Calendar_ViewController
-        
-        private var dateToDayView: [Date: BookingDayView] = [:]
-        private var tapDateByViewId: [ObjectIdentifier: Date] = [:]
-        private var monthBlockByMonthStart: [Date: UIView] = [:]
-        private var pendingScrollMonth: Date?
-        private var pendingScrollAnimated = false
-        /// Mois à centrer une fois le `reload` terminé (évite un scroll avec `contentSize` encore incomplet).
-        private var centerMonthWhenReloadFinishes: (month: Date, animated: Bool)?
-        /// Annule les enchaînements `async` d’un `reload` précédent lorsqu’un nouveau `reload` est demandé.
-        private var reloadGeneration = 0
+    /// Grille verticale scrollable : une cellule = une semaine ; hauteur variable par semaine.
+    private final class WeeksScrollHostView: UICollectionView, UICollectionViewDataSource, UICollectionViewDelegateFlowLayout {
         
         private static let horizontalDayGap: CGFloat = 2
         private static let weekRowGap: CGFloat = 2
+        private static let monthHeaderHeight: CGFloat = 36
+        private static let weekdayHeaderHeight: CGFloat = 22
+        private static let monthGapHeight: CGFloat = 24
+        
+        unowned let owner: RU_Bookings_Calendar_ViewController
+        
+        private let rangeOverlay = UIView()
+        private let rangeLayerSecondary = CAShapeLayer()
+        
+        private var dataSourceItems: [CalendarRowItem] = []
+        private var displayItems: [CalendarRowItem] = []
+        private var weekDaysByKey: [WeekRowKey: [Date?]] = [:]
+        private var weekBandsByKey: [WeekRowKey: Int] = [:]
+        private var monthStartByTimestamp: [TimeInterval: Date] = [:]
+        private var laneByBookingKey: [String: Int] = [:]
+        private var dateToDayView: [Date: BookingDayView] = [:]
+        private var pendingScrollMonth: Date?
+        private var pendingScrollAnimated = false
         
         init(owner: RU_Bookings_Calendar_ViewController) {
             self.owner = owner
-            super.init(frame: .zero)
+            let flowLayout = UICollectionViewFlowLayout()
+            flowLayout.minimumLineSpacing = Self.weekRowGap
+            flowLayout.minimumInteritemSpacing = 0
+            flowLayout.sectionInset = UIEdgeInsets(top: 0, left: UI.Margins, bottom: 0, right: UI.Margins)
+            super.init(frame: .zero, collectionViewLayout: flowLayout)
             backgroundColor = .clear
+            alwaysBounceVertical = true
+            contentInsetAdjustmentBehavior = .automatic
+            dataSource = self
+            delegate = self
             
-            addSubview(scrollView)
-            scrollView.snp.makeConstraints { $0.edges.equalToSuperview() }
-            scrollView.alwaysBounceVertical = true
+            register(BookingCalendarMonthHeaderCell.self, forCellWithReuseIdentifier: BookingCalendarMonthHeaderCell.reuseId)
+            register(BookingCalendarWeekdayHeaderCell.self, forCellWithReuseIdentifier: BookingCalendarWeekdayHeaderCell.reuseId)
+            register(BookingCalendarMonthGapCell.self, forCellWithReuseIdentifier: BookingCalendarMonthGapCell.reuseId)
+            register(BookingCalendarWeekRowCell.self, forCellWithReuseIdentifier: BookingCalendarWeekRowCell.reuseId)
             
-            scrollView.addSubview(contentContainer)
-            contentContainer.snp.makeConstraints { make in
-                make.edges.equalTo(scrollView.contentLayoutGuide)
-                make.width.equalTo(scrollView.frameLayoutGuide)
-            }
-            
-            contentContainer.addSubview(rangeOverlay)
             rangeOverlay.isUserInteractionEnabled = false
-            rangeOverlay.snp.makeConstraints { $0.edges.equalToSuperview() }
             rangeLayerSecondary.fillColor = Colors.Secondary.cgColor
             rangeOverlay.layer.addSublayer(rangeLayerSecondary)
-            
-            contentContainer.addSubview(contentStack)
-            contentStack.axis = .vertical
-            contentStack.spacing = 0
-            contentStack.alignment = .fill
-            contentStack.snp.makeConstraints { $0.edges.equalToSuperview().inset(UIEdgeInsets(top: 0, left: UI.Margins, bottom: 0, right: UI.Margins)) }
-            
-            let tap = UITapGestureRecognizer(target: self, action: #selector(handleDayTap(_:)))
-            contentStack.addGestureRecognizer(tap)
         }
         
         required init?(coder: NSCoder) {
             fatalError("init(coder:) has not been implemented")
         }
         
-        func reload(animated: Bool) {
-            _ = animated
-            reloadGeneration += 1
-            let generation = reloadGeneration
-            pendingScrollMonth = nil
-            centerMonthWhenReloadFinishes = nil
+        override func didMoveToSuperview() {
+            super.didMoveToSuperview()
+            guard let superview else {
+                rangeOverlay.removeFromSuperview()
+                return
+            }
+            if rangeOverlay.superview !== superview {
+                superview.insertSubview(rangeOverlay, belowSubview: self)
+                rangeOverlay.snp.remakeConstraints { $0.edges.equalTo(self) }
+            }
+        }
+        
+        func performInitialLoad() {
+            rebuildModel()
+            applySnapshot(preservingContentOffset: false)
+            scrollToMonthContaining(Date(), animated: false)
+        }
+        
+        func applyBookingsChange() {
+            let offset = contentOffset
+            rebuildModel()
+            applySnapshot(preservingContentOffset: true, savedOffset: offset)
+        }
+        
+        func applySecondaryHighlightChange() {
+            refreshVisibleWeekCells()
+            rebuildRangePaths()
+        }
+        
+        func scrollToMonthContaining(_ date: Date, animated: Bool) {
+            let cal = owner.displayedCalendar
+            let key = cal.date(from: cal.dateComponents([.year, .month], from: date))!
+            pendingScrollMonth = key
+            pendingScrollAnimated = animated
+            setNeedsLayout()
+        }
+        
+        override func layoutSubviews() {
+            super.layoutSubviews()
+            rangeLayerSecondary.frame = rangeOverlay.bounds
             
-            contentStack.arrangedSubviews.forEach { $0.removeFromSuperview() }
-            dateToDayView.removeAll()
-            tapDateByViewId.removeAll()
-            monthBlockByMonthStart.removeAll()
-            contentStack.alpha = 0
-            rangeOverlay.alpha = 0
+            if let target = pendingScrollMonth {
+                let ts = target.timeIntervalSince1970
+                if let itemIndex = displayItems.firstIndex(where: {
+                    if case .monthHeader(let t) = $0 { return t == ts }
+                    return false
+                }) {
+                    pendingScrollMonth = nil
+                    let indexPath = IndexPath(item: itemIndex, section: 0)
+                    scrollToItem(at: indexPath, at: .centeredVertically, animated: pendingScrollAnimated)
+                }
+            }
             
-            showPlaceholder(.Loading)
-            
+            rebuildRangePaths()
+        }
+        
+        private func configureCell(collectionView: UICollectionView, indexPath: IndexPath, item: CalendarRowItem) -> UICollectionViewCell {
+            switch item {
+            case .monthGap:
+                return collectionView.dequeueReusableCell(withReuseIdentifier: BookingCalendarMonthGapCell.reuseId, for: indexPath)
+            case .monthHeader(let timestamp):
+                let cell = collectionView.dequeueReusableCell(withReuseIdentifier: BookingCalendarMonthHeaderCell.reuseId, for: indexPath) as! BookingCalendarMonthHeaderCell
+                let monthStart = monthStartByTimestamp[timestamp] ?? Date(timeIntervalSince1970: timestamp)
+                let monthDF = DateFormatter()
+                monthDF.locale = Locale(identifier: "fr_FR")
+                monthDF.dateFormat = "MMMM yyyy"
+                cell.configure(title: monthDF.string(from: monthStart).capitalized)
+                return cell
+            case .weekdayHeader:
+                return collectionView.dequeueReusableCell(withReuseIdentifier: BookingCalendarWeekdayHeaderCell.reuseId, for: indexPath)
+            case .week(let key):
+                let cell = collectionView.dequeueReusableCell(withReuseIdentifier: BookingCalendarWeekRowCell.reuseId, for: indexPath) as! BookingCalendarWeekRowCell
+                let days = weekDaysByKey[key] ?? []
+                let cal = owner.displayedCalendar
+                let today = cal.startOfDay(for: Date())
+                let secondary = owner.secondaryHighlightRanges ?? []
+                cell.onDaySelected = { [weak owner] date in
+                    owner?.handleDaySelection(date: date)
+                }
+                cell.configure(
+                    days: days,
+                    calendar: cal,
+                    contentProvider: { [weak owner] date in
+                        guard let owner else {
+                            return BookingDayViewContent(year: 0, month: 0, dayOfMonth: 0, isToday: false, isInSecondaryRange: false, barRows: [], hiddenCount: 0)
+                        }
+                        return owner.makeBookingDayViewContent(
+                            for: date,
+                            calendar: cal,
+                            today: today,
+                            laneByBookingKey: laneByBookingKey,
+                            secondaryRanges: secondary
+                        )
+                    }
+                )
+                return cell
+            }
+        }
+        
+        private func refreshVisibleWeekCells() {
+            let cal = owner.displayedCalendar
+            let today = cal.startOfDay(for: Date())
+            let secondary = owner.secondaryHighlightRanges ?? []
+            for case let cell as BookingCalendarWeekRowCell in visibleCells {
+                cell.refreshContent(
+                    contentProvider: { [weak owner] date in
+                        guard let owner else {
+                            return BookingDayViewContent(year: 0, month: 0, dayOfMonth: 0, isToday: false, isInSecondaryRange: false, barRows: [], hiddenCount: 0)
+                        }
+                        return owner.makeBookingDayViewContent(
+                            for: date,
+                            calendar: cal,
+                            today: today,
+                            laneByBookingKey: laneByBookingKey,
+                            secondaryRanges: secondary
+                        )
+                    }
+                )
+            }
+        }
+        
+        private func applySnapshot(preservingContentOffset: Bool, savedOffset: CGPoint = .zero) {
+            displayItems = dataSourceItems
+            reloadData()
+            layoutIfNeeded()
+            if preservingContentOffset {
+                let maxY = max(0, contentSize.height - bounds.height)
+                let y = min(savedOffset.y, maxY)
+                setContentOffset(CGPoint(x: 0, y: y), animated: false)
+            }
+            rebuildRangePaths()
+        }
+        
+        private func rebuildModel() {
             let cal = owner.displayedCalendar
             let today = cal.startOfDay(for: Date())
             let sourceBookings = owner.bookings ?? []
             let activeForLanes = sourceBookings.filter { !$0.isCancelled }
-            let laneByBookingKey = owner.makeLaneMapping(for: activeForLanes, calendar: cal)
+            laneByBookingKey = owner.makeLaneMapping(for: activeForLanes, calendar: cal)
             let secondary = owner.secondaryHighlightRanges ?? []
             
             func monthStart(containing date: Date) -> Date {
@@ -405,9 +518,11 @@ public class RU_Bookings_Calendar_ViewController: RU_ViewController {
             } else {
                 guard let startAnchor = cal.date(byAdding: .year, value: -1, to: Date()),
                       let endAnchor = cal.date(byAdding: .year, value: 1, to: Date()) else {
-                    contentStack.alpha = 1
-                    rangeOverlay.alpha = 1
-                    dismissPlaceholder()
+                    displayItems = []
+                    dataSourceItems = []
+                    weekDaysByKey = [:]
+                    weekBandsByKey = [:]
+                    monthStartByTimestamp = [:]
                     return
                 }
                 startMonth = monthStart(containing: startAnchor)
@@ -421,149 +536,62 @@ public class RU_Bookings_Calendar_ViewController: RU_ViewController {
                 guard let nx = cal.date(byAdding: .month, value: 1, to: walk) else { break }
                 walk = nx
             }
-            var pendingMonths = allMonthStarts
             
-            let monthDF = DateFormatter()
-            monthDF.locale = Locale(identifier: "fr_FR")
-            monthDF.dateFormat = "MMMM yyyy"
+            var items: [CalendarRowItem] = []
+            var daysMap: [WeekRowKey: [Date?]] = [:]
+            var bandsMap: [WeekRowKey: Int] = [:]
+            var monthMap: [TimeInterval: Date] = [:]
+            var nextRowItemID = 0
             
-            let symbols = ["L", "M", "M", "J", "V", "S", "D"]
-            var isFirstMonth = true
-            
-            func appendNextMonth() {
-                guard generation == self.reloadGeneration else { return }
-                guard !pendingMonths.isEmpty else {
-                    guard generation == self.reloadGeneration else { return }
-                    if let spec = centerMonthWhenReloadFinishes {
-                        pendingScrollMonth = spec.month
-                        pendingScrollAnimated = spec.animated
-                        centerMonthWhenReloadFinishes = nil
-                    }
-                    setNeedsLayout()
-                    layoutIfNeeded()
-                    rebuildRangePaths()
-                    contentStack.alpha = 1
-                    rangeOverlay.alpha = 1
-                    dismissPlaceholder()
-                    return
+            for (monthIndex, monthCursor) in allMonthStarts.enumerated() {
+                if monthIndex > 0 {
+                    items.append(.monthGap(nextRowItemID))
+                    nextRowItemID += 1
                 }
-                let monthCursor = pendingMonths.removeFirst()
-                
-                if !isFirstMonth {
-                    let spacer = UIView()
-                    spacer.snp.makeConstraints { $0.height.equalTo(24) }
-                    contentStack.addArrangedSubview(spacer)
-                }
-                isFirstMonth = false
-                
                 let monthKey = cal.date(from: cal.dateComponents([.year, .month], from: monthCursor))!
-                
-                let block = UIView()
-                monthBlockByMonthStart[monthKey] = block
-                contentStack.addArrangedSubview(block)
-                
-                let inner = UIStackView()
-                inner.axis = .vertical
-                inner.spacing = Self.weekRowGap
-                inner.alignment = .fill
-                block.addSubview(inner)
-                inner.snp.makeConstraints { $0.edges.equalToSuperview() }
-                
-                let header = UILabel()
-                header.font = Fonts.Content.Title.H4
-                header.textColor = Colors.Content.Title
-                header.text = monthDF.string(from: monthKey).capitalized
-                inner.addArrangedSubview(header)
-                
-                let dow = UIStackView()
-                dow.axis = .horizontal
-                dow.distribution = .fillEqually
-                dow.spacing = Self.horizontalDayGap
-                for s in symbols {
-                    let l = UILabel()
-                    l.text = s
-                    l.font = Fonts.Content.Text.Bold
-                    l.textColor = Colors.Content.Text.withAlphaComponent(0.5)
-                    l.textAlignment = .center
-                    dow.addArrangedSubview(l)
-                }
-                inner.addArrangedSubview(dow)
-                dow.snp.makeConstraints { $0.height.equalTo(22) }
+                let ts = monthKey.timeIntervalSince1970
+                monthMap[ts] = monthKey
+                items.append(.monthHeader(ts))
+                items.append(.weekdayHeader(nextRowItemID))
+                nextRowItemID += 1
                 
                 let weeks = Self.weeksForMonth(monthAnchor: monthCursor, calendar: cal)
-                for week in weeks {
+                for (weekIndex, week) in weeks.enumerated() {
+                    let key = WeekRowKey(monthTimestamp: ts, weekIndex: weekIndex)
                     let maxBands = week.compactMap { $0 }.map { d in
                         owner.barBandCountForDay(date: d, calendar: cal, today: today, laneByBookingKey: laneByBookingKey)
                     }.max() ?? 0
-                    let ratio = RU_Bookings_Calendar_ViewController.verticalDayAspectRatio(maxBarBands: maxBands)
-                    
-                    let row = UIStackView()
-                    row.axis = .horizontal
-                    row.distribution = .fillEqually
-                    row.spacing = Self.horizontalDayGap
-                    
-                    for dayOpt in week {
-                        if let date = dayOpt {
-                            let dayView = BookingDayView()
-                            let dayStart = cal.startOfDay(for: date)
-                            BookingDayView.setContent(
-                                owner.makeBookingDayViewContent(
-                                    for: date,
-                                    calendar: cal,
-                                    today: today,
-                                    laneByBookingKey: laneByBookingKey,
-                                    secondaryRanges: secondary
-                                ),
-                                on: dayView
-                            )
-                            dateToDayView[dayStart] = dayView
-                            tapDateByViewId[ObjectIdentifier(dayView)] = date
-                            row.addArrangedSubview(dayView)
-                        } else {
-                            let placeholder = UIView()
-                            placeholder.isUserInteractionEnabled = false
-                            row.addArrangedSubview(placeholder)
-                        }
-                    }
-                    
-                    inner.addArrangedSubview(row)
-                    let gapCount: CGFloat = 6
-                    row.snp.makeConstraints { make in
-                        make.height.equalTo(contentStack.snp.width).multipliedBy(ratio / 7).offset(-(Self.horizontalDayGap * gapCount * ratio) / 7)
-                    }
+                    daysMap[key] = week
+                    bandsMap[key] = maxBands
+                    items.append(.week(key))
                 }
-                
-                DispatchQueue.main.async { appendNextMonth() }
             }
             
-            // Un mois par « tour » de run loop pour ne pas bloquer l’interaction / la transition.
-            DispatchQueue.main.async { appendNextMonth() }
+            displayItems = items
+            dataSourceItems = items
+            weekDaysByKey = daysMap
+            weekBandsByKey = bandsMap
+            monthStartByTimestamp = monthMap
         }
         
-        func scrollToMonthContaining(_ date: Date, animated: Bool) {
+        private func weekRowHeight(for key: WeekRowKey, containerWidth: CGFloat) -> CGFloat {
+            let bands = weekBandsByKey[key] ?? 0
+            let ratio = RU_Bookings_Calendar_ViewController.verticalDayAspectRatio(maxBarBands: bands)
+            let gapCount: CGFloat = 6
+            let cellWidth = (containerWidth - Self.horizontalDayGap * gapCount) / 7
+            return cellWidth * ratio
+        }
+        
+        private func contentWidth() -> CGFloat {
+            bounds.width - UI.Margins * 2
+        }
+        
+        private func syncVisibleDayViewRegistry() {
             let cal = owner.displayedCalendar
-            let key = cal.date(from: cal.dateComponents([.year, .month], from: date))!
-            centerMonthWhenReloadFinishes = (month: key, animated: animated)
-            setNeedsLayout()
-        }
-        
-        override func layoutSubviews() {
-            super.layoutSubviews()
-            rangeLayerSecondary.frame = rangeOverlay.bounds
-            
-            if let target = pendingScrollMonth {
-                let viewportH = scrollView.bounds.height
-                if viewportH > 0, let block = monthBlockByMonthStart[target] {
-                    pendingScrollMonth = nil
-                    let rect = block.convert(block.bounds, to: scrollView)
-                    let maxOffsetY = max(0, scrollView.contentSize.height - viewportH)
-                    let centeredY = rect.midY - viewportH / 2
-                    let y = max(0, min(centeredY, maxOffsetY))
-                    scrollView.setContentOffset(CGPoint(x: 0, y: y), animated: pendingScrollAnimated)
-                }
+            dateToDayView.removeAll(keepingCapacity: true)
+            for case let cell as BookingCalendarWeekRowCell in visibleCells {
+                cell.registerDayViews(into: &dateToDayView, calendar: cal)
             }
-            
-            rebuildRangePaths()
         }
         
         private func rebuildRangePaths() {
@@ -573,6 +601,7 @@ public class RU_Bookings_Calendar_ViewController: RU_ViewController {
                 rangeLayerSecondary.path = nil
                 return
             }
+            syncVisibleDayViewRegistry()
             let path = UIBezierPath()
             for range in secondary {
                 var frames: [CGRect] = []
@@ -591,25 +620,12 @@ public class RU_Bookings_Calendar_ViewController: RU_ViewController {
             rangeLayerSecondary.path = path.cgPath
         }
         
-        @objc private func handleDayTap(_ gesture: UITapGestureRecognizer) {
-            let p = gesture.location(in: contentStack)
-            guard let hit = contentStack.hitTest(p, with: nil) else { return }
-            var v: UIView? = hit
-            while let cur = v {
-                if let day = cur as? BookingDayView, let date = tapDateByViewId[ObjectIdentifier(day)] {
-                    owner.handleDaySelection(date: date)
-                    return
-                }
-                v = cur.superview
-            }
-        }
-        
         private static func weeksForMonth(monthAnchor: Date, calendar: Calendar) -> [[Date?]] {
             guard let interval = calendar.dateInterval(of: .month, for: monthAnchor) else { return [] }
             let firstDay = calendar.startOfDay(for: interval.start)
             guard let dayCount = calendar.range(of: .day, in: .month, for: firstDay)?.count else { return [] }
             let weekday = calendar.component(.weekday, from: firstDay)
-            let leading = (weekday + 5) % 7
+            let leading = (weekday - calendar.firstWeekday + 7) % 7
             var cells: [Date?] = Array(repeating: nil, count: leading)
             for i in 0..<dayCount {
                 cells.append(calendar.date(byAdding: .day, value: i, to: firstDay))
@@ -638,6 +654,187 @@ public class RU_Bookings_Calendar_ViewController: RU_ViewController {
                 path.append(UIBezierPath(roundedRect: rect, cornerRadius: 6))
             }
         }
+        
+        func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
+            displayItems.count
+        }
+        
+        func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
+            configureCell(collectionView: collectionView, indexPath: indexPath, item: displayItems[indexPath.item])
+        }
+        
+        func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, sizeForItemAt indexPath: IndexPath) -> CGSize {
+            guard indexPath.item < displayItems.count else {
+                return CGSize(width: contentWidth(), height: 44)
+            }
+            let width = contentWidth()
+            switch displayItems[indexPath.item] {
+            case .monthGap:
+                return CGSize(width: width, height: Self.monthGapHeight)
+            case .monthHeader:
+                return CGSize(width: width, height: Self.monthHeaderHeight)
+            case .weekdayHeader:
+                return CGSize(width: width, height: Self.weekdayHeaderHeight)
+            case .week(let key):
+                return CGSize(width: width, height: weekRowHeight(for: key, containerWidth: width))
+            }
+        }
+        
+        func scrollViewDidScroll(_ scrollView: UIScrollView) {
+            rebuildRangePaths()
+        }
+        
+        func collectionView(_ collectionView: UICollectionView, willDisplay cell: UICollectionViewCell, forItemAt indexPath: IndexPath) {
+            guard indexPath.item < displayItems.count,
+                  case .week = displayItems[indexPath.item] else { return }
+            DispatchQueue.main.async { [weak self] in
+                self?.rebuildRangePaths()
+            }
+        }
+    }
+}
+
+// MARK: - Collection calendar models & cells
+
+private enum CalendarRowItem: Hashable {
+    case monthGap(Int)
+    case monthHeader(TimeInterval)
+    case weekdayHeader(Int)
+    case week(WeekRowKey)
+}
+
+private struct WeekRowKey: Hashable {
+    let monthTimestamp: TimeInterval
+    let weekIndex: Int
+}
+
+private final class BookingCalendarMonthGapCell: UICollectionViewCell {
+    static let reuseId = "BookingCalendarMonthGapCell"
+}
+
+private final class BookingCalendarMonthHeaderCell: UICollectionViewCell {
+    static let reuseId = "BookingCalendarMonthHeaderCell"
+    private let label = UILabel()
+    
+    override init(frame: CGRect) {
+        super.init(frame: frame)
+        label.font = Fonts.Content.Title.H4
+        label.textColor = Colors.Content.Title
+        contentView.addSubview(label)
+        label.snp.makeConstraints { $0.edges.equalToSuperview() }
+    }
+    
+    required init?(coder: NSCoder) { fatalError("init(coder:) has not been implemented") }
+    
+    func configure(title: String) {
+        label.text = title
+    }
+}
+
+private final class BookingCalendarWeekdayHeaderCell: UICollectionViewCell {
+    static let reuseId = "BookingCalendarWeekdayHeaderCell"
+    private let stack = UIStackView()
+    
+    override init(frame: CGRect) {
+        super.init(frame: frame)
+        stack.axis = .horizontal
+        stack.distribution = .fillEqually
+        stack.spacing = 2
+        contentView.addSubview(stack)
+        stack.snp.makeConstraints { $0.edges.equalToSuperview() }
+        for s in ["L", "M", "M", "J", "V", "S", "D"] {
+            let l = UILabel()
+            l.text = s
+            l.font = Fonts.Content.Text.Bold
+            l.textColor = Colors.Content.Text.withAlphaComponent(0.5)
+            l.textAlignment = .center
+            stack.addArrangedSubview(l)
+        }
+    }
+    
+    required init?(coder: NSCoder) { fatalError("init(coder:) has not been implemented") }
+}
+
+private final class BookingCalendarWeekRowCell: UICollectionViewCell {
+    static let reuseId = "BookingCalendarWeekRowCell"
+    private static let horizontalDayGap: CGFloat = 2
+    
+    private let rowStack = UIStackView()
+    private var slotViews: [UIView] = []
+    private var dayViews: [BookingDayView] = []
+    private var dayDates: [Date?] = Array(repeating: nil, count: 7)
+    var onDaySelected: ((Date) -> Void)?
+    
+    override init(frame: CGRect) {
+        super.init(frame: frame)
+        rowStack.axis = .horizontal
+        rowStack.distribution = .fillEqually
+        rowStack.spacing = Self.horizontalDayGap
+        contentView.addSubview(rowStack)
+        rowStack.snp.makeConstraints { $0.edges.equalToSuperview() }
+        
+        for i in 0..<7 {
+            let slot = UIView()
+            slot.isUserInteractionEnabled = false
+            let dayView = BookingDayView()
+            dayView.tag = i
+            slot.addSubview(dayView)
+            dayView.snp.makeConstraints { $0.edges.equalToSuperview() }
+            slotViews.append(slot)
+            dayViews.append(dayView)
+            rowStack.addArrangedSubview(slot)
+            let tap = UITapGestureRecognizer(target: self, action: #selector(handleDayTap(_:)))
+            dayView.addGestureRecognizer(tap)
+        }
+    }
+    
+    required init?(coder: NSCoder) { fatalError("init(coder:) has not been implemented") }
+    
+    override func prepareForReuse() {
+        super.prepareForReuse()
+        dayDates = Array(repeating: nil, count: 7)
+        onDaySelected = nil
+    }
+    
+    func configure(
+        days: [Date?],
+        calendar: Calendar,
+        contentProvider: (Date) -> BookingDayViewContent
+    ) {
+        for i in 0..<7 {
+            let dateOpt = i < days.count ? days[i] : nil
+            dayDates[i] = dateOpt
+            let dayView = dayViews[i]
+            let slot = slotViews[i]
+            let hasDay = dateOpt != nil
+            slot.isUserInteractionEnabled = hasDay
+            dayView.isUserInteractionEnabled = hasDay
+            dayView.isHidden = !hasDay
+            
+            if let date = dateOpt {
+                BookingDayView.setContent(contentProvider(date), on: dayView)
+            }
+        }
+    }
+    
+    func registerDayViews(into registry: inout [Date: BookingDayView], calendar: Calendar) {
+        for i in 0..<7 {
+            guard let date = dayDates[i] else { continue }
+            registry[calendar.startOfDay(for: date)] = dayViews[i]
+        }
+    }
+    
+    func refreshContent(contentProvider: (Date) -> BookingDayViewContent) {
+        for i in 0..<7 {
+            guard let date = dayDates[i] else { continue }
+            BookingDayView.setContent(contentProvider(date), on: dayViews[i])
+        }
+    }
+    
+    @objc private func handleDayTap(_ gesture: UITapGestureRecognizer) {
+        guard let view = gesture.view, view.tag >= 0, view.tag < dayDates.count,
+              let date = dayDates[view.tag] else { return }
+        onDaySelected?(date)
     }
 }
 
