@@ -92,6 +92,11 @@ public class RU_Platform_Label: UIView {
 			snp.removeConstraints()
 			contentStackView.isLayoutMarginsRelativeArrangement = true
 			contentStackView.layoutMargins = UIEdgeInsets(horizontal: UI.Margins / 3, vertical: UI.Margins / 7)
+			contentStackView.snp.remakeConstraints { make in
+				make.edges.equalToSuperview()
+			}
+			setContentHuggingPriority(.required, for: .horizontal)
+			setContentCompressionResistancePriority(.required, for: .horizontal)
 		}
 	}
 }
