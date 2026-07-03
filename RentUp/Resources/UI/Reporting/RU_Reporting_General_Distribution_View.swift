@@ -24,6 +24,10 @@ public class RU_Reporting_General_Distribution_View: RU_StackView {
         $0.configuration?.imagePlacement = .trailing
 		$0.titleFont = Fonts.Content.Button.Title.withSize(Fonts.Size)
 		$0.showsMenuAsPrimaryAction = true
+        $0.snp.remakeConstraints { make in
+            make.height.equalTo(4*UI.Margins)
+        }
+        
 		return $0
 	}(RU_Button())
 	
@@ -60,9 +64,6 @@ public class RU_Reporting_General_Distribution_View: RU_StackView {
 	public override func didMoveToSuperview() {
 		super.didMoveToSuperview()
 		guard superview != nil else { return }
-		dimensionButton.snp.remakeConstraints { make in
-			make.width.equalToSuperview().multipliedBy(0.55)
-		}
 		dimensionButton.configuration?.titleLineBreakMode = .byTruncatingTail
         updateDimensionButton()
 	}

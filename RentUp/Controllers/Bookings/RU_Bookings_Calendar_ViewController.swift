@@ -23,11 +23,16 @@ public class RU_Bookings_Calendar_ViewController: RU_ViewController {
         calendar.minimumDaysInFirstWeek = 4
         return calendar
     }()
-    
+	
+	/// Si vrai, le calendrier attend les réservations avant le premier rendu (évite un flash vide puis un mauvais scroll).
+	internal var skipsInitialLayoutWithoutBookings = false
+	
+	private var hasPerformedInitialLayout = false
+	
 	public var bookings: [RU_Booking]? {
 		didSet {
 			guard isViewLoaded else { return }
-			weeksScrollHostView.applyBookingsChange()
+			handleBookingsUpdate()
 		}
 	}
 	
@@ -44,6 +49,18 @@ public class RU_Bookings_Calendar_ViewController: RU_ViewController {
 	private var weeksScrollHostView: WeeksScrollHostView!
 	
 	// MARK: - Lifecycle
+    
+    public override init(nibName nibNameOrNil: String?, bundle nibBundleOrNil: Bundle?) {
+        
+        super.init(nibName: nibNameOrNil, bundle: nibBundleOrNil)
+        
+        tabBarItem = .init(title: String(key: "tabbar.bookings"), image: UIImage(systemName: "calendar"), tag: RU_TabBarController.Indexes.allCases.firstIndex(of: .Bookings) ?? 0)
+    }
+    
+    required init?(coder: NSCoder) {
+        
+        fatalError("init(coder:) has not been implemented")
+    }
 	
 	public override func loadView() {
 		
@@ -51,18 +68,41 @@ public class RU_Bookings_Calendar_ViewController: RU_ViewController {
 		view = weeksScrollHostView
 		installDefaultViewChrome()
 		
-		isModal = true
         navigationItem.title = String(key: "bookings.calendar.overview.title")
         navigationItem.largeTitleDisplayMode = .always
-        
-        DispatchQueue.main.async { [weak self] in
-            self?.weeksScrollHostView.performInitialLoad()
+		
+        if !skipsInitialLayoutWithoutBookings {
+            DispatchQueue.main.async { [weak self] in
+                guard let self else { return }
+                self.weeksScrollHostView.performInitialLoad()
+                self.hasPerformedInitialLayout = true
+            }
         }
-	}
+		}
 	
+	public override func viewDidLoad() {
+		
+		super.viewDidLoad()
+		
+		if skipsInitialLayoutWithoutBookings, bookings != nil, !hasPerformedInitialLayout {
+			handleBookingsUpdate()
+		}
+	}
+        
 	public override func viewWillAppear(_ animated: Bool) {
 		super.viewWillAppear(animated)
 		navigationController?.navigationBar.prefersLargeTitles = true
+	}
+	
+	private func handleBookingsUpdate() {
+		
+		if skipsInitialLayoutWithoutBookings, !hasPerformedInitialLayout {
+			hasPerformedInitialLayout = true
+			weeksScrollHostView.performInitialLoad()
+			return
+		}
+		
+		weeksScrollHostView.applyBookingsChange(reanchorToToday: false)
 	}
 	
 	// MARK: - Selection
@@ -147,21 +187,21 @@ public class RU_Bookings_Calendar_ViewController: RU_ViewController {
         laneByBookingKey: [String: Int],
         secondaryRanges: Set<ClosedRange<Date>>
     ) -> BookingDayViewContent {
-        let dayStart = calendar.startOfDay(for: date)
+			let dayStart = calendar.startOfDay(for: date)
         let y = calendar.component(.year, from: date)
         let m = calendar.component(.month, from: date)
         let dom = calendar.component(.day, from: date)
-        let isToday = calendar.isDateInToday(date)
+			let isToday = calendar.isDateInToday(date)
         let isInSecondaryRange = secondaryRanges.contains { range in
             let lo = calendar.startOfDay(for: range.lowerBound)
             let hi = calendar.startOfDay(for: range.upperBound)
             return dayStart >= lo && dayStart <= hi
         }
-        
+			
         let bookingsForDay = (bookings ?? []).filter({ booking in
-            let start = calendar.startOfDay(for: booking.dates.start)
-            let end = calendar.startOfDay(for: booking.dates.end)
-            return dayStart >= start && dayStart <= end
+				let start = calendar.startOfDay(for: booking.dates.start)
+				let end = calendar.startOfDay(for: booking.dates.end)
+				return dayStart >= start && dayStart <= end
         })
         
         let barRows = makeBarRows(
@@ -366,12 +406,12 @@ public class RU_Bookings_Calendar_ViewController: RU_ViewController {
             rangeOverlay.isUserInteractionEnabled = false
             rangeLayerSecondary.fillColor = Colors.Secondary.cgColor
             rangeOverlay.layer.addSublayer(rangeLayerSecondary)
-        }
-        
-        required init?(coder: NSCoder) {
-            fatalError("init(coder:) has not been implemented")
-        }
-        
+	}
+	
+	required init?(coder: NSCoder) {
+		fatalError("init(coder:) has not been implemented")
+	}
+	
         override func didMoveToSuperview() {
             super.didMoveToSuperview()
             guard let superview else {
@@ -395,11 +435,14 @@ public class RU_Bookings_Calendar_ViewController: RU_ViewController {
             }
         }
         
-        func applyBookingsChange() {
+        func applyBookingsChange(reanchorToToday: Bool = false) {
             let offset = contentOffset
             loadedEndMonth = nil
             rebuildModel()
-            applySnapshot(preservingContentOffset: true, savedOffset: offset)
+            applySnapshot(preservingContentOffset: !reanchorToToday, savedOffset: offset)
+            if reanchorToToday {
+                scrollToMonthContaining(Date(), animated: false)
+            }
         }
         
         func applySecondaryHighlightChange() {
@@ -862,8 +905,8 @@ private final class BookingCalendarMonthGapCell: UICollectionViewCell {
 
 private final class BookingCalendarMonthHeaderCell: UICollectionViewCell {
     static let reuseId = "BookingCalendarMonthHeaderCell"
-    private let label = UILabel()
-    
+	private let label = UILabel()
+	
     override init(frame: CGRect) {
         super.init(frame: frame)
         label.font = Fonts.Content.Title.H4
@@ -1040,10 +1083,10 @@ private final class BookingDayView: UIView {
     private static let barsTopInset: CGFloat = 2
     /// Entre fin de séjour et début suivant le même jour (effet « -- »).
     private static let barGapBetweenSegments: CGFloat = 3
-
+	
 	init() {
 		super.init(frame: .zero)
-
+		
         daySurfaceView.clipsToBounds = false
         daySurfaceView.layer.shadowColor = UIColor.black.cgColor
         daySurfaceView.layer.shadowOffset = CGSize(width: 0, height: 4)
@@ -1081,28 +1124,28 @@ private final class BookingDayView: UIView {
         }
         barsTopSpacer.isHidden = true
 
-        barsStackView.axis = .vertical
+		barsStackView.axis = .vertical
         barsStackView.spacing = Self.barSpacing
         barsStackView.alignment = .fill
         contentStackView.addArrangedSubview(barsStackView)
-        barsStackView.snp.makeConstraints { make in
+		barsStackView.snp.makeConstraints { make in
             make.left.right.equalToSuperview().inset(Self.horizontalInset)
-        }
+		}
         
         moreLabel.font = Fonts.Content.Text.Bold.withSize(9)
         moreLabel.textAlignment = .center
         moreLabel.textColor = Colors.Content.Text.withAlphaComponent(0.6)
         contentStackView.addArrangedSubview(moreLabel)
-
+		
 		label.textAlignment = .center
 		label.font = Fonts.Content.Text.Regular
 		contentStackView.addArrangedSubview(label)
 	}
-
+	
 	required init?(coder: NSCoder) {
 		fatalError("init(coder:) has not been implemented")
 	}
-
+	
 	private static func applyBarCorners(to bar: UIView, segment: BookingBarSegment) {
 		bar.backgroundColor = segment.color
 		if segment.isStartDate && segment.isEndDate {

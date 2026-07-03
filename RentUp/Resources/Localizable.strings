@@ -99,11 +99,11 @@
 "reporting.detail.general.dimension.singleBeds" = "Lits simples";
 "reporting.detail.general.dimension.babyBeds" = "Lits bébé";
 "reporting.detail.general.dimension.platforms" = "Plateformes";
-"reporting.detail.general.dimension.stayLength" = "Durée du séjour";
-"reporting.detail.general.dimension.revenue" = "Rendement par plateforme";
+"reporting.detail.general.dimension.stayLength" = "Durée";
+"reporting.detail.general.dimension.revenue" = "Rendement";
 "reporting.detail.general.dimension.checkInWeekday" = "Jour d'arrivée";
 "reporting.detail.general.dimension.checkInSeason" = "Mois d'arrivée";
-"reporting.detail.general.dimension.familyProfile" = "Profil voyageurs";
+"reporting.detail.general.dimension.familyProfile" = "Profils";
 "reporting.detail.general.dimension.classified" = "Biens";
 "reporting.detail.general.travelers.format" = "%d voyageur(s)";
 "reporting.detail.general.travelers.5plus" = "5 voyageurs et +";
@@ -255,6 +255,9 @@
 "bookings.create.save.button" = "Enregistrer";
 "bookings.create.revenue" = "Revenu estimé: %.2f €";
 "bookings.create.delete.button" = "Supprimer";
+"bookings.reporting.tips.title" = "Votre bilan du mois est dispo";
+"bookings.reporting.tips.content" = "Consultez le bilan et les chiffres clefs du mois qui vient de s'écouler";
+"bookings.reporting.tips.button" = "Consulter le bilan";
 //Errors
 "bookings.error.getAll" = "Une erreur est survenue pendant la récupération des réservations";
 "bookings.error.save" = "Une erreur est survenue pendant la sauvegarde de la réservation";

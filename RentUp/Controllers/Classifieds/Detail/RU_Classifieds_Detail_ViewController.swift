@@ -120,10 +120,10 @@ public class RU_Classifieds_Detail_ViewController: RU_ViewController {
 	}(RU_Section_StackView())
     private lazy var comparatorTipStackView:RU_Tip_StackView = {
         
-        $0.contentStackView.spacing = UI.Margins
+        $0.labelsStackView.spacing = UI.Margins
         $0.title = String(key: "classifieds.comparator.title")
-        $0.add(String(key: "classifieds.comparator.tip"))
-        $0.add(RU_Button(String(key: "classifieds.comparator.button")) { [weak self] _ in
+        $0.addLabel(String(key: "classifieds.comparator.tip"))
+        $0.addButton(String(key: "classifieds.comparator.button"), { [weak self] _ in
             
             let viewController:RU_Classifieds_Comparator_ViewController = .init()
             viewController.classified = self?.classified

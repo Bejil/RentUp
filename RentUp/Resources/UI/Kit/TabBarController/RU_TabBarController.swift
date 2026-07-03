@@ -13,8 +13,8 @@ public class RU_TabBarController : UITabBarController {
 	public enum Indexes : CaseIterable {
 		
 		case Home
+        case Bookings
 		case Reporting
-		case Bookings
 		case Classifieds
 		case Settings
 	}
@@ -60,7 +60,7 @@ public class RU_TabBarController : UITabBarController {
 			case .Reporting:
 				RU_Reporting_ViewController()
 			case .Bookings:
-				RU_Bookings_ViewController()
+				RU_Bookings_CalendarTab_ViewController()
 			case .Classifieds:
 				RU_Classifieds_ViewController()
 			case .Settings:

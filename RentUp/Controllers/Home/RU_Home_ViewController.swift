@@ -64,7 +64,6 @@ public class RU_Home_ViewController: RU_ViewController {
     }(RU_Reporting_Tip_StackView())
 	private lazy var promoTipStackView: RU_Tip_StackView = {
         
-		$0.icon = UIImage(systemName: "tag.fill")
         $0.title = String(key: "home.tip.promo.title")
 		return $0
         
@@ -126,7 +125,7 @@ public class RU_Home_ViewController: RU_ViewController {
 		if let opportunity = Date().nextUpcomingHolidayOpportunity(withinDays: 60) {
             
 			promoTipStackView.isHidden = false
-			promoTipStackView.add(String(key: "home.tip.promo.message"))
+			promoTipStackView.addLabel(String(key: "home.tip.promo.message"))
 			
             let formatter = DateFormatter()
 			formatter.locale = Locale(identifier: "fr_FR")
@@ -145,9 +144,8 @@ public class RU_Home_ViewController: RU_ViewController {
 				dateRangeText = String(format: String(key: "home.tip.promo.dates.range"), startString, endString)
 			}
             
-            let label:RU_Label = .init(dateRangeText + ":\n" + String(key: opportunity.name))
+			let label = promoTipStackView.addLabel(dateRangeText + ":\n" + String(key: opportunity.name))
             label.set(font: Fonts.Content.Text.Bold, string: dateRangeText + ":")
-			promoTipStackView.add(label)
 		}
         else {
             

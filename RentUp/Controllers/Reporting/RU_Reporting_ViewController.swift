@@ -267,7 +267,7 @@ public class RU_Reporting_ViewController : RU_ViewController {
     private lazy var profitabilityTipView:RU_Tip_StackView = {
         
         $0.title = String(key: "reporting.profitability.tip.title")
-        $0.add(RU_Label(String(key: "reporting.profitability.tip.content")))
+        $0.addLabel(String(key: "reporting.profitability.tip.content"))
         return $0
         
     }(RU_Tip_StackView())
@@ -295,7 +295,7 @@ public class RU_Reporting_ViewController : RU_ViewController {
 		
 		super.init(nibName: nibNameOrNil, bundle: nibBundleOrNil)
 		
-		tabBarItem = .init(title: String(key: "tabbar.reporting"), image: UIImage(systemName: "square.grid.2x2"), tag: RU_TabBarController.Indexes.allCases.firstIndex(of: .Reporting) ?? 0)
+		tabBarItem = .init(title: String(key: "tabbar.reporting"), image: UIImage(systemName: "chart.line.text.clipboard"), tag: RU_TabBarController.Indexes.allCases.firstIndex(of: .Reporting) ?? 0)
 	}
 	
 	required init?(coder: NSCoder) {

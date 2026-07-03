@@ -64,8 +64,8 @@ public struct Colors {
 	
 	public struct Tip {
 		
-		public static let Background:UIColor = UIColor(named: "TipBackground")!
-        public static let Icon:UIColor = Colors.Secondary
+        public static let Background:UIColor = Colors.Tertiary.withAlphaComponent(0.15)
+        public static let Icon:UIColor = Colors.Tertiary
 	}
 	
 	public struct TextField {

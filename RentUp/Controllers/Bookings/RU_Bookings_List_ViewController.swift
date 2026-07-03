@@ -116,8 +116,6 @@ public class RU_Bookings_List_ViewController: RU_ViewController {
         $0.spacing = UI.Margins
         $0.alignment = .center
         
-        $0.addArrangedSubview(calendarButton)
-        
         let visualEffectView:UIVisualEffectView = .init(effect: UIGlassEffect(style: .regular))
         visualEffectView.layer.cornerRadius = UI.CornerRadius
         $0.addArrangedSubview(visualEffectView)
@@ -157,36 +155,6 @@ public class RU_Bookings_List_ViewController: RU_ViewController {
     }(RU_Button() { [weak self] _ in
         
         self?.scrollToClosestBooking()
-    })
-    private lazy var calendarButton:RU_Button = {
-        
-        $0.type = .secondary
-        $0.image = UIImage(systemName: "calendar")
-        
-        let size = 4*UI.Margins
-        
-        $0.configuration?.background.cornerRadius = size/2
-        $0.snp.remakeConstraints { make in
-            make.size.equalTo(size)
-        }
-        
-        return $0
-        
-    }(RU_Button() { [weak self] _ in
-        
-        let calendarViewController = RU_Bookings_Calendar_ViewController()
-        calendarViewController.bookings = self?.bookings?.filter({ $0.status != .cancelled })
-        calendarViewController.didSelectBooking = { [weak self] booking in
-            
-            calendarViewController.dismiss {
-                
-                let detailViewController = RU_Bookings_Detail_ViewController()
-                detailViewController.booking = booking
-                self?.navigationController?.pushViewController(detailViewController, animated: true)
-            }
-        }
-        
-        UI.MainController.present(RU_NavigationController(rootViewController: calendarViewController), animated: true)
     })
     private lazy var addButton:RU_Button = {
         
@@ -250,23 +218,11 @@ public class RU_Bookings_List_ViewController: RU_ViewController {
         alertController.present()
     })
 	
-	public override init(nibName nibNameOrNil: String?, bundle nibBundleOrNil: Bundle?) {
-		
-		super.init(nibName: nibNameOrNil, bundle: nibBundleOrNil)
-		
-		tabBarItem = .init(title: String(key: "tabbar.bookings"), image: UIImage(systemName: "list.bullet.clipboard"), tag: RU_TabBarController.Indexes.allCases.firstIndex(of: .Bookings) ?? 0)
-	}
-	
-	required init?(coder: NSCoder) {
-		
-		fatalError("init(coder:) has not been implemented")
-	}
-	
 	public override func loadView() {
 		
 		super.loadView()
 		
-		navigationItem.title = String(key: "bookings.title")
+        navigationItem.title = String(key: "bookings.title")
 		
 		view.addSubview(bookingsTableView)
         view.addSubview(bottomStackView)
@@ -299,6 +255,10 @@ public class RU_Bookings_List_ViewController: RU_ViewController {
 			
 			self?.updateData()
 		}
+        
+        updateData()
+        
+        isModal = true
 	}
     
     public override func viewDidLayoutSubviews() {
@@ -377,7 +337,9 @@ public class RU_Bookings_List_ViewController: RU_ViewController {
 	
 	private func updateFilterNavigationItem() {
 		
-        navigationItem.leftBarButtonItem = nil
+		if !isModal {
+			navigationItem.leftBarButtonItem = nil
+		}
         navigationItem.rightBarButtonItem = nil
         
         bottomStackView.isHidden = true
@@ -461,6 +423,8 @@ public class RU_Bookings_List_ViewController: RU_ViewController {
                 bottomStackView.isHidden = false
             }
         }
+		
+		refreshModalChrome()
 	}
 }
 
@@ -481,11 +445,11 @@ extension RU_Bookings_List_ViewController: UITableViewDelegate, UITableViewDataS
             alertController.booking = booking
             alertController.present()
         }
-        cell.editHandler = { [weak self] booking in
+        cell.editHandler = { booking in
             
             let viewController:RU_Bookings_Edit_ViewController = .init()
             viewController.booking = booking
-            self?.navigationController?.pushViewController(viewController, animated: true)
+            UI.MainController.present(RU_NavigationController(rootViewController: viewController), animated: true)
         }
         cell.cancelHandler = { [weak self] booking, state in
             

@@ -91,7 +91,7 @@ public class RU_Booking_Card_Section_StackView : RU_Section_StackView {
 					layoutMargins.bottom = inset
 					
 					commentTipStackView.isHidden = false
-					commentTipStackView.add(comment)
+					commentTipStackView.addLabel(comment)
 				}
 				else {
 					
@@ -129,7 +129,6 @@ public class RU_Booking_Card_Section_StackView : RU_Section_StackView {
 	private lazy var commentTipStackView:RU_Tip_StackView = {
 		
 		$0.isMinimized = true
-		$0.title = String(key: "bookings.details.comment.title")
 		return $0
 		
 	}(RU_Tip_StackView())

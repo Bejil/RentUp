@@ -317,11 +317,11 @@ public class RU_Bookings_Edit_ViewController : RU_ViewController {
 		
 	}(RU_Button(String(key: "bookings.create.delete.button")){ [weak self] button in
 		
-		let alertController:RU_Booking_Delete_Alert_ViewController = .init()
+        let alertController:RU_Booking_Delete_Alert_ViewController = .init()
 		alertController.booking = self?.booking
 		alertController.deleteCompletion = { [weak self] in
 			
-			self?.dismiss()
+            self?.dismiss()
 		}
 		alertController.present()
 	})

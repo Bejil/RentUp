@@ -92,11 +92,6 @@ extension UIApplication {
                         indexesToBadge.insert(.Home)
                     }
                     
-                    if hasCurrentBooking || hasUpcomingBookingWithin5Days {
-                        
-                        indexesToBadge.insert(.Bookings)
-                    }
-                    
                     for index in indexesToBadge {
                         
                         if let tabIndex = RU_TabBarController.Indexes.allCases.firstIndex(where: { $0 == index }), tabIndex < (tabBarController.viewControllers?.count ?? 0) {

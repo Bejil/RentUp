@@ -238,7 +238,7 @@ public class RU_Classifieds_Edit_ViewController : RU_ViewController {
         
         let feesTipStackView:RU_Tip_StackView = .init()
         feesTipStackView.title = String(key: "settings.classified.fees.tip.title")
-        feesTipStackView.add(String(key: "settings.classified.fees.tip.content"))
+        feesTipStackView.addLabel(String(key: "settings.classified.fees.tip.content"))
         generalSectionStackView.addArrangedSubview(feesTipStackView)
         
         generalSectionStackView.addArrangedSubview(feesRow)
