@@ -30,6 +30,7 @@ extension RU_Classified {
                     
                     let classifieds = querySnapshot?.documents.compactMap { try? $0.data(as: RU_Classified.self) }
                     let sorted = classifieds?.sorted(by: { $0.creationDate > $1.creationDate }) ?? []
+                    RU_Classified_WidgetSync.updateSnapshot(with: sorted)
                     completion?(nil, sorted)
                 }
 			}
@@ -47,6 +48,7 @@ extension RU_Classified {
 			do {
 				
 				try collection.document(id).setData(from: self)
+				RU_Classified_WidgetSync.upsert(self)
 				completion?(nil)
 			}
 			catch {
@@ -60,6 +62,7 @@ extension RU_Classified {
 				
 				let documentReference = try collection.addDocument(from: self)
 				id = documentReference.documentID
+				RU_Classified_WidgetSync.upsert(self)
 				completion?(nil)
 			}
 			catch {

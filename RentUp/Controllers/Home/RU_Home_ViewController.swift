@@ -47,6 +47,7 @@ public class RU_Home_ViewController: RU_ViewController {
 	private lazy var currentBookingSectionStackView: RU_Booking_Card_Section_StackView = {
 		
 		$0.title = String(key: "home.currentBooking.section.title")
+		$0.isEmphasized = true
 		return $0
 		
 	}(RU_Booking_Card_Section_StackView())

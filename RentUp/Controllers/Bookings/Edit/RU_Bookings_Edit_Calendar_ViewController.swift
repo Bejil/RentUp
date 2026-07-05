@@ -22,6 +22,8 @@ public class RU_Bookings_Edit_Calendar_ViewController: RU_Bookings_Calendar_View
                 let end = normalizedCalendarDay(current.dates.end)
                 secondaryHighlightRanges = normalizedSecondaryRanges([start...end])
                 updateButtonSubtitle(from: start, to: end)
+            } else if let current = currentBooking {
+                restorePresetArrivalIfNeeded(from: current)
             } else {
                 secondaryHighlightRanges = nil
                 button.subtitle = nil
@@ -59,6 +61,8 @@ public class RU_Bookings_Edit_Calendar_ViewController: RU_Bookings_Calendar_View
         
         super.loadView()
         
+        isModal = true
+        
         view.addSubview(button)
         button.snp.makeConstraints { (make) in
             make.right.bottom.left.equalTo(view.safeAreaLayoutGuide).inset(UI.Margins)
@@ -71,6 +75,13 @@ public class RU_Bookings_Edit_Calendar_ViewController: RU_Bookings_Calendar_View
         if let collectionView = view as? UICollectionView {
             collectionView.contentInset.bottom = bottomInset
             collectionView.verticalScrollIndicatorInsets.bottom = bottomInset
+        }
+    }
+
+    public override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
+        if let start = selectedStartDate {
+            scrollToMonthContaining(start, animated: false)
         }
     }
 
@@ -188,6 +199,15 @@ public class RU_Bookings_Edit_Calendar_ViewController: RU_Bookings_Calendar_View
         return false
     }
     
+    private func restorePresetArrivalIfNeeded(from current: RU_Booking) {
+        let start = normalizedCalendarDay(current.dates.start)
+        let end = normalizedCalendarDay(current.dates.end)
+        guard bookingDisplayCalendar.isDate(start, inSameDayAs: end) else { return }
+        selectedStartDate = start
+        secondaryHighlightRanges = normalizedSecondaryRanges([start...start])
+        updateButtonSubtitle(from: start, to: end)
+    }
+    
     private func clearSelection(showSelectionError: Bool = false, showPastDateError: Bool = false) {
         selectedStartDate = nil
         if isEditingExistingBooking,
@@ -197,6 +217,8 @@ public class RU_Bookings_Edit_Calendar_ViewController: RU_Bookings_Calendar_View
             let end = normalizedCalendarDay(current.dates.end)
             secondaryHighlightRanges = normalizedSecondaryRanges([start...end])
             updateButtonSubtitle(from: start, to: end)
+        } else if let current = currentBooking {
+            restorePresetArrivalIfNeeded(from: current)
         } else {
             secondaryHighlightRanges = nil
             button.subtitle = nil

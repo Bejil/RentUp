@@ -24,11 +24,16 @@ public class RU_Reporting_Detail_Profitability_ViewController: RU_Reporting_Deta
         
         let calendar = Calendar.current
         let now = Date()
-        let pastBookings = filteredBookings.filter { $0.dates.end < now }
-        let firstStart = filteredBookings.map(\.dates.start).min()!
-        let lastEnd = filteredBookings.map(\.dates.end).max()!
+        let list = RU_Reporting_Detail_ViewController.ReportingMonthMetrics.eligibleBookings(filteredBookings)
+        guard !list.isEmpty else { return }
+        
+        let pastBookings = list.filter { $0.dates.end < now }
+        let firstStart = list.map(\.dates.start).min() ?? now
+        let lastEnd = list.map(\.dates.end).max() ?? now
         let firstMonthStart = calendar.date(from: calendar.dateComponents([.year, .month], from: firstStart)) ?? firstStart
         let lastMonthStart = calendar.date(from: calendar.dateComponents([.year, .month], from: lastEnd)) ?? lastEnd
+        let currentMonthStart = calendar.date(from: calendar.dateComponents([.year, .month], from: now)) ?? now
+        let endMonthStart = max(lastMonthStart, currentMonthStart)
         var monthStart = firstMonthStart
         monthes = []
         actualValues = []
@@ -36,70 +41,25 @@ public class RU_Reporting_Detail_Profitability_ViewController: RU_Reporting_Deta
         var occupancySummaries: [String] = []
         var netSummaries: [String] = []
         
-        while monthStart <= lastMonthStart {
+        while monthStart <= endMonthStart {
             monthes?.append(monthStart)
-            let monthRange = calendar.range(of: .day, in: .month, for: monthStart)
-            let daysInMonth = monthRange?.count ?? 30
-            let monthEnd = calendar.date(byAdding: .day, value: daysInMonth, to: monthStart) ?? monthStart
+            let daysInMonth = RU_Reporting_Detail_ViewController.ReportingMonthMetrics.daysInMonth(monthStart: monthStart, calendar: calendar)
             
-            func nightsInMonth(_ b: RU_Booking) -> Int {
-                let start = max(b.dates.start, monthStart)
-                let end = min(b.dates.end, monthEnd)
-                return max(0, calendar.dateComponents([.day], from: start, to: end).day ?? 0)
-            }
-            func bookingNights(_ b: RU_Booking) -> Int {
-                max(0, calendar.dateComponents([.day], from: b.dates.start, to: b.dates.end).day ?? 0)
-            }
-            func proratedHostTotal(_ b: RU_Booking) -> Double {
-                let monthNights = nightsInMonth(b)
-                guard monthNights > 0 else { return 0 }
-                let totalNights = bookingNights(b)
-                guard totalNights > 0 else { return 0 }
-                guard let hostTotal = b.platform?.calculatePrice(for: b)?.hostTotal else { return 0 }
-                return hostTotal * Double(monthNights) / Double(totalNights)
-            }
-            func uniqueClassifiedFees(for bookings: [RU_Booking]) -> Double {
-                var classifieds: [RU_Classified] = []
-                bookings.compactMap({ $0.classified }).forEach {
-                    if !classifieds.contains($0) {
-                        classifieds.append($0)
-                    }
-                }
-                return Double(classifieds.compactMap({ $0.fees }).reduce(0, +))
-            }
+            let metrics = RU_Reporting_Detail_ViewController.ReportingMonthMetrics.profitabilityPercentages(
+                monthStart: monthStart,
+                bookings: filteredBookings,
+                now: now,
+                calendar: calendar
+            )
+            actualValues?.append(metrics.actual)
+            forecastValues?.append(metrics.forecast)
             
-            // Charges : une seule fois par classified par mois (ensemble des classifieds ayant une réservation dans le mois)
-            func chargesActual() -> Double {
-                return uniqueClassifiedFees(for: pastBookings.filter({ nightsInMonth($0) > 0 }))
+            let pastNightsOcc = pastBookings.reduce(0) {
+                $0 + RU_Reporting_Detail_ViewController.ReportingMonthMetrics.nightsInMonth(booking: $1, monthStart: monthStart, calendar: calendar)
             }
-            func chargesForecast() -> Double {
-                return uniqueClassifiedFees(for: filteredBookings.filter({ nightsInMonth($0) > 0 }))
+            let forecastNightsOcc = list.reduce(0) {
+                $0 + RU_Reporting_Detail_ViewController.ReportingMonthMetrics.nightsInMonth(booking: $1, monthStart: monthStart, calendar: calendar)
             }
-            
-            // Actuel : uniquement pour les mois <= aujourd'hui (période : plus ancienne résa → aujourd'hui)
-            let currentMonthStart = calendar.date(from: calendar.dateComponents([.year, .month], from: now)) ?? now
-            let isInActualPeriod = monthStart <= currentMonthStart
-            var revenueActual: Double = 0
-            if isInActualPeriod {
-                for b in pastBookings {
-                    revenueActual += proratedHostTotal(b)
-                }
-            }
-            let chargesActual = isInActualPeriod ? chargesActual() : 0
-            let actual = chargesActual > 0 ? revenueActual / chargesActual * 100 : (revenueActual > 0 ? 100 : 0)
-            actualValues?.append(actual)
-            
-            // Prévisionnel : toutes les réservations sur la période (plus ancienne → plus lointaine)
-            var revenueForecast: Double = 0
-            for b in filteredBookings {
-                revenueForecast += proratedHostTotal(b)
-            }
-            let chargesForecast = chargesForecast()
-            let forecast = chargesForecast > 0 ? revenueForecast / chargesForecast * 100 : (revenueForecast > 0 ? 100 : 0)
-            forecastValues?.append(forecast)
-            
-            let pastNightsOcc = pastBookings.reduce(0) { $0 + nightsInMonth($1) }
-            let forecastNightsOcc = filteredBookings.reduce(0) { $0 + nightsInMonth($1) }
             let occPctActual = daysInMonth > 0 ? Double(pastNightsOcc) / Double(daysInMonth) * 100 : 0
             let occPctForecast = daysInMonth > 0 ? Double(forecastNightsOcc) / Double(daysInMonth) * 100 : 0
             occupancySummaries.append(String(
@@ -108,8 +68,8 @@ public class RU_Reporting_Detail_Profitability_ViewController: RU_Reporting_Deta
             ))
             netSummaries.append(String(
                 format: String(key: "reporting.cell.netLine"),
-                RU_Reporting_Detail_ViewController.ReportingMonthMetrics.formatNetEUR(revenueActual),
-                RU_Reporting_Detail_ViewController.ReportingMonthMetrics.formatNetEUR(revenueForecast)
+                RU_Reporting_Detail_ViewController.ReportingMonthMetrics.formatNetEUR(metrics.revenueActual),
+                RU_Reporting_Detail_ViewController.ReportingMonthMetrics.formatNetEUR(metrics.revenueForecast)
             ))
             
             monthStart = calendar.date(byAdding: .month, value: 1, to: monthStart) ?? monthStart

@@ -24,7 +24,7 @@ public class RU_Bookings_CalendarTab_ViewController: RU_Bookings_Calendar_ViewCo
 	
 	public override func loadView() {
         
-        navigationItem.rightBarButtonItem = .init(title: String(key: "Liste"), primaryAction: .init(handler: { _ in
+        navigationItem.rightBarButtonItem = .init(title: String(key: "bookings.calendar.list.button"), primaryAction: .init(handler: { _ in
             
             UI.MainController.present(RU_NavigationController(rootViewController: RU_Bookings_List_ViewController()), animated: true)
         }))

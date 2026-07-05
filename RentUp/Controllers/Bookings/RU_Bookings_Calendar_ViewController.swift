@@ -116,44 +116,74 @@ public class RU_Bookings_Calendar_ViewController: RU_ViewController {
 		let calendar = displayedCalendar
         let selectedDay = calendar.startOfDay(for: selectedDate)
 		
-		// Trouver TOUTES les réservations correspondant à cette date
         let bookingsForDay = bookings?.filter({ booking in
 			let start = calendar.startOfDay(for: booking.dates.start)
 			let end = calendar.startOfDay(for: booking.dates.end)
 			return selectedDay >= start && selectedDay <= end
 		}) ?? []
         
-        guard !bookingsForDay.isEmpty else { return }
+        presentDaySelectionAlert(for: selectedDay, bookings: bookingsForDay)
+	}
+    
+    private func presentDaySelectionAlert(for selectedDay: Date, bookings bookingsForDay: [RU_Booking]) {
         
-        if bookingsForDay.count == 1, let booking = bookingsForDay.first {
-			didSelectBooking?(booking)
-            return
-		}
+        let dayFormatter = DateFormatter()
+        dayFormatter.locale = Locale(identifier: "fr_FR")
+        dayFormatter.dateStyle = .long
         
-        let formatter = DateFormatter()
-        formatter.locale = Locale(identifier: "fr_FR")
-        formatter.dateFormat = "dd/MM"
+        let rangeFormatter = DateFormatter()
+        rangeFormatter.locale = Locale(identifier: "fr_FR")
+        rangeFormatter.dateFormat = "dd/MM"
         
         let alert: RU_Alert_ViewController = .init()
-        alert.title = String(key: "bookings.calendar.overview.title")
+        alert.title = dayFormatter.string(from: selectedDay)
         
-        bookingsForDay.sorted(by: { $0.dates.start < $1.dates.start }).forEach { booking in
-            
-            let platformName = booking.platform?.type?.name ?? "-"
-            let classifiedName = booking.classified?.name ?? "-"
-            
-            let button = alert.addButton(title: "\(platformName) • \(classifiedName)") { [weak self] _ in
-                alert.close {
-                    self?.didSelectBooking?(booking)
-                }
+        if bookingsForDay.isEmpty {
+            alert.add(String(key: "bookings.calendar.day.empty"))
+        } else {
+            let propertyCount = countPropertyRows(for: bookingsForDay)
+            if propertyCount > maxVisibleLanesPerDay || bookingsForDay.count > maxVisibleLanesPerDay {
+                alert.add(String(format: String(key: "bookings.calendar.day.summary"), propertyCount, bookingsForDay.count))
             }
-            let range = String(key: "bookings.calendar.overview.range.0") + " \(formatter.string(from: booking.dates.start)) " + String(key: "bookings.calendar.overview.range.1") + " \(formatter.string(from: booking.dates.end))"
-            button.subtitle = range
-            button.configuration?.baseBackgroundColor = booking.platform?.type?.backgroundColor
         }
+        
+        let groupedBookings = Dictionary(grouping: bookingsForDay.sorted(by: { $0.dates.start < $1.dates.start })) { propertyKey(for: $0) }
+        let sortedGroups = groupedBookings.values.sorted {
+            ($0.first?.dates.start ?? .distantPast) < ($1.first?.dates.start ?? .distantPast)
+        }
+        
+        for group in sortedGroups {
+            for booking in group {
+                
+                let platformName = booking.platform?.type?.name ?? "-"
+                let classifiedName = booking.classified?.name ?? "-"
+                let title = group.count > 1 ? "\(classifiedName) · \(platformName)" : "\(platformName) • \(classifiedName)"
+                
+                let button = alert.addButton(title: title) { [weak self] _ in
+                    alert.close {
+                        self?.didSelectBooking?(booking)
+                    }
+                }
+                let range = String(key: "bookings.calendar.overview.range.0") + " \(rangeFormatter.string(from: booking.dates.start)) " + String(key: "bookings.calendar.overview.range.1") + " \(rangeFormatter.string(from: booking.dates.end))"
+                button.subtitle = range
+                button.configuration?.baseBackgroundColor = booking.platform?.type?.backgroundColor
+            }
+        }
+        
+        let createButton = alert.addButton(title: String(key: "bookings.calendar.day.create")) { _ in
+            alert.close {
+                RU_Booking.create(startDate: selectedDay)
+            }
+        }
+        createButton.image = UIImage(systemName: "plus")
         
         alert.addCancelButton()
         alert.present(as: .Sheet)
+    }
+	
+	internal func scrollToMonthContaining(_ date: Date, animated: Bool = false) {
+		guard isViewLoaded else { return }
+		weeksScrollHostView.scrollToMonthContaining(date, animated: animated)
 	}
 	
 	internal func updateCalendar() {
@@ -220,7 +250,7 @@ public class RU_Bookings_Calendar_ViewController: RU_ViewController {
             year: y,
             month: m,
             dayOfMonth: dom,
-            isToday: isToday,
+					isToday: isToday,
             isInSecondaryRange: isInSecondaryRange,
             barRows: barRows,
             hiddenCount: hiddenCount
@@ -1243,9 +1273,9 @@ private final class BookingDayView: UIView {
         
         if content.hiddenCount > 0 {
             view.moreLabel.isHidden = false
-            view.moreLabel.text = "+\(content.hiddenCount)"
+            view.moreLabel.text = String(format: String(key: "bookings.calendar.day.more"), content.hiddenCount)
             view.moreLabel.textColor = content.isInSecondaryRange ? .white.withAlphaComponent(0.85) : Colors.Content.Text.withAlphaComponent(0.6)
-        } else {
+					} else {
             view.moreLabel.isHidden = true
             view.moreLabel.text = nil
         }

@@ -62,7 +62,21 @@ extension UIApplication {
         let window = windowScene?.keyWindow
         window?.rootViewController = RU_TabBarController()
         
+        registerTabBarBadgeObserverIfNeeded()
         updateTabBarBadges()
+        RU_WidgetDeepLinkHandler.flushPendingIfNeeded()
+    }
+    
+    private static var didRegisterTabBarBadgeObserver = false
+    
+    private static func registerTabBarBadgeObserverIfNeeded() {
+        
+        guard !didRegisterTabBarBadgeObserver else { return }
+        didRegisterTabBarBadgeObserver = true
+        
+        NotificationCenter.add(.updateBookings) { _ in
+            updateTabBarBadges()
+        }
     }
     
     public static func updateTabBarBadges() {
@@ -92,11 +106,18 @@ extension UIApplication {
                         indexesToBadge.insert(.Home)
                     }
                     
-                    for index in indexesToBadge {
+                    if hasCurrentBooking || hasUpcomingBookingWithin5Days {
                         
-                        if let tabIndex = RU_TabBarController.Indexes.allCases.firstIndex(where: { $0 == index }), tabIndex < (tabBarController.viewControllers?.count ?? 0) {
+                        indexesToBadge.insert(.Bookings)
+                    }
+                    
+                    DispatchQueue.main.async {
+                        for index in indexesToBadge {
                             
-                            tabBarController.viewControllers?[tabIndex].tabBarItem.badgeValue = "!"
+                            if let tabIndex = RU_TabBarController.Indexes.allCases.firstIndex(where: { $0 == index }), tabIndex < (tabBarController.viewControllers?.count ?? 0) {
+                                
+                                tabBarController.viewControllers?[tabIndex].tabBarItem.badgeValue = "!"
+                            }
                         }
                     }
                 }

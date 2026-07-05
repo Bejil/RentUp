@@ -64,6 +64,10 @@
 "reporting.main.averageGuests" = "Nombre de personnes moyen";
 "reporting.main.mostUsedPlatform" = "Plateforme la plus utilisée";
 "reporting.main.mostProfitablePlatform" = "Plateforme la plus rentable";
+"reporting.main.totalNights.short" = "Nuitées totales";
+"reporting.main.bookingCount.short" = "Réservations";
+"reporting.main.value.noData" = "—";
+"reporting.section.distribution" = "Répartition";
 "reporting.section.occupancy" = "Occupation";
 "reporting.section.occupancy.subtitle" = "Il s'agit du nombre de jours occupés de vos biens sur le nombre de jours total";
 "reporting.section.profitability" = "Rentabilité";
@@ -182,7 +186,12 @@
 //MARK: - Dashboard
 "home.title" = "Vos actualités";
 "home.currentBooking.section.title" = "En cours";
+"home.currentBooking.headline.departureToday" = "Les voyageurs partent aujourd'hui";
+"home.currentBooking.headline.departureTomorrow" = "Départ demain";
+"home.currentBooking.headline.departureIn" = "Départ dans %d jours";
 "home.nextBooking.section.title" = "À venir";
+"home.nextBooking.headline.arrivalTomorrow" = "Arrivée demain";
+"home.nextBooking.headline.arrivalIn" = "Arrivée dans %d jours";
 "home.booking.nights" = "Nombre de nuitées";
 "home.details.button" = "Plus de détails";
 "home.tip.promo.title" = "Idée promotion";
@@ -229,10 +238,16 @@
 "bookings.create.dates.section.title" = "Dates du séjour";
 "bookings.create.dates.section.subtitle" = "Quelles sont les dates d'arrivée et de départ des voyageurs ?";
 "bookings.create.dates.button" = "Sélectionner";
+"bookings.create.dates.arrivalOnly" = "Arrivée le %@ · choisir le départ";
 "bookings.calendar.validate" = "Valider";
 "bookings.calendar.overview.title" = "Calendrier";
 "bookings.calendar.overview.range.0" = "Du";
 "bookings.calendar.overview.range.1" = "au";
+"bookings.calendar.day.empty" = "Aucune réservation ce jour-là.";
+"bookings.calendar.day.create" = "Créer une réservation";
+"bookings.calendar.day.more" = "+%d";
+"bookings.calendar.day.summary" = "%1$d bien(s) · %2$d réservation(s) ce jour-là.";
+"bookings.calendar.list.button" = "Liste";
 "bookings.calendar.edit.selection.error" = "Cette période chevauche une ou plusieurs réservations existantes. Choisissez une date d’arrivée libre ou en fin de séjour, et une date de départ libre ou en début de séjour.";
 "bookings.calendar.edit.pastDate.error" = "Vous ne pouvez pas sélectionner une date antérieure à aujourd’hui.";
 "bookings.create.travelers.section.title" = "Voyageurs";

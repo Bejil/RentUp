@@ -10,6 +10,14 @@ import SnapKit
 
 public class RU_Booking_Card_Section_StackView : RU_Section_StackView {
     
+    /// Légère mise en avant (réservation en cours sur l’accueil).
+    public var isEmphasized: Bool = false {
+        didSet {
+            guard booking != nil else { return }
+            applyCardStyle(for: booking!)
+        }
+    }
+    
 	public var booking:RU_Booking? {
 		
 		didSet {
@@ -22,19 +30,7 @@ public class RU_Booking_Card_Section_StackView : RU_Section_StackView {
 			
 			if let booking {
                 
-                if booking.status == .current {
-                    
-                    layer.shadowOpacity = 0.1
-                    backgroundColor = Colors.Background.View
-                    layoutMargins = .init(horizontal: inset)
-                    layoutMargins.top = inset
-                }
-                else {
-                    
-                    layer.shadowOpacity = 0.0
-                    backgroundColor = .clear
-                    layoutMargins = .init(horizontal: inset/2)
-                }
+                applyCardStyle(for: booking)
                 
                 statusLabel.booking = booking
                 platformLabel.platform = booking.platform
@@ -191,6 +187,32 @@ public class RU_Booking_Card_Section_StackView : RU_Section_StackView {
 	@MainActor required init(coder: NSCoder) {
 		fatalError("init(coder:) has not been implemented")
 	}
+	
+	private func applyCardStyle(for booking: RU_Booking) {
+        
+        let isProminent = isEmphasized || booking.status == .current
+        
+        if isProminent {
+            
+            layer.shadowOpacity = isEmphasized ? 0.14 : 0.1
+            layer.shadowRadius = UI.CornerRadius
+            layer.shadowOffset = CGSize(width: 0, height: isEmphasized ? 6 : 4)
+            backgroundColor = Colors.Background.View
+            layoutMargins = .init(horizontal: inset)
+            layoutMargins.top = inset
+            layoutMargins.bottom = inset / 2
+            layer.borderWidth = isEmphasized ? 1 : 0
+            layer.borderColor = booking.status.backgroundColor.withAlphaComponent(0.22).cgColor
+        }
+        else {
+            
+            layer.shadowOpacity = 0.0
+            layer.borderWidth = 0
+            backgroundColor = .clear
+            layoutMargins = .init(horizontal: inset/2)
+            layoutMargins.bottom = inset/2
+        }
+    }
 	
 	private func createRow(icon: String?, title: String?, view: UIView, isHighlighted: Bool = false) -> RU_Section_Row_StackView {
 		

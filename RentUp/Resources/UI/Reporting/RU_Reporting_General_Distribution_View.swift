@@ -38,7 +38,7 @@ public class RU_Reporting_General_Distribution_View: RU_StackView {
 	}(RU_StackView())
 	
 	private lazy var distributionSection: RU_Section_StackView = {
-		$0.title = String(key: "reporting.section.main")
+		$0.title = String(key: "reporting.section.distribution")
 		$0.subtitle = String(key: "reporting.detail.general.distribution.subtitle")
 		$0.accessoryView = dimensionButton
 		$0.addArrangedSubview(summaryLabel)
