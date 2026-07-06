@@ -16,6 +16,17 @@ public struct UI {
     
 	public static let Margins:CGFloat = 15.0
 	public static let CornerRadius:CGFloat = 18.0
+	
+	/// Largeur max du contenu sur iPad / Mac (évite l’étirement pleine largeur).
+	public static let ContentMaxWidth: CGFloat = 760
+	/// Largeur max du calendrier (grille 7 jours lisible).
+	public static let CalendarMaxWidth: CGFloat = 680
+	/// Largeur fixe de la sidebar iPad (max système, non redimensionnable).
+	public static let SidebarWidth: CGFloat = 320
+	
+	public static func adaptiveMargins(for traitCollection: UITraitCollection) -> CGFloat {
+		traitCollection.isRegularWidth ? 24 : Margins
+	}
 }
 
 public struct Colors {
@@ -64,8 +75,8 @@ public struct Colors {
 	
 	public struct Tip {
 		
-		public static let Background:UIColor = UIColor(named: "TipBackground")!
-        public static let Icon:UIColor = Colors.Secondary
+        public static let Background:UIColor = Colors.Tertiary.withAlphaComponent(0.15)
+        public static let Icon:UIColor = Colors.Tertiary
 	}
 	
 	public struct TextField {

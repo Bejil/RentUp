@@ -73,6 +73,7 @@ extension RU_Booking {
                     
                     let bookings = querySnapshot?.documents.compactMap { try? $0.data(as: RU_Booking.self) }
                     let sorted = bookings?.sorted(by: { $0.dates.start > $1.dates.start }) ?? []
+                    RU_Booking_WidgetSync.updateSnapshot(with: sorted)
                     completion?(nil, sorted)
                 }
 			}
@@ -133,7 +134,7 @@ extension RU_Booking {
 		}
 	}
 				
-    public static func create() {
+    public static func create(startDate: Date? = nil) {
         
         RU_Alert_ViewController.presentLoading { controller in
             
@@ -151,7 +152,11 @@ extension RU_Booking {
                     }
                     else {
                         
-                        UI.MainController.present(RU_NavigationController(rootViewController: RU_Bookings_Edit_ViewController()), animated: true)
+                        let viewController = RU_Bookings_Edit_ViewController()
+                        if let startDate {
+                            viewController.presetStartDate = Calendar.current.startOfDay(for: startDate)
+                        }
+                        UI.MainController.present(RU_NavigationController(rootViewController: viewController), animated: true)
                     }
                 }
             }

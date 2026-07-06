@@ -121,11 +121,10 @@ public class RU_Classifieds_Comparator_ViewController : RU_ViewController {
 	
 	private func makeTipsView(classified: RU_Classified, results: [PlatformResult]) -> RU_Tip_StackView {
 		let tip = RU_Tip_StackView()
-		tip.icon = UIImage(systemName: "lightbulb.fill")
 		tip.title = String(key: "classifieds.comparator.tips.title")
 		
 		if results.count == 1 {
-			tip.add(String(key: "classifieds.comparator.tips.single"))
+			tip.addLabel(String(key: "classifieds.comparator.tips.single"))
 		} else if let best = results.max(by: { $0.hostTotal1 < $1.hostTotal1 }) {
 			let refName = best.platform.type?.name ?? ""
 			var hasGap = false
@@ -134,22 +133,22 @@ public class RU_Classifieds_Comparator_ViewController : RU_ViewController {
 				if diff > 0.5 {
 					hasGap = true
 					let name = r.platform.type?.name ?? ""
-					tip.add(String(format: String(key: "classifieds.comparator.tips.increase"), name, diff, refName))
+					tip.addLabel(String(format: String(key: "classifieds.comparator.tips.increase"), name, diff, refName))
 					if let tarification = classified.tarification.first(where: { $0.platform?.type == r.platform.type }),
 					   let cleaning = tarification.cleaning, cleaning > 0 {
-						tip.add(String(format: String(key: "classifieds.comparator.tips.cleaning"), name, Double(cleaning)))
+						tip.addLabel(String(format: String(key: "classifieds.comparator.tips.cleaning"), name, Double(cleaning)))
 					}
 				} else if diff < -0.5 {
 					hasGap = true
 					let name = r.platform.type?.name ?? ""
-					tip.add(String(format: String(key: "classifieds.comparator.tips.decrease"), name, -diff, refName))
+					tip.addLabel(String(format: String(key: "classifieds.comparator.tips.decrease"), name, -diff, refName))
 				}
 			}
 			if !hasGap {
-				tip.add(String(key: "classifieds.comparator.tips.aligned"))
+				tip.addLabel(String(key: "classifieds.comparator.tips.aligned"))
 			}
 		}
-		tip.contentStackView.arrangedSubviews.forEach { ($0 as? RU_Label)?.numberOfLines = 0 }
+		tip.labelsStackView.arrangedSubviews.forEach { ($0 as? RU_Label)?.numberOfLines = 0 }
 		return tip
 	}
 	

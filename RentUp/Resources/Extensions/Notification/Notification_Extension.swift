@@ -12,4 +12,5 @@ extension Notification.Name {
     static let updateAccount = Notification.Name("updateAccount")
 	static let updateBookings = Notification.Name("updateBookings")
 	static let updateClassifieds = Notification.Name("updateClassifieds")
+	static let splitViewLayoutDidChange = Notification.Name("splitViewLayoutDidChange")
 }

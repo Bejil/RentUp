@@ -10,23 +10,27 @@ import SnapKit
 
 public class RU_Tip_StackView: RU_StackView {
 	
-	public var isMinimized:Bool = false {
-		
-		didSet {
-			
-			titleStackView.isHidden = isMinimized
-			iconContentImageView.isHidden = !isMinimized
-		}
-	}
+    public var isMinimized:Bool = false {
+        
+        didSet {
+            
+            layoutMargins = isMinimized ? .init(horizontal: UI.Margins, vertical: UI.Margins/2) : .init(UI.Margins)
+            
+            titleLabel.isHidden = isMinimized
+            
+            iconImageView.snp.remakeConstraints { make in
+                make.size.equalTo((isMinimized ? 2 : 4) * UI.Margins).priority(.high)
+            }
+            
+            contentStackView.spacing = UI.Margins/(isMinimized ? 2 : 1)
+        }
+    }
 	public var icon:UIImage? {
 		
 		didSet {
 			
-			iconTitleImageView.isHidden = icon == nil
-			iconTitleImageView.image = icon
-			
-			iconContentImageView.isHidden = !isMinimized || icon == nil
-			iconContentImageView.image = icon
+            iconImageView.isHidden = icon == nil
+            iconImageView.image = icon
 		}
 	}
 	public var title:String? {
@@ -37,23 +41,16 @@ public class RU_Tip_StackView: RU_StackView {
 			titleLabel.text = title
 		}
 	}
-	private lazy var iconTitleImageView: UIImageView = {
+	private lazy var iconImageView: UIImageView = {
+        
+        $0.contentMode = .scaleAspectFit
 		$0.setContentHuggingPriority(.defaultHigh, for: .horizontal)
 		$0.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
 		$0.snp.makeConstraints { make in
-			make.size.equalTo(2 * UI.Margins).priority(.high)
+			make.size.equalTo(4 * UI.Margins).priority(.high)
 		}
 		return $0
-	}(createImageView())
-	private lazy var iconContentImageView: UIImageView = {
-		$0.isHidden = true
-		$0.setContentHuggingPriority(.defaultHigh, for: .horizontal)
-		$0.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
-		$0.snp.makeConstraints { make in
-			make.size.equalTo(1.25 * UI.Margins).priority(.high)
-		}
-		return $0
-	}(createImageView())
+	}(UIImageView(image: UIImage(named: "placeholder_tip")))
 	private lazy var titleLabel:RU_Label = {
 		
 		$0.isHidden = true
@@ -61,16 +58,7 @@ public class RU_Tip_StackView: RU_StackView {
 		return $0
 		
 	}(RU_Label())
-	private lazy var titleStackView:RU_StackView = {
-		
-		$0.isHidden = false
-		$0.axis = .horizontal
-		$0.spacing = UI.Margins/2
-		$0.alignment = .center
-		return $0
-		
-	}(RU_StackView(arrangedSubviews: [iconTitleImageView,titleLabel]))
-	public lazy var contentStackView:RU_StackView = {
+	public lazy var labelsStackView:RU_StackView = {
 		
 		$0.isHidden = true
 		$0.axis = .vertical
@@ -78,29 +66,42 @@ public class RU_Tip_StackView: RU_StackView {
 		return $0
 		
 	}(RU_StackView())
+    public lazy var buttonsStackView:RU_StackView = {
+        
+        $0.isHidden = true
+        $0.axis = .vertical
+        $0.spacing = UI.Margins/3
+        return $0
+        
+    }(RU_StackView())
+    private lazy var contentStackView:RU_StackView = {
+        
+        $0.axis = .horizontal
+        $0.spacing = UI.Margins
+        $0.alignment = .center
+        $0.addArrangedSubview(iconImageView)
+        
+        let textStackView:RU_StackView = .init(arrangedSubviews: [titleLabel,labelsStackView])
+        textStackView.axis = .vertical
+        textStackView.spacing = UI.Margins/2
+        $0.addArrangedSubview(textStackView)
+        
+        return $0
+        
+    }(RU_StackView())
 	
 	public override init(frame: CGRect) {
 		
 		super.init(frame: frame)
-		
-		axis = .vertical
-		spacing = UI.Margins/2
-		isLayoutMarginsRelativeArrangement = true
-		layoutMargins = .init(UI.Margins)
-		layer.cornerRadius = UI.CornerRadius
-		backgroundColor = Colors.Tip.Background
-		
-		addArrangedSubview(titleStackView)
-		
-		let contentContainerStackView = RU_StackView(arrangedSubviews: [iconContentImageView,contentStackView])
-		contentContainerStackView.axis = .horizontal
-		contentContainerStackView.spacing = UI.Margins/2
-		contentContainerStackView.alignment = .top
-		addArrangedSubview(contentContainerStackView)
-		
-		contentStackView.snp.makeConstraints { make in
-            make.height.greaterThanOrEqualTo(iconContentImageView).priority(.high)
-		}
+        
+        isLayoutMarginsRelativeArrangement = true
+        layoutMargins = .init(UI.Margins)
+        layer.cornerRadius = UI.CornerRadius
+        backgroundColor = Colors.Tip.Background
+        axis = .vertical
+        spacing = UI.Margins
+        addArrangedSubview(contentStackView)
+        addArrangedSubview(buttonsStackView)
 	}
 	
 	@MainActor required init(coder: NSCoder) {
@@ -109,34 +110,36 @@ public class RU_Tip_StackView: RU_StackView {
 	
 	public func reset() {
 		
-		contentStackView.arrangedSubviews.forEach({ $0.removeFromSuperview() })
+        labelsStackView.arrangedSubviews.forEach({ $0.removeFromSuperview() })
 	}
 	
-	public func add(_ view:UIView) {
-		
-		contentStackView.addArrangedSubview(view)
-		updateContent()
-	}
-	
-	@discardableResult public func add(_ string:String) -> RU_Label {
+	@discardableResult public func addLabel(_ string:String) -> RU_Label {
 		
         let label:RU_Label = .init(string)
-		contentStackView.addArrangedSubview(label)
+        labelsStackView.addArrangedSubview(label)
 		updateContent()
         
         return label
 	}
+    
+    public func addButton(_ title:String, _ completion:((RU_Button?)->Void)?) {
+        
+        let button:RU_Button = .init(title) { button in
+            
+            completion?(button)
+        }
+        button.type = .tertiary
+        button.titleFont = Fonts.Content.Button.Title.withSize(Fonts.Size+1)
+        button.snp.makeConstraints { make in
+            make.height.equalTo(4*UI.Margins)
+        }
+        buttonsStackView.addArrangedSubview(button)
+        updateContent()
+    }
 	
 	private func updateContent() {
 		
-		contentStackView.isHidden = contentStackView.arrangedSubviews.isEmpty
-	}
-	
-	public func createImageView() -> UIImageView {
-		
-		let imageView:UIImageView = .init(image: UIImage(systemName: "info.circle.fill"))
-		imageView.tintColor = Colors.Tip.Icon
-		imageView.contentMode = .scaleAspectFit
-		return imageView
+        labelsStackView.isHidden = labelsStackView.arrangedSubviews.isEmpty
+        buttonsStackView.isHidden = buttonsStackView.arrangedSubviews.isEmpty
 	}
 }

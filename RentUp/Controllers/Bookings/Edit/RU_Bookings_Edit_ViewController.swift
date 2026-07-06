@@ -10,6 +10,13 @@ import SnapKit
 
 public class RU_Bookings_Edit_ViewController : RU_ViewController {
 	
+	public var presetStartDate: Date? {
+		
+		didSet {
+			applyPresetArrivalDateIfNeeded()
+		}
+	}
+	
 	public var booking:RU_Booking? = .init() {
 		
 		didSet {
@@ -136,6 +143,7 @@ public class RU_Bookings_Edit_ViewController : RU_ViewController {
 				calendarViewController.didSelectRange = { [weak self] startDate, endDate in
 					self?.booking?.dates.start = startDate
 					self?.booking?.dates.end = endDate
+					self?.presetStartDate = nil
 					self?.updateDatesButton()
 					self?.updateSaveButton()
 					self?.dismiss(animated: true)
@@ -317,11 +325,11 @@ public class RU_Bookings_Edit_ViewController : RU_ViewController {
 		
 	}(RU_Button(String(key: "bookings.create.delete.button")){ [weak self] button in
 		
-		let alertController:RU_Booking_Delete_Alert_ViewController = .init()
+        let alertController:RU_Booking_Delete_Alert_ViewController = .init()
 		alertController.booking = self?.booking
 		alertController.deleteCompletion = { [weak self] in
 			
-			self?.dismiss()
+            self?.dismiss()
 		}
 		alertController.present()
 	})
@@ -357,6 +365,8 @@ public class RU_Bookings_Edit_ViewController : RU_ViewController {
 	
 	public override func loadView() {
 		
+		resetDatesIfNewBooking()
+		updateDatesButton()
 		super.loadView()
         
         isModal = true
@@ -595,13 +605,59 @@ public class RU_Bookings_Edit_ViewController : RU_ViewController {
 		}
 	}
 	
+	private func resetDatesIfNewBooking() {
+		guard booking?.id == nil else { return }
+		if presetStartDate != nil {
+			applyPresetArrivalDateIfNeeded()
+		}
+		else {
+			let day = Calendar.current.startOfDay(for: Date())
+			booking?.dates.start = day
+			booking?.dates.end = day
+		}
+	}
+	
+	private func applyPresetArrivalDateIfNeeded() {
+		guard booking?.id == nil, let presetStartDate else { return }
+		let day = Calendar.current.startOfDay(for: presetStartDate)
+		booking?.dates.start = day
+		booking?.dates.end = day
+		if isViewLoaded {
+			updateDatesButton()
+			updateSaveButton()
+		}
+	}
+	
+	private var hasCompleteStayDates: Bool {
+		guard let booking else { return false }
+		if booking.id != nil { return true }
+		return booking.dates.end > booking.dates.start
+	}
+	
+	private var hasPresetArrivalDate: Bool {
+		guard booking?.id == nil,
+			  let presetStartDate,
+			  let start = booking?.dates.start,
+			  let end = booking?.dates.end else { return false }
+		let calendar = Calendar.current
+		return calendar.isDate(start, inSameDayAs: presetStartDate)
+			&& calendar.isDate(end, inSameDayAs: start)
+	}
+	
 	private func updateDatesButton() {
 		
 		let dateFormatter = DateFormatter()
 		dateFormatter.dateStyle = .medium
 		dateFormatter.locale = Locale(identifier: "fr_FR")
 		
-		if let startDate = booking?.dates.start, let endDate = booking?.dates.end {
+		guard let startDate = booking?.dates.start,
+			  let endDate = booking?.dates.end else {
+			datesButton.title = String(key: "bookings.create.dates.button")
+			remakeDatesButtonWidthConstraint()
+			return
+		}
+		
+		if hasCompleteStayDates {
 			
 			let startString = dateFormatter.string(from: startDate)
 			let endString = dateFormatter.string(from: endDate)
@@ -612,13 +668,23 @@ public class RU_Bookings_Edit_ViewController : RU_ViewController {
 			
 			datesButton.title = "\(startString) ➜ \(endString) • \(nights) \(nightsString)"
 		}
+		else if hasPresetArrivalDate {
+			
+			datesButton.title = String(
+				format: String(key: "bookings.create.dates.arrivalOnly"),
+				dateFormatter.string(from: startDate)
+			)
+		}
 		else {
 			
-			datesButton.title = nil
+			datesButton.title = String(key: "bookings.create.dates.button")
 		}
 		
+		remakeDatesButtonWidthConstraint()
+	}
+	
+	private func remakeDatesButtonWidthConstraint() {
 		if datesButton.superview != nil {
-			
 			datesButton.snp.remakeConstraints { make in
 				make.width.lessThanOrEqualToSuperview().multipliedBy(0.5)
 			}

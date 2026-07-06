@@ -13,10 +13,26 @@ public class RU_TabBarController : UITabBarController {
 	public enum Indexes : CaseIterable {
 		
 		case Home
+        case Bookings
 		case Reporting
-		case Bookings
 		case Classifieds
 		case Settings
+	}
+	
+	private let injectedNavigationControllers: [UINavigationController]?
+	
+	public init(navigationControllers: [RU_TabBarController.Indexes: RU_NavigationController]) {
+		injectedNavigationControllers = Indexes.allCases.compactMap { navigationControllers[$0] }
+		super.init(nibName: nil, bundle: nil)
+	}
+	
+	required init?(coder: NSCoder) {
+		injectedNavigationControllers = nil
+		super.init(coder: coder)
+	}
+	
+	public convenience override init(nibName nibNameOrNil: String?, bundle nibBundleOrNil: Bundle?) {
+		self.init(navigationControllers: RU_AppSectionFactory.makeAllNavigationControllers())
 	}
 
 	public override func loadView() {
@@ -52,24 +68,13 @@ public class RU_TabBarController : UITabBarController {
 		tabBar.standardAppearance = appearance
 		tabBar.scrollEdgeAppearance = appearance
 		
-		viewControllers = Indexes.allCases.compactMap({
-			
-			switch $0 {
-			case .Home:
-				RU_Home_ViewController()
-			case .Reporting:
-				RU_Reporting_ViewController()
-			case .Bookings:
-				RU_Bookings_ViewController()
-			case .Classifieds:
-				RU_Classifieds_ViewController()
-			case .Settings:
-				RU_Settings_ViewController()
+		if let injectedNavigationControllers {
+			viewControllers = injectedNavigationControllers
+		} else {
+			viewControllers = Indexes.allCases.map {
+				RU_AppSectionFactory.navigationController(for: $0)
 			}
-		}).compactMap({
-			
-			RU_NavigationController(rootViewController: $0)
-		})
+		}
 		
 		delegate = self
 	}

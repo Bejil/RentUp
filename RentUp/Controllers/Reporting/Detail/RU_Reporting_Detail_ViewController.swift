@@ -11,7 +11,7 @@ import SwiftUI
 
 public class RU_Reporting_Detail_ViewController : RU_ViewController {
     
-    private var bookings:[RU_Booking]? {
+    var bookings:[RU_Booking]? {
         
         didSet {
             
@@ -122,7 +122,9 @@ public class RU_Reporting_Detail_ViewController : RU_ViewController {
         
         super.viewWillAppear(animated)
         
-        updateData()
+        if bookings == nil {
+            updateData()
+        }
     }
     
     public override func viewDidLayoutSubviews() {
@@ -197,6 +199,11 @@ public class RU_Reporting_Detail_ViewController : RU_ViewController {
     }
     
     private func updateData() {
+        
+        if bookings != nil {
+            updateUI()
+            return
+        }
         
         view.showPlaceholder(.Loading)
         
@@ -344,6 +351,103 @@ extension RU_Reporting_Detail_ViewController {
             formatter.currencyCode = "EUR"
             formatter.maximumFractionDigits = 0
             return formatter.string(from: NSNumber(value: value)) ?? "—"
+        }
+        
+        static func eligibleBookings(_ bookings: [RU_Booking]) -> [RU_Booking] {
+            bookings.filter { !$0.isCancelled && $0.status != .cancelled }
+        }
+        
+        struct MainKPIs {
+            let bookingCount: Int
+            let totalNights: Int
+            let averageNights: Double
+            let averageGuests: Double
+            let mostUsedPlatform: RU_Platform?
+            let mostProfitablePlatform: RU_Platform?
+        }
+        
+        static func mainKPIs(bookings: [RU_Booking], calendar: Calendar = .current) -> MainKPIs {
+            let list = eligibleBookings(bookings)
+            guard !list.isEmpty else {
+                return MainKPIs(bookingCount: 0, totalNights: 0, averageNights: 0, averageGuests: 0, mostUsedPlatform: nil, mostProfitablePlatform: nil)
+            }
+            
+            var totalNights = 0
+            var totalGuests = 0
+            var platformCountById: [String: (platform: RU_Platform?, count: Int)] = [:]
+            var platformRevenueById: [String: (platform: RU_Platform?, revenue: Double)] = [:]
+            
+            for booking in list {
+                let nights = bookingNights(booking, calendar: calendar)
+                totalNights += nights
+                
+                let guests = max(1, (booking.travelers.adults ?? 0) + (booking.travelers.children ?? 0) + (booking.travelers.babies ?? 0))
+                totalGuests += guests
+                
+                if let platform = booking.platform {
+                    let key = platform.uuid
+                    var bucket = platformCountById[key] ?? (platform, 0)
+                    bucket.count += 1
+                    platformCountById[key] = bucket
+                    
+                    let revenue = platform.calculatePrice(for: booking)?.hostTotal ?? 0
+                    var revenueBucket = platformRevenueById[key] ?? (platform, 0)
+                    revenueBucket.revenue += revenue
+                    platformRevenueById[key] = revenueBucket
+                }
+            }
+            
+            let count = list.count
+            let mostUsedPlatform = platformCountById.max(by: { $0.value.count < $1.value.count })?.value.platform
+            let mostProfitablePlatform = platformRevenueById.max(by: { $0.value.revenue < $1.value.revenue })?.value.platform
+            
+            return MainKPIs(
+                bookingCount: count,
+                totalNights: totalNights,
+                averageNights: Double(totalNights) / Double(count),
+                averageGuests: Double(totalGuests) / Double(count),
+                mostUsedPlatform: mostUsedPlatform,
+                mostProfitablePlatform: mostProfitablePlatform
+            )
+        }
+        
+        static func uniqueClassifiedFees(for bookings: [RU_Booking]) -> Double {
+            var classifieds: [RU_Classified] = []
+            bookings.compactMap(\.classified).forEach {
+                if !classifieds.contains($0) {
+                    classifieds.append($0)
+                }
+            }
+            return Double(classifieds.compactMap(\.fees).reduce(0, +))
+        }
+        
+        /// Taux de rendement = revenu net proratisé du mois / charges (frais uniques par bien).
+        static func profitabilityPercentages(
+            monthStart: Date,
+            bookings: [RU_Booking],
+            now: Date,
+            calendar: Calendar = .current
+        ) -> (actual: Double, forecast: Double, revenueActual: Double, revenueForecast: Double) {
+            let list = eligibleBookings(bookings)
+            let pastBookings = list.filter { $0.dates.end < now }
+            let pastInMonth = pastBookings.filter { nightsInMonth(booking: $0, monthStart: monthStart, calendar: calendar) > 0 }
+            let allInMonth = list.filter { nightsInMonth(booking: $0, monthStart: monthStart, calendar: calendar) > 0 }
+            
+            let chargesActual = uniqueClassifiedFees(for: pastInMonth)
+            let chargesForecast = uniqueClassifiedFees(for: allInMonth)
+            
+            var revenueActual = 0.0
+            for booking in pastInMonth {
+                revenueActual += proratedHostTotal(booking: booking, monthStart: monthStart, calendar: calendar)
+            }
+            var revenueForecast = 0.0
+            for booking in allInMonth {
+                revenueForecast += proratedHostTotal(booking: booking, monthStart: monthStart, calendar: calendar)
+            }
+            
+            let actual = chargesActual > 0 ? revenueActual / chargesActual * 100 : (revenueActual > 0 ? 100 : 0)
+            let forecast = chargesForecast > 0 ? revenueForecast / chargesForecast * 100 : (revenueForecast > 0 ? 100 : 0)
+            return (actual, forecast, revenueActual, revenueForecast)
         }
     }
 }

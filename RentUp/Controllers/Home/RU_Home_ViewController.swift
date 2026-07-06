@@ -47,6 +47,7 @@ public class RU_Home_ViewController: RU_ViewController {
 	private lazy var currentBookingSectionStackView: RU_Booking_Card_Section_StackView = {
 		
 		$0.title = String(key: "home.currentBooking.section.title")
+		$0.isEmphasized = true
 		return $0
 		
 	}(RU_Booking_Card_Section_StackView())
@@ -56,6 +57,20 @@ public class RU_Home_ViewController: RU_ViewController {
 		return $0
 		
 	}(RU_Booking_Card_Section_StackView())
+	private lazy var bookingsRowStackView: RU_StackView = {
+		let stack = RU_StackView(arrangedSubviews: [currentBookingSectionStackView, nextBookingSectionStackView])
+		stack.spacing = 2 * UI.Margins
+		stack.distribution = .fillEqually
+		return stack
+	}()
+	private lazy var contentScrollView = RU_ScrollView()
+	private lazy var contentStackView: RU_StackView = {
+		let stack = RU_StackView(arrangedSubviews: [reportingTipStackView, promoTipStackView, bookingsRowStackView])
+		stack.axis = .vertical
+		stack.spacing = 2 * UI.Margins
+		stack.isLayoutMarginsRelativeArrangement = true
+		return stack
+	}()
     private lazy var reportingTipStackView:RU_Reporting_Tip_StackView = {
         
         $0.isHidden = true
@@ -64,7 +79,6 @@ public class RU_Home_ViewController: RU_ViewController {
     }(RU_Reporting_Tip_StackView())
 	private lazy var promoTipStackView: RU_Tip_StackView = {
         
-		$0.icon = UIImage(systemName: "tag.fill")
         $0.title = String(key: "home.tip.promo.title")
 		return $0
         
@@ -88,27 +102,31 @@ public class RU_Home_ViewController: RU_ViewController {
 		
 		navigationItem.title = String(key: "home.title")
 		
-        let contentScrollView:RU_ScrollView = .init()
-        view.addSubview(contentScrollView)
-        contentScrollView.snp.makeConstraints { make in
-            make.edges.equalToSuperview()
-        }
-        
-        let contentStackView: RU_StackView = .init(arrangedSubviews: [reportingTipStackView, promoTipStackView, currentBookingSectionStackView, nextBookingSectionStackView])
-        contentStackView.axis = .vertical
-        contentStackView.spacing = 2 * UI.Margins
-        contentStackView.isLayoutMarginsRelativeArrangement = true
-        contentStackView.layoutMargins = .init(UI.Margins)
-        contentScrollView.addSubview(contentStackView)
-        contentStackView.snp.makeConstraints { make in
-            make.leading.trailing.top.bottom.equalToSuperview()
-            make.width.equalTo(contentScrollView.snp.width)
-        }
+		updateAdaptiveLayoutMargins()
+		RU_AdaptiveLayout.installScrollContent(
+			scrollView: contentScrollView,
+			contentView: contentStackView,
+			in: view,
+			traitCollection: traitCollection
+		)
 		
 		NotificationCenter.add(.updateBookings) { [weak self] _ in
 			
 			self?.updateBookings()
 		}
+	}
+	
+	public override func traitCollectionDidChange(_ previousTraitCollection: UITraitCollection?) {
+		super.traitCollectionDidChange(previousTraitCollection)
+		guard traitCollection.horizontalSizeClass != previousTraitCollection?.horizontalSizeClass else { return }
+		updateAdaptiveLayoutMargins()
+		bookingsRowStackView.axis = traitCollection.isRegularWidth ? .horizontal : .vertical
+	}
+	
+	private func updateAdaptiveLayoutMargins() {
+		let margins = UI.adaptiveMargins(for: traitCollection)
+		contentStackView.layoutMargins = UIEdgeInsets(top: margins, left: margins, bottom: margins, right: margins)
+		bookingsRowStackView.axis = traitCollection.isRegularWidth ? .horizontal : .vertical
 	}
 	
 	public override func viewWillAppear(_ animated: Bool) {
@@ -126,7 +144,7 @@ public class RU_Home_ViewController: RU_ViewController {
 		if let opportunity = Date().nextUpcomingHolidayOpportunity(withinDays: 60) {
             
 			promoTipStackView.isHidden = false
-			promoTipStackView.add(String(key: "home.tip.promo.message"))
+			promoTipStackView.addLabel(String(key: "home.tip.promo.message"))
 			
             let formatter = DateFormatter()
 			formatter.locale = Locale(identifier: "fr_FR")
@@ -145,9 +163,8 @@ public class RU_Home_ViewController: RU_ViewController {
 				dateRangeText = String(format: String(key: "home.tip.promo.dates.range"), startString, endString)
 			}
             
-            let label:RU_Label = .init(dateRangeText + ":\n" + String(key: opportunity.name))
+			let label = promoTipStackView.addLabel(dateRangeText + ":\n" + String(key: opportunity.name))
             label.set(font: Fonts.Content.Text.Bold, string: dateRangeText + ":")
-			promoTipStackView.add(label)
 		}
         else {
             

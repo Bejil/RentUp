@@ -13,26 +13,32 @@ public class RU_ViewController: UIViewController {
 	public var isModal:Bool = false {
 		
 		didSet {
-            
-            navigationItem.leftBarButtonItem = nil
-            closeButton.isHidden = true
-            
-            if isModal && navigationController?.viewControllers.count ?? 0 < 2 {
-                
-                if navigationController != nil {
-                    
-                    navigationItem.leftBarButtonItem = .init(image: UIImage(systemName: "xmark"), primaryAction: .init(handler: { [weak self] _ in
-                        
-                        RU_Feedback.shared.make(.Off)
-                        
-                        self?.close()
-                    }))
-                }
-                else {
-                    
-                    closeButton.isHidden = false
-                }
-            }
+			refreshModalChrome()
+		}
+	}
+	
+	internal func refreshModalChrome() {
+		
+		guard isModal else { return }
+		
+		navigationItem.leftBarButtonItem = nil
+		closeButton.isHidden = true
+		
+		if navigationController?.viewControllers.count ?? 0 < 2 {
+			
+			if navigationController != nil {
+				
+				navigationItem.leftBarButtonItem = .init(image: UIImage(systemName: "xmark"), primaryAction: .init(handler: { [weak self] _ in
+					
+					RU_Feedback.shared.make(.Off)
+					
+					self?.close()
+				}))
+			}
+			else {
+				
+				closeButton.isHidden = false
+			}
 		}
 	}
     private lazy var closeButton:RU_Button = {
@@ -51,7 +57,11 @@ public class RU_ViewController: UIViewController {
 	public override func loadView() {
 		
 		super.loadView()
-		
+		installDefaultViewChrome()
+	}
+    
+    func installDefaultViewChrome() {
+        
         view.backgroundColor = Colors.Background.View
         
         let tapGestureRecognizer:UITapGestureRecognizer = .init { [weak self] sender in
@@ -76,12 +86,13 @@ public class RU_ViewController: UIViewController {
 		}
 		tapGestureRecognizer.cancelsTouchesInView = false
 		view.addGestureRecognizer(tapGestureRecognizer)
-        
-//        view.addSubview(closeButton)
-//        closeButton.snp.makeConstraints { make in
-//            
-//            make.top.left.equalTo(view.safeAreaLayoutGuide).inset(UI.Margins)
-//        }
+    }
+	
+	public override func viewWillAppear(_ animated: Bool) {
+		
+		super.viewWillAppear(animated)
+		
+		refreshModalChrome()
 	}
 	
 	public override func viewWillDisappear(_ animated: Bool) {

@@ -29,6 +29,8 @@ public class RU_Reporting_ViewController : RU_ViewController {
             if filteredBookings?.isEmpty ?? true {
                 
                 contentScrollView.isHidden = true
+                generalKPIView.isHidden = true
+                generalDistributionView.isHidden = true
                 
                 let placeholderView = view.showPlaceholder(.Empty)
                 let button = placeholderView.addButton(String(key: "bookings.create.button")) { _ in
@@ -37,21 +39,19 @@ public class RU_Reporting_ViewController : RU_ViewController {
                 }
                 button.image = UIImage(systemName: "plus")
                 
-                [occupationCurrentMonthLabel, occupationPreviousMonthLabel, occupationTotalLabel, profitabilityCurrentMonthLabel, profitabilityPreviousMonthLabel, profitabilityTotalLabel, totalNightsLabel, averageNightsLabel, averageGuestsLabel].forEach { $0.text = String(key: "reporting.value.placeholder") }
-                mostUsedPlatformLabel.platform = nil
-                mostUsedPlatformLabel.text = String(key: "reporting.value.placeholder")
-                mostProfitablePlatformLabel.platform = nil
-                mostProfitablePlatformLabel.text = String(key: "reporting.value.placeholder")
+                [occupationCurrentMonthLabel, occupationPreviousMonthLabel, occupationTotalLabel, profitabilityCurrentMonthLabel, profitabilityPreviousMonthLabel, profitabilityTotalLabel].forEach { $0.text = String(key: "reporting.value.placeholder") }
             }
             else {
                 
                 contentScrollView.isHidden = false
                 
-                [occupationCurrentMonthLabel, occupationPreviousMonthLabel, occupationTotalLabel, profitabilityCurrentMonthLabel, profitabilityPreviousMonthLabel, profitabilityTotalLabel, totalNightsLabel, averageNightsLabel, averageGuestsLabel].forEach { $0.text = String(key: "reporting.value.placeholder") }
-                mostUsedPlatformLabel.platform = nil
-                mostUsedPlatformLabel.text = String(key: "reporting.value.placeholder")
-                mostProfitablePlatformLabel.platform = nil
-                mostProfitablePlatformLabel.text = String(key: "reporting.value.placeholder")
+                [occupationCurrentMonthLabel, occupationPreviousMonthLabel, occupationTotalLabel, profitabilityCurrentMonthLabel, profitabilityPreviousMonthLabel, profitabilityTotalLabel].forEach { $0.text = String(key: "reporting.value.placeholder") }
+                
+                let listForDistribution = distributionBookings(from: filteredBookings ?? [])
+                generalKPIView.isHidden = listForDistribution.isEmpty
+                generalDistributionView.isHidden = listForDistribution.isEmpty
+                generalKPIView.update(bookings: listForDistribution)
+                generalDistributionView.update(bookings: listForDistribution)
             }
 
             let listForFees = filteredBookings?.filter { $0.status != .cancelled } ?? []
@@ -144,10 +144,23 @@ public class RU_Reporting_ViewController : RU_ViewController {
                 var totalAllNights = 0
                 for b in totalAllBookingsForOcc { totalAllNights += daysInPeriod(b, periodStart: firstPastStart, periodEnd: periodEnd) }
                 let occTotForecast = Double(totalAllNights) / Double(totalPeriodDays) * 100
-                let currentMonthPastBookings = pastBookings.filter({ nightsInMonth($0, monthStart: currentMonthStart, monthEnd: currentMonthEnd) > 0 })
-                let currentMonthAllBookings = listCopy.filter({ nightsInMonth($0, monthStart: currentMonthStart, monthEnd: currentMonthEnd) > 0 })
-                let currentMonthChargesActual = uniqueClassifiedFees(for: currentMonthPastBookings)
-                let currentMonthChargesForecast = uniqueClassifiedFees(for: currentMonthAllBookings)
+                let currentMonthProfitability = RU_Reporting_Detail_ViewController.ReportingMonthMetrics.profitabilityPercentages(
+                    monthStart: currentMonthStart,
+                    bookings: listCopy,
+                    now: now,
+                    calendar: calendar
+                )
+                let profCurrActual = currentMonthProfitability.actual
+                let profCurrForecast = currentMonthProfitability.forecast
+                
+                let previousMonthProfitability = RU_Reporting_Detail_ViewController.ReportingMonthMetrics.profitabilityPercentages(
+                    monthStart: previousMonthStart,
+                    bookings: listCopy,
+                    now: now,
+                    calendar: calendar
+                )
+                let profPrevActual = previousMonthProfitability.actual
+                let profPrevForecast = previousMonthProfitability.forecast
                 let periodStart = firstPastStart
                 var periodStartMonth = calendar.date(from: calendar.dateComponents([.year, .month], from: periodStart)) ?? periodStart
                 var totalChargesActual: Double = 0
@@ -164,35 +177,6 @@ public class RU_Reporting_ViewController : RU_ViewController {
                     }
                     periodStartMonth = calendar.date(byAdding: .month, value: 1, to: periodStartMonth) ?? periodStartMonth
                 }
-                var currMonthPastRev: Double = 0
-                autoreleasepool {
-                    for b in currentMonthPastBookings {
-                        currMonthPastRev += proratedHostTotal(b, monthStart: currentMonthStart, monthEnd: currentMonthEnd)
-                    }
-                }
-                let profCurrActual = currentMonthChargesActual > 0 ? currMonthPastRev / currentMonthChargesActual * 100 : (currMonthPastRev > 0 ? 100 : 0)
-                var currMonthAllRev: Double = 0
-                autoreleasepool {
-                    for b in currentMonthAllBookings {
-                        currMonthAllRev += proratedHostTotal(b, monthStart: currentMonthStart, monthEnd: currentMonthEnd)
-                    }
-                }
-                let profCurrForecast = currentMonthChargesForecast > 0 ? currMonthAllRev / currentMonthChargesForecast * 100 : (currMonthAllRev > 0 ? 100 : 0)
-                
-                let previousMonthPastBookings = pastBookings.filter({ nightsInMonth($0, monthStart: previousMonthStart, monthEnd: previousMonthEnd) > 0 })
-                let previousMonthAllBookings = listCopy.filter({ nightsInMonth($0, monthStart: previousMonthStart, monthEnd: previousMonthEnd) > 0 })
-                let previousMonthChargesActual = uniqueClassifiedFees(for: previousMonthPastBookings)
-                let previousMonthChargesForecast = uniqueClassifiedFees(for: previousMonthAllBookings)
-                var prevMonthPastRev: Double = 0
-                for b in previousMonthPastBookings {
-                    prevMonthPastRev += proratedHostTotal(b, monthStart: previousMonthStart, monthEnd: previousMonthEnd)
-                }
-                let profPrevActual = previousMonthChargesActual > 0 ? prevMonthPastRev / previousMonthChargesActual * 100 : (prevMonthPastRev > 0 ? 100 : 0)
-                var prevMonthAllRev: Double = 0
-                for b in previousMonthAllBookings {
-                    prevMonthAllRev += proratedHostTotal(b, monthStart: previousMonthStart, monthEnd: previousMonthEnd)
-                }
-                let profPrevForecast = previousMonthChargesForecast > 0 ? prevMonthAllRev / previousMonthChargesForecast * 100 : (prevMonthAllRev > 0 ? 100 : 0)
                 var totalPastRev: Double = 0
                 autoreleasepool {
                     for b in pastBookings where daysInPeriod(b, periodStart: periodStart, periodEnd: periodEnd) > 0 {
@@ -207,23 +191,6 @@ public class RU_Reporting_ViewController : RU_ViewController {
                 }
                 let profTotActual = totalChargesActual > 0 ? totalPastRev / totalChargesActual * 100 : (totalPastRev > 0 ? 100 : 0)
                 let profTotForecast = totalChargesForecast > 0 ? totalAllRev / totalChargesForecast * 100 : (totalAllRev > 0 ? 100 : 0)
-                func guests(_ b: RU_Booking) -> Int { (b.travelers.adults ?? 0) + (b.travelers.children ?? 0) + (b.travelers.babies ?? 0) }
-                let totalNights = listCopy.reduce(0) { $0 + bookingNights($1) }
-                let count = listCopy.count
-                let avgNightsStr = count > 0 ? String(format: "%.1f", Double(totalNights) / Double(count)) : String(key: "reporting.value.placeholder")
-                let totalGuests = listCopy.reduce(0) { $0 + guests($1) }
-                let avgGuestsStr = count > 0 ? String(format: "%.1f", Double(totalGuests) / Double(count)) : String(key: "reporting.value.placeholder")
-                var platCount: [String: Int] = [:]
-                var platRev: [String: Double] = [:]
-                autoreleasepool {
-                    for b in listCopy {
-                        guard let p = b.platform else { continue }
-                        platCount[p.uuid, default: 0] += 1
-                        if let calc = p.calculatePrice(for: b) { platRev[p.uuid, default: 0] += calc.hostTotal }
-                    }
-                }
-                let mostUsedId = platCount.max(by: { $0.value < $1.value })?.key
-                let mostProfId = platRev.max(by: { $0.value < $1.value })?.key
                 DispatchQueue.main.async { [weak self] in
                     guard let self else { return }
                     self.occupationCurrentMonthLabel.text = String(format: "%.0f%% (→ %.0f%%)", occCurrActual, occCurrForecast)
@@ -232,11 +199,6 @@ public class RU_Reporting_ViewController : RU_ViewController {
                     self.profitabilityCurrentMonthLabel.text = String(format: "%.0f%% (→ %.0f%%)", profCurrActual, profCurrForecast)
                     self.profitabilityPreviousMonthLabel.text = String(format: "%.0f%% (→ %.0f%%)", profPrevActual, profPrevForecast)
                     self.profitabilityTotalLabel.text = String(format: "%.0f%% (→ %.0f%%)", profTotActual, profTotForecast)
-                    self.totalNightsLabel.text = "\(totalNights)"
-                    self.averageNightsLabel.text = avgNightsStr
-                    self.averageGuestsLabel.text = avgGuestsStr
-                    self.mostUsedPlatformLabel.platform = mostUsedId.flatMap { id in RU_Platform.all?.first(where: { $0.uuid == id }) }
-                    self.mostProfitablePlatformLabel.platform = mostProfId.flatMap { id in RU_Platform.all?.first(where: { $0.uuid == id }) }
                 }
             }
         }
@@ -292,7 +254,7 @@ public class RU_Reporting_ViewController : RU_ViewController {
     private lazy var profitabilityTipView:RU_Tip_StackView = {
         
         $0.title = String(key: "reporting.profitability.tip.title")
-        $0.add(RU_Label(String(key: "reporting.profitability.tip.content")))
+        $0.addLabel(String(key: "reporting.profitability.tip.content"))
         return $0
         
     }(RU_Tip_StackView())
@@ -312,20 +274,15 @@ public class RU_Reporting_ViewController : RU_ViewController {
         
     }(RU_Button(String(key: "reporting.details.button")) { [weak self] _ in
         
-        let viewController:RU_Reporting_Detail_Profitability_ViewController = .init()
-        self?.navigationController?.pushViewController(viewController, animated: true)
+        self?.pushProfitabilityDetail()
     })
-    private lazy var totalNightsLabel: RU_Label = .init()
-    private lazy var averageNightsLabel: RU_Label = .init()
-    private lazy var averageGuestsLabel: RU_Label = .init()
-    private lazy var mostUsedPlatformLabel: RU_Platform_Label = .init()
-    private lazy var mostProfitablePlatformLabel: RU_Platform_Label = .init()
-    
+    private lazy var generalKPIView: RU_Reporting_General_KPI_View = .init()
+    private lazy var generalDistributionView: RU_Reporting_General_Distribution_View = .init()
 	public override init(nibName nibNameOrNil: String?, bundle nibBundleOrNil: Bundle?) {
 		
 		super.init(nibName: nibNameOrNil, bundle: nibBundleOrNil)
 		
-		tabBarItem = .init(title: String(key: "tabbar.reporting"), image: UIImage(systemName: "square.grid.2x2"), tag: RU_TabBarController.Indexes.allCases.firstIndex(of: .Reporting) ?? 0)
+		tabBarItem = .init(title: String(key: "tabbar.reporting"), image: UIImage(systemName: "chart.line.text.clipboard"), tag: RU_TabBarController.Indexes.allCases.firstIndex(of: .Reporting) ?? 0)
 	}
 	
 	required init?(coder: NSCoder) {
@@ -356,25 +313,8 @@ public class RU_Reporting_ViewController : RU_ViewController {
         }
         
         contentStackView.addArrangedSubview(reportingTipStackView)
-        
-        let mainSectionStackView:RU_Section_StackView = .init()
-        mainSectionStackView.title = String(key: "reporting.section.main")
-        mainSectionStackView.subtitle = String(key: "reporting.section.main.subtitle")
-        mainSectionStackView.addArrangedSubview(createRow(icon: "moon.zzz.fill", title: String(key: "reporting.main.totalNights"), view: totalNightsLabel))
-        mainSectionStackView.addArrangedSubview(createRow(icon: "moon.fill", title: String(key: "reporting.main.averageNights"), view: averageNightsLabel))
-        mainSectionStackView.addArrangedSubview(createRow(icon: "person.2.fill", title: String(key: "reporting.main.averageGuests"), view: averageGuestsLabel))
-        
-        let mostUsedPlatformStackView:RU_StackView = .init(arrangedSubviews: [.init(),mostUsedPlatformLabel])
-        mostUsedPlatformStackView.axis = .horizontal
-        
-        mainSectionStackView.addArrangedSubview(createRow(icon: "square.grid.2x2", title: String(key: "reporting.main.mostUsedPlatform"), view: mostUsedPlatformStackView))
-        
-        let mostProfitablePlatformStackView:RU_StackView = .init(arrangedSubviews: [.init(),mostProfitablePlatformLabel])
-        mostProfitablePlatformStackView.axis = .horizontal
-        
-        mainSectionStackView.addArrangedSubview(createRow(icon: "eurosign.circle.fill", title: String(key: "reporting.main.mostProfitablePlatform"), view: mostProfitablePlatformStackView, isHighlighted: true))
-        
-        contentStackView.addArrangedSubview(mainSectionStackView)
+        contentStackView.addArrangedSubview(generalKPIView)
+        contentStackView.addArrangedSubview(generalDistributionView)
         
         let occupationSectionStackView:RU_Section_StackView = .init()
         occupationSectionStackView.title = String(key: "reporting.section.occupancy")
@@ -385,8 +325,7 @@ public class RU_Reporting_ViewController : RU_ViewController {
         
         let occupationSectionButton:RU_Button = .init(String(key: "reporting.details.button")) { [weak self] _ in
             
-            let viewController:RU_Reporting_Detail_Occupation_ViewController = .init()
-            self?.navigationController?.pushViewController(viewController, animated: true)
+            self?.pushOccupationDetail()
         }
         occupationSectionButton.titleFont = Fonts.Content.Button.Title.withSize(Fonts.Size)
         occupationSectionButton.image = UIImage(systemName: "arrowtriangle.right.square")?.applyingSymbolConfiguration(.init(scale: .small))
@@ -421,6 +360,29 @@ public class RU_Reporting_ViewController : RU_ViewController {
         super.viewWillAppear(animated)
         
         updateData()
+    }
+    
+    private func metricsBookings() -> [RU_Booking]? {
+        RU_Reporting_Detail_ViewController.ReportingMonthMetrics.eligibleBookings(filteredBookings ?? [])
+    }
+    
+    private func pushProfitabilityDetail() {
+        let viewController = RU_Reporting_Detail_Profitability_ViewController()
+        viewController.bookings = metricsBookings()
+        navigationController?.pushViewController(viewController, animated: true)
+    }
+    
+    private func pushOccupationDetail() {
+        let viewController = RU_Reporting_Detail_Occupation_ViewController()
+        viewController.bookings = metricsBookings()
+        navigationController?.pushViewController(viewController, animated: true)
+    }
+    
+    private func distributionBookings(from bookings: [RU_Booking]) -> [RU_Booking] {
+        bookings.filter { booking in
+            if activeFilters.status == nil && booking.status == .cancelled { return false }
+            return true
+        }
     }
     
     private func updateFilterNavigationItem() {

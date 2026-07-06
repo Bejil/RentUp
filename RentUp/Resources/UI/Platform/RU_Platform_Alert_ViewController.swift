@@ -23,13 +23,11 @@ public class RU_Platform_Alert_ViewController : RU_Alert_ViewController {
             
             if let type = platform?.type {
                 
-                let travelerTipLabel:RU_Label = .init([String(key: "settings.platform.tip.content.traveler"),type.priceFormulaTraveler].joined(separator: " "))
+                let travelerTipLabel = tipStackView.addLabel([String(key: "settings.platform.tip.content.traveler"),type.priceFormulaTraveler].joined(separator: " "))
                 travelerTipLabel.set(font: Fonts.Content.Text.Bold, string:String(key: "settings.platform.tip.content.traveler"))
-                tipStackView.add(travelerTipLabel)
                 
-                let hostTipLabel:RU_Label = .init([String(key: "settings.platform.tip.content.host"),type.priceFormulaHost].joined(separator: " "))
+                let hostTipLabel = tipStackView.addLabel([String(key: "settings.platform.tip.content.host"),type.priceFormulaHost].joined(separator: " "))
                 hostTipLabel.set(font: Fonts.Content.Text.Bold, string:String(key: "settings.platform.tip.content.host"))
-                tipStackView.add(hostTipLabel)
             }
             
             commissionTouristTaxRow.isHidden = platform?.commission?.touristTax == nil

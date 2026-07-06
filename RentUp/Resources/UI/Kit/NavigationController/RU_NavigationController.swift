@@ -15,21 +15,24 @@ public class RU_NavigationController : UINavigationController {
 		
 		navigationBar.prefersLargeTitles = true
 		
-		let appearance = UINavigationBarAppearance()
-		appearance.configureWithTransparentBackground()
-		
-		let largeTitleTextAttributes: [NSAttributedString.Key: Any] = [.font: Fonts.Navigation.Title.Large as Any, .foregroundColor: Colors.Navigation.Title as Any]
-		appearance.largeTitleTextAttributes = largeTitleTextAttributes
-		
-		let titleAttributes: [NSAttributedString.Key: Any] = [.font: Fonts.Navigation.Title.Small as Any, .foregroundColor: Colors.Navigation.Title as Any]
-		appearance.titleTextAttributes = titleAttributes
-		
 		let buttonAttributes: [NSAttributedString.Key: Any] = [.font: Fonts.Navigation.Button as Any, .foregroundColor: Colors.Navigation.Button as Any]
-		appearance.buttonAppearance.normal.titleTextAttributes = buttonAttributes
+		let largeTitleTextAttributes: [NSAttributedString.Key: Any] = [.font: Fonts.Navigation.Title.Large as Any, .foregroundColor: Colors.Navigation.Title as Any]
+		let titleAttributes: [NSAttributedString.Key: Any] = [.font: Fonts.Navigation.Title.Small as Any, .foregroundColor: Colors.Navigation.Title as Any]
 		
-		UINavigationBar.appearance().tintColor = Colors.Navigation.Button
-		UINavigationBar.appearance().standardAppearance = appearance
-		UINavigationBar.appearance().compactAppearance = appearance
-		UINavigationBar.appearance().scrollEdgeAppearance = appearance
+		let scrollEdgeAppearance = UINavigationBarAppearance()
+		scrollEdgeAppearance.configureWithTransparentBackground()
+		scrollEdgeAppearance.largeTitleTextAttributes = largeTitleTextAttributes
+		scrollEdgeAppearance.titleTextAttributes = titleAttributes
+		scrollEdgeAppearance.buttonAppearance.normal.titleTextAttributes = buttonAttributes
+		
+		let standardAppearance = UINavigationBarAppearance()
+		standardAppearance.configureWithTransparentBackground()
+		standardAppearance.titleTextAttributes = titleAttributes
+		standardAppearance.buttonAppearance.normal.titleTextAttributes = buttonAttributes
+		
+		navigationBar.tintColor = Colors.Navigation.Button
+		navigationBar.standardAppearance = standardAppearance
+		navigationBar.compactAppearance = standardAppearance
+		navigationBar.scrollEdgeAppearance = scrollEdgeAppearance
 	}
 }

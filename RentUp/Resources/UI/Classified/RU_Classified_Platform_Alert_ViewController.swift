@@ -21,6 +21,7 @@ public class RU_Classified_Platform_Alert_ViewController : RU_Alert_ViewControll
             travelersExtraTextFieldRowStack.textField.isEnabled = isEditing
             offerWeekTextFieldRowStack.textField.isEnabled = isEditing
             offerMonthTextFieldRowStack.textField.isEnabled = isEditing
+            saveButton?.isHidden = !isEditing
         }
     }
     public var classified:RU_Classified?
@@ -36,13 +37,11 @@ public class RU_Classified_Platform_Alert_ViewController : RU_Alert_ViewControll
             
             if let type = platform?.type {
                 
-                let travelerTipLabel:RU_Label = .init([String(key: "settings.platform.tip.content.traveler"),type.priceFormulaTraveler].joined(separator: " "))
+                let travelerTipLabel = tipStackView.addLabel([String(key: "settings.platform.tip.content.traveler"),type.priceFormulaTraveler].joined(separator: " "))
                 travelerTipLabel.set(font: Fonts.Content.Text.Bold, string:String(key: "settings.platform.tip.content.traveler"))
-                tipStackView.add(travelerTipLabel)
                 
-                let hostTipLabel:RU_Label = .init([String(key: "settings.platform.tip.content.host"),type.priceFormulaHost].joined(separator: " "))
+                let hostTipLabel = tipStackView.addLabel([String(key: "settings.platform.tip.content.host"),type.priceFormulaHost].joined(separator: " "))
                 hostTipLabel.set(font: Fonts.Content.Text.Bold, string:String(key: "settings.platform.tip.content.host"))
-                tipStackView.add(hostTipLabel)
             }
             
             let tarification = classified?.tarification.first(where: { $0.platform == platform })

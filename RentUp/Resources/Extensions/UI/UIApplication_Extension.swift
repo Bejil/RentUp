@@ -45,6 +45,7 @@ extension UIApplication {
         let connectedScenes = UIApplication.shared.connectedScenes
         let windowScene = connectedScenes.first(where: { $0.activationState == .foregroundActive }) as? UIWindowScene
         let window = windowScene?.keyWindow
+        (window?.rootViewController as? RU_AdaptiveRootViewController)?.updateBadges([])
         (window?.rootViewController as? RU_TabBarController)?.viewControllers?.forEach { $0.tabBarItem.badgeValue = nil }
         
         let controller:RU_Onboarding_Welcome_ViewController = .init()
@@ -60,9 +61,23 @@ extension UIApplication {
         let connectedScenes = UIApplication.shared.connectedScenes
         let windowScene = connectedScenes.first(where: { $0.activationState == .foregroundActive }) as? UIWindowScene
         let window = windowScene?.keyWindow
-        window?.rootViewController = RU_TabBarController()
+        window?.rootViewController = RU_AdaptiveRootViewController()
         
+        registerTabBarBadgeObserverIfNeeded()
         updateTabBarBadges()
+        RU_WidgetDeepLinkHandler.flushPendingIfNeeded()
+    }
+    
+    private static var didRegisterTabBarBadgeObserver = false
+    
+    private static func registerTabBarBadgeObserverIfNeeded() {
+        
+        guard !didRegisterTabBarBadgeObserver else { return }
+        didRegisterTabBarBadgeObserver = true
+        
+        NotificationCenter.add(.updateBookings) { _ in
+            updateTabBarBadges()
+        }
     }
     
     public static func updateTabBarBadges() {
@@ -71,36 +86,35 @@ extension UIApplication {
         let windowScene = connectedScenes.first(where: { $0.activationState == .foregroundActive }) as? UIWindowScene
         let window = windowScene?.keyWindow
         
-        if let tabBarController = window?.rootViewController as? RU_TabBarController {
+        RU_Booking.getAll { _, bookings in
             
-            tabBarController.viewControllers?.forEach { $0.tabBarItem.badgeValue = nil }
+            guard !(bookings?.isEmpty ?? true) else { return }
             
-            RU_Booking.getAll { _, bookings in
-                
-                if !(bookings?.isEmpty ?? true) {
-                    
-                    let calendar = Calendar.current
-                    let now = Date()
-                    let thresholdDate = calendar.date(byAdding: .day, value: 5, to: now) ?? now
-                    let hasCurrentBooking = bookings?.current != nil
-                    let hasUpcomingBookingWithin5Days = (bookings?.contains(where: { $0.status == .upcoming && $0.dates.start <= thresholdDate }) ?? false)
-                    let hasUpcomingHolidayWithin60Days = Date().nextUpcomingHolidayOpportunity(withinDays: 60) != nil
-                    var indexesToBadge = Set<RU_TabBarController.Indexes>()
-                    
-                    if hasCurrentBooking || hasUpcomingBookingWithin5Days || hasUpcomingHolidayWithin60Days {
-                        
-                        indexesToBadge.insert(.Home)
-                    }
-                    
-                    if hasCurrentBooking || hasUpcomingBookingWithin5Days {
-                        
-                        indexesToBadge.insert(.Bookings)
-                    }
-                    
+            let calendar = Calendar.current
+            let now = Date()
+            let thresholdDate = calendar.date(byAdding: .day, value: 5, to: now) ?? now
+            let hasCurrentBooking = bookings?.current != nil
+            let hasUpcomingBookingWithin5Days = (bookings?.contains(where: { $0.status == .upcoming && $0.dates.start <= thresholdDate }) ?? false)
+            let hasUpcomingHolidayWithin60Days = Date().nextUpcomingHolidayOpportunity(withinDays: 60) != nil
+            var indexesToBadge = Set<RU_TabBarController.Indexes>()
+            
+            if hasCurrentBooking || hasUpcomingBookingWithin5Days || hasUpcomingHolidayWithin60Days {
+                indexesToBadge.insert(.Home)
+            }
+            
+            if hasCurrentBooking || hasUpcomingBookingWithin5Days {
+                indexesToBadge.insert(.Bookings)
+            }
+            
+            DispatchQueue.main.async {
+                if let adaptiveRoot = window?.rootViewController as? RU_AdaptiveRootViewController {
+                    adaptiveRoot.updateBadges(indexesToBadge)
+                }
+                else if let tabBarController = window?.rootViewController as? RU_TabBarController {
+                    tabBarController.viewControllers?.forEach { $0.tabBarItem.badgeValue = nil }
                     for index in indexesToBadge {
-                        
-                        if let tabIndex = RU_TabBarController.Indexes.allCases.firstIndex(where: { $0 == index }), tabIndex < (tabBarController.viewControllers?.count ?? 0) {
-                            
+                        if let tabIndex = RU_TabBarController.Indexes.allCases.firstIndex(where: { $0 == index }),
+                           tabIndex < (tabBarController.viewControllers?.count ?? 0) {
                             tabBarController.viewControllers?[tabIndex].tabBarItem.badgeValue = "!"
                         }
                     }

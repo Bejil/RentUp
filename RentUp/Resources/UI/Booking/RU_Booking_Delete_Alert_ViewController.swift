@@ -27,18 +27,19 @@ public class RU_Booking_Delete_Alert_ViewController : RU_Alert_ViewController {
 				
 				button?.isLoading = false
 				
-				self?.close {
-					
-					if let error {
-						
-						RU_Alert_ViewController.present(error)
-					}
-					else {
-						
-						NotificationCenter.post(.updateBookings)
-						self?.deleteCompletion?()
-					}
-				}
+                if let error {
+                    
+                    self?.close {
+                        
+                        RU_Alert_ViewController.present(error)
+                    }
+                }
+                else {
+                    
+                    NotificationCenter.post(.updateBookings)
+                    self?.deleteCompletion?()
+                    self?.close()
+                }
 			}
 		}
 		deleteButton.image = UIImage(systemName: "trash")

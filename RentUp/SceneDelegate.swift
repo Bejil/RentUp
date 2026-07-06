@@ -38,6 +38,10 @@ public class SceneDelegate: UIResponder, UIWindowSceneDelegate {
             }
             window?.rootViewController = viewController
             window?.makeKeyAndVisible()
+            
+            if let url = connectionOptions.urlContexts.first?.url {
+                RU_WidgetDeepLinkHandler.handle(url)
+            }
         }
 	}
 
@@ -48,10 +52,14 @@ public class SceneDelegate: UIResponder, UIWindowSceneDelegate {
     
     public func scene(_ scene: UIScene, openURLContexts URLContexts: Set<UIOpenURLContext>) {
         
-        if let context = URLContexts.first {
-            
-            RU_Firebase.shared.handle(context.url)
+        guard let url = URLContexts.first?.url else { return }
+        
+        if WidgetBookingDeepLink.bookingID(from: url) != nil {
+            RU_WidgetDeepLinkHandler.handle(url)
+            return
         }
+        
+        RU_Firebase.shared.handle(url)
     }
 }
 

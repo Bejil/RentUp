@@ -13,8 +13,8 @@ public class RU_Bookings_Detail_ViewController : RU_ViewController {
 	public var booking:RU_Booking? {
 		
 		didSet {
-			
-			title = booking?.classified?.name ?? String(key: "bookings.details.title")
+            
+            title = booking?.classified?.name ?? String(key: "bookings.details.title")
 			
 			platformLabel.platform = booking?.platform
 			statusLabel.booking = booking
@@ -47,7 +47,7 @@ public class RU_Bookings_Detail_ViewController : RU_ViewController {
 			if let comment = booking?.comment, !comment.isEmpty {
 				
 				commentTipStackView.isHidden = false
-				commentTipStackView.add(comment)
+				commentTipStackView.addLabel(comment)
 			}
 			else {
 				
@@ -318,14 +318,15 @@ public class RU_Bookings_Detail_ViewController : RU_ViewController {
         
         NotificationCenter.add(.updateBookings) { [weak self] _ in
             
-            RU_Alert_ViewController.presentLoading { [weak self] alertController in
-                
-                RU_Booking.getAll { [weak self] error, bookings in
+            RU_Booking.getAll { [weak self] error, bookings in
+               
+                if let booking = bookings?.first(where: { $0.uuid == self?.booking?.uuid }) {
                     
-                    alertController?.close { [weak self] in
-                      
-                        self?.booking = bookings?.first(where: { $0.uuid == self?.booking?.uuid })
-                    }
+                    self?.booking = booking
+                }
+                else {
+                    
+                    self?.navigationController?.popViewController(animated: true)
                 }
             }
         }
