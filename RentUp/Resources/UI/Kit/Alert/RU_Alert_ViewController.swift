@@ -272,6 +272,11 @@ public class RU_Alert_ViewController : UIViewController {
 		}
 		else if style == .Popover {
 			
+			guard popoverSourceView != nil || popoverSourceBarButtonItem != nil else {
+				present(as: .Sheet, withAnimation: animated, completion)
+				return
+			}
+			
 			modalPresentationStyle = .popover
 			popoverPresentationController?.delegate = self
 			modalTransitionStyle = .crossDissolve

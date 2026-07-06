@@ -87,6 +87,27 @@ public class RU_Bookings_Calendar_ViewController: RU_ViewController {
 		if skipsInitialLayoutWithoutBookings, bookings != nil, !hasPerformedInitialLayout {
 			handleBookingsUpdate()
 		}
+		
+		NotificationCenter.add(.splitViewLayoutDidChange) { [weak self] _ in
+			self?.relayoutCalendarForContainerWidthChange()
+		}
+	}
+	
+	private var lastCalendarLayoutSignature = ""
+	
+	public override func viewDidLayoutSubviews() {
+		super.viewDidLayoutSubviews()
+		relayoutCalendarForContainerWidthChange()
+	}
+	
+	private func relayoutCalendarForContainerWidthChange() {
+		guard isViewLoaded else { return }
+		let safe = view.safeAreaInsets
+		let signature = "\(view.bounds.width)|\(safe.left)|\(safe.right)"
+		guard signature != lastCalendarLayoutSignature else { return }
+		lastCalendarLayoutSignature = signature
+		weeksScrollHostView.setNeedsLayout()
+		weeksScrollHostView.collectionViewLayout.invalidateLayout()
 	}
         
 	public override func viewWillAppear(_ animated: Bool) {
@@ -107,11 +128,11 @@ public class RU_Bookings_Calendar_ViewController: RU_ViewController {
 	
 	// MARK: - Selection
 	
-	internal func calendarDidSelectDay(_ date: Date) {
-		handleDaySelection(date: date)
+	internal func calendarDidSelectDay(_ date: Date, sourceView: UIView) {
+		handleDaySelection(date: date, sourceView: sourceView)
 	}
 	
-	internal func handleDaySelection(date selectedDate: Date) {
+	internal func handleDaySelection(date selectedDate: Date, sourceView: UIView) {
 		
 		let calendar = displayedCalendar
         let selectedDay = calendar.startOfDay(for: selectedDate)
@@ -122,10 +143,10 @@ public class RU_Bookings_Calendar_ViewController: RU_ViewController {
 			return selectedDay >= start && selectedDay <= end
 		}) ?? []
         
-        presentDaySelectionAlert(for: selectedDay, bookings: bookingsForDay)
+        presentDaySelectionAlert(for: selectedDay, bookings: bookingsForDay, sourceView: sourceView)
 	}
     
-    private func presentDaySelectionAlert(for selectedDay: Date, bookings bookingsForDay: [RU_Booking]) {
+    private func presentDaySelectionAlert(for selectedDay: Date, bookings bookingsForDay: [RU_Booking], sourceView: UIView) {
         
         let dayFormatter = DateFormatter()
         dayFormatter.locale = Locale(identifier: "fr_FR")
@@ -178,7 +199,14 @@ public class RU_Bookings_Calendar_ViewController: RU_ViewController {
         createButton.image = UIImage(systemName: "plus")
         
         alert.addCancelButton()
-        alert.present(as: .Sheet)
+        
+        let usePopover = traitCollection.isRegularWidth
+        if usePopover {
+            alert.popoverSourceView = sourceView
+            alert.present(as: .Popover)
+        } else {
+            alert.present(as: .Sheet)
+        }
     }
 	
 	internal func scrollToMonthContaining(_ date: Date, animated: Bool = false) {
@@ -414,6 +442,18 @@ public class RU_Bookings_Calendar_ViewController: RU_ViewController {
         private var loadedEndMonth: Date?
         private var nextRowItemID = 0
         private var isLoadingForwardMonths = false
+        private var lastLaidOutBoundsWidth: CGFloat = -1
+        private var lastContentWidth: CGFloat = -1
+        private var lastSafeAreaSignature = ""
+        private var lastAppliedInsets = UIEdgeInsets.zero
+        
+        private var isInSidebarLayout: Bool {
+            owner.splitViewController != nil && owner.traitCollection.isRegularWidth
+        }
+        
+        private func layoutWidthWithinSafeArea() -> CGFloat {
+            max(0, bounds.width - safeAreaInsets.left - safeAreaInsets.right)
+        }
         
         init(owner: RU_Bookings_Calendar_ViewController) {
             self.owner = owner
@@ -498,7 +538,24 @@ public class RU_Bookings_Calendar_ViewController: RU_ViewController {
         }
         
         override func layoutSubviews() {
+            let safe = safeAreaInsets
+            let safeAreaSignature = "\(bounds.width)|\(safe.left)|\(safe.right)"
+            let boundsWidthChanged = abs(bounds.width - lastLaidOutBoundsWidth) > 0.5
+            let safeAreaChanged = safeAreaSignature != lastSafeAreaSignature
+            
+            if boundsWidthChanged {
+                lastLaidOutBoundsWidth = bounds.width
+            }
+            if safeAreaChanged {
+                lastSafeAreaSignature = safeAreaSignature
+            }
+            
             super.layoutSubviews()
+            
+            if boundsWidthChanged || safeAreaChanged {
+                updateHorizontalInsets()
+            }
+            
             rangeLayerSecondary.frame = rangeOverlay.bounds
             
             if let target = pendingScrollMonth {
@@ -536,8 +593,8 @@ public class RU_Bookings_Calendar_ViewController: RU_ViewController {
                 let cal = owner.displayedCalendar
                 let today = cal.startOfDay(for: Date())
                 let secondary = owner.normalizedSecondaryRanges(owner.secondaryHighlightRanges)
-                cell.onDaySelected = { [weak owner] date in
-                    owner?.calendarDidSelectDay(date)
+                cell.onDaySelected = { [weak owner] date, sourceView in
+                    owner?.calendarDidSelectDay(date, sourceView: sourceView)
                 }
                 cell.configure(
                     days: days,
@@ -824,7 +881,47 @@ public class RU_Bookings_Calendar_ViewController: RU_ViewController {
         }
         
         private func contentWidth() -> CGFloat {
-            bounds.width - UI.Margins * 2
+            let margins = UI.adaptiveMargins(for: owner.traitCollection)
+            let available = max(0, layoutWidthWithinSafeArea() - margins * 2)
+            if isInSidebarLayout {
+                return available
+            }
+            if owner.traitCollection.isRegularWidth {
+                return min(available, UI.CalendarMaxWidth)
+            }
+            return available
+        }
+        
+        private func updateHorizontalInsets() {
+            guard let layout = collectionViewLayout as? UICollectionViewFlowLayout else { return }
+            let margins = UI.adaptiveMargins(for: owner.traitCollection)
+            let width = contentWidth()
+            let usableWidth = layoutWidthWithinSafeArea()
+            
+            let centering: CGFloat
+            if isInSidebarLayout {
+                centering = 0
+            } else if owner.traitCollection.isRegularWidth {
+                centering = max(0, (usableWidth - width) / 2)
+            } else {
+                centering = 0
+            }
+            
+            let leftInset = safeAreaInsets.left + margins + centering
+            let rightInset = safeAreaInsets.right + margins + centering
+            let newInsets = UIEdgeInsets(top: 0, left: leftInset, bottom: 0, right: rightInset)
+            
+            let insetsChanged = lastAppliedInsets.left != newInsets.left
+                || lastAppliedInsets.right != newInsets.right
+            let widthChanged = abs(width - lastContentWidth) > 0.5
+            
+            guard insetsChanged || widthChanged else { return }
+            
+            lastAppliedInsets = newInsets
+            lastContentWidth = width
+            layout.sectionInset = newInsets
+            layout.invalidateLayout()
+            rebuildRangePaths()
         }
         
         private func syncVisibleDayViewRegistry() {
@@ -984,7 +1081,7 @@ private final class BookingCalendarWeekRowCell: UICollectionViewCell {
     private var slotViews: [UIView] = []
     private var dayViews: [BookingDayView] = []
     private var dayDates: [Date?] = Array(repeating: nil, count: 7)
-    var onDaySelected: ((Date) -> Void)?
+    var onDaySelected: ((Date, UIView) -> Void)?
     
     override init(frame: CGRect) {
         super.init(frame: frame)
@@ -1055,7 +1152,7 @@ private final class BookingCalendarWeekRowCell: UICollectionViewCell {
     @objc private func handleDayTap(_ gesture: UITapGestureRecognizer) {
         guard let view = gesture.view, view.tag >= 0, view.tag < dayDates.count,
               let date = dayDates[view.tag] else { return }
-        onDaySelected?(date)
+        onDaySelected?(date, view)
     }
 }
 

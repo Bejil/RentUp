@@ -85,11 +85,11 @@ public class RU_Bookings_Edit_Calendar_ViewController: RU_Bookings_Calendar_View
         }
     }
 
-    internal override func calendarDidSelectDay(_ date: Date) {
-        handleDaySelection(date: date)
+    internal override func calendarDidSelectDay(_ date: Date, sourceView: UIView) {
+        handleDaySelection(date: date, sourceView: sourceView)
     }
     
-    internal override func handleDaySelection(date tappedDate: Date) {
+    internal override func handleDaySelection(date tappedDate: Date, sourceView: UIView) {
         let tappedDay = normalizedCalendarDay(tappedDate)
 
         if let start = selectedStartDate {

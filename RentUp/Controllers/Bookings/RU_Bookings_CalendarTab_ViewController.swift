@@ -26,7 +26,7 @@ public class RU_Bookings_CalendarTab_ViewController: RU_Bookings_Calendar_ViewCo
         
         navigationItem.rightBarButtonItem = .init(title: String(key: "bookings.calendar.list.button"), primaryAction: .init(handler: { _ in
             
-            UI.MainController.present(RU_NavigationController(rootViewController: RU_Bookings_List_ViewController()), animated: true)
+            UI.MainController.presentAdaptive(RU_NavigationController(rootViewController: RU_Bookings_List_ViewController()), animated: true)
         }))
 		
 		skipsInitialLayoutWithoutBookings = true
@@ -65,7 +65,8 @@ public class RU_Bookings_CalendarTab_ViewController: RU_Bookings_Calendar_ViewCo
 		super.viewDidLayoutSubviews()
 		
 		let bottomInset = createButton.bounds.height + 2 * UI.Margins
-		if let collectionView = view as? UICollectionView {
+		if let collectionView = view as? UICollectionView,
+		   abs(collectionView.contentInset.bottom - bottomInset) > 0.5 {
 			collectionView.contentInset.bottom = bottomInset
 			collectionView.verticalScrollIndicatorInsets.bottom = bottomInset
 		}

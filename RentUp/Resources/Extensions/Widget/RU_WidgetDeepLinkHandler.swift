@@ -26,7 +26,8 @@ enum RU_WidgetDeepLinkHandler {
 	}
 	
 	private static var canNavigateImmediately: Bool {
-		keyWindow?.rootViewController is RU_TabBarController
+		let root = keyWindow?.rootViewController
+		return root is RU_AdaptiveRootViewController || root is RU_TabBarController
 	}
 	
 	private static func openBookingDetail(bookingID: String) {
@@ -49,7 +50,23 @@ enum RU_WidgetDeepLinkHandler {
 	}
 	
 	private static func navigateToBooking(_ booking: RU_Booking) {
-		guard let tabBar = keyWindow?.rootViewController as? RU_TabBarController else {
+		guard let root = keyWindow?.rootViewController else {
+			pendingBookingID = widgetBookingID(for: booking)
+			return
+		}
+		
+		if let adaptiveRoot = root as? RU_AdaptiveRootViewController {
+			adaptiveRoot.selectSection(.Bookings) { navigationController in
+				navigationController.dismiss(animated: false)
+				navigationController.popToRootViewController(animated: false)
+				let detailViewController = RU_Bookings_Detail_ViewController()
+				detailViewController.booking = booking
+				navigationController.pushViewController(detailViewController, animated: true)
+			}
+			return
+		}
+		
+		guard let tabBar = root as? RU_TabBarController else {
 			pendingBookingID = widgetBookingID(for: booking)
 			return
 		}
