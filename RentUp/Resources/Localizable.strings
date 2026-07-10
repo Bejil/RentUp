@@ -326,6 +326,8 @@
 "bookings.details.price.travelerTotal" = "TOTAL";
 "bookings.details.price.hostFees" = "Frais déduits";
 "bookings.details.price.hostTotal" = "TOTAL";
+"bookings.details.approve.button" = "Marquer comme confirmée";
+"bookings.details.cancel.button" = "Marquer comme annulée";
 
 //MARK: - Settings
 "settings.title" = "Vos réglages";

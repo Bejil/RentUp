@@ -155,6 +155,11 @@ public class RU_Bookings_Detail_ViewController : RU_ViewController {
 				travelerSectionTitleStackView.isHidden = true
 				hostSectionTitleStackView.isHidden = true
 			}
+            
+            let isCancelled = booking?.isCancelled ?? false
+            cancelButton.title = String(key: isCancelled ? "bookings.details.approve.button" : "bookings.details.cancel.button")
+            cancelButton.type = isCancelled ? .primary : .delete
+            cancelButton.image = UIImage(systemName: isCancelled ? "checkmark" : "xmark")
 		}
 	}
 	private lazy var childrenSectionRowStackView:RU_Section_Row_StackView = createRow(icon: "figure.child", title: String(key: "bookings.create.travelers.children"), view: childrenValueLabel)
@@ -260,6 +265,28 @@ public class RU_Bookings_Detail_ViewController : RU_ViewController {
     private lazy var hostCostsCompensationSectionRowStackView:RU_Section_Row_StackView = createRow(icon: "hand.wave", title: String(key: "bookings.details.price.costs.compensation"), view: hostCostsCompensationValueLabel)
     private lazy var hostCostsCompensationValueLabel:RU_Label = .init()
 	private lazy var hostTotalValueLabel:RU_Label = .init()
+    private lazy var cancelButton:RU_Button = .init() { [weak self] _ in
+        
+        self?.booking?.isCancelled = !(self?.booking?.isCancelled ?? true)
+        
+        RU_Alert_ViewController.presentLoading { [weak self] alertController in
+            
+            self?.booking?.save { [weak self] error in
+                
+                alertController?.close { [weak self] in
+                    
+                    if let error {
+                        
+                        RU_Alert_ViewController.present(error)
+                    }
+                    else {
+                        
+                        self?.booking = self?.booking
+                    }
+                }
+            }
+        }
+    }
 	
 	public override func loadView() {
 		
@@ -315,6 +342,7 @@ public class RU_Bookings_Detail_ViewController : RU_ViewController {
 		
 		contentStackView.addArrangedSubview(configurationSectionStackView)
 		contentStackView.addArrangedSubview(pricesStackView)
+        contentStackView.addArrangedSubview(cancelButton)
         
         NotificationCenter.add(.updateBookings) { [weak self] _ in
             
