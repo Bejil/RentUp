@@ -267,23 +267,14 @@ public class RU_Bookings_Detail_ViewController : RU_ViewController {
 	private lazy var hostTotalValueLabel:RU_Label = .init()
     private lazy var cancelButton:RU_Button = .init() { [weak self] _ in
         
-        self?.booking?.isCancelled = !(self?.booking?.isCancelled ?? true)
+        guard let self, let booking = self.booking else { return }
         
-        RU_Alert_ViewController.presentLoading { [weak self] alertController in
+        RU_Booking.handleCancellationToggle(for: booking, markingAsCancelled: !booking.isCancelled) { [weak self] error in
             
-            self?.booking?.save { [weak self] error in
-                
-                alertController?.close { [weak self] in
-                    
-                    if let error {
-                        
-                        RU_Alert_ViewController.present(error)
-                    }
-                    else {
-                        
-                        self?.booking = self?.booking
-                    }
-                }
+            if let error {
+                RU_Alert_ViewController.present(error)
+            } else {
+                self?.booking = booking
             }
         }
     }

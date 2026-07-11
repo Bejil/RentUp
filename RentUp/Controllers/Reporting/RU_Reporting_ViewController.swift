@@ -54,7 +54,7 @@ public class RU_Reporting_ViewController : RU_ViewController {
                 generalDistributionView.update(bookings: listForDistribution)
             }
 
-            let listForFees = filteredBookings?.filter { $0.status != .cancelled } ?? []
+            let listForFees = RU_Reporting_Detail_ViewController.ReportingMonthMetrics.eligibleBookings(filteredBookings ?? [])
             let hasAnyClassifiedWithFees = listForFees.contains(where: { ($0.classified?.fees ?? 0) > 0 })
             profitabilityTipView.isHidden = hasAnyClassifiedWithFees
             profitabilityPreviousMonthRow.isHidden = !hasAnyClassifiedWithFees
@@ -62,7 +62,8 @@ public class RU_Reporting_ViewController : RU_ViewController {
             profitabilityTotalRow.isHidden = !hasAnyClassifiedWithFees
             profitabilityButton.isHidden = !hasAnyClassifiedWithFees
             
-            guard let list = filteredBookings?.filter({ $0.status != .cancelled }), !list.isEmpty else { return }
+            let list = RU_Reporting_Detail_ViewController.ReportingMonthMetrics.eligibleBookings(filteredBookings ?? [])
+            guard !list.isEmpty else { return }
             
             let listCopy = list
             DispatchQueue.global(qos: .userInitiated).async { [weak self] in
@@ -379,10 +380,10 @@ public class RU_Reporting_ViewController : RU_ViewController {
     }
     
     private func distributionBookings(from bookings: [RU_Booking]) -> [RU_Booking] {
-        bookings.filter { booking in
-            if activeFilters.status == nil && booking.status == .cancelled { return false }
-            return true
+        if activeFilters.status == nil {
+            return RU_Reporting_Detail_ViewController.ReportingMonthMetrics.eligibleBookings(bookings)
         }
+        return bookings
     }
     
     private func updateFilterNavigationItem() {

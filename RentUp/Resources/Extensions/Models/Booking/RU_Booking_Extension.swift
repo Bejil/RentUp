@@ -164,6 +164,56 @@ extension RU_Booking {
     }
 }
 
+// MARK: - Cancellation
+
+extension RU_Booking {
+	
+	public var travelerGrossAmount: Double {
+		platform?.calculatePrice(for: self)?.travelerTotal ?? 0
+	}
+	
+	public static func handleCancellationToggle(
+		for booking: RU_Booking,
+		markingAsCancelled: Bool,
+		completion: @escaping (Error?) -> Void
+	) {
+		if markingAsCancelled {
+			let alert = RU_Booking_Cancel_Alert_ViewController(booking: booking)
+			alert.completion = completion
+			alert.present()
+		} else {
+			RU_Alert_ViewController.presentLoading { alertController in
+				booking.applyConfirmedStatus { error in
+					alertController?.close {
+						completion(error)
+					}
+				}
+			}
+		}
+	}
+	
+	public func applyCancelledStatus(compensation: Double, completion: @escaping (Error?) -> Void) {
+		isCancelled = true
+		costs.compensation = compensation
+		saveAndNotify(completion: completion)
+	}
+	
+	public func applyConfirmedStatus(completion: @escaping (Error?) -> Void) {
+		isCancelled = false
+		costs.compensation = 0
+		saveAndNotify(completion: completion)
+	}
+	
+	private func saveAndNotify(completion: @escaping (Error?) -> Void) {
+		save { error in
+			if error == nil {
+				NotificationCenter.post(.updateBookings)
+			}
+			completion(error)
+		}
+	}
+}
+
 extension [RU_Booking] {
     
     public var current:RU_Booking? {

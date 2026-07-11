@@ -354,7 +354,12 @@ extension RU_Reporting_Detail_ViewController {
         }
         
         static func eligibleBookings(_ bookings: [RU_Booking]) -> [RU_Booking] {
-            bookings.filter { !$0.isCancelled && $0.status != .cancelled }
+            bookings.filter { booking in
+                guard booking.isCancelled || booking.status == .cancelled else {
+                    return true
+                }
+                return (booking.costs.compensation ?? 0) > 0
+            }
         }
         
         struct MainKPIs {

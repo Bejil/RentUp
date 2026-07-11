@@ -297,6 +297,13 @@
 "bookings.delete.alert.title" = "Attention";
 "bookings.delete.alert.content" = "Voulez-vous vraiment supprimer cette(ces) réservation(s) ?";
 "bookings.delete.alert.button" = "Supprimer";
+"bookings.cancel.alert.title" = "Annuler la réservation";
+"bookings.cancel.alert.content" = "Voulez-vous marquer cette réservation comme annulée ?";
+"bookings.cancel.alert.feesSwitch" = "Frais d'annulation (remboursement partiel au voyageur)";
+"bookings.cancel.alert.grossAmountFormat" = "Montant brut payé par le voyageur : %.2f €";
+"bookings.cancel.alert.percentageFormat" = "%.0f %% soit %.2f € remboursés";
+"bookings.cancel.alert.amountPlaceholder" = "Montant remboursé";
+"bookings.cancel.alert.confirm" = "Confirmer l'annulation";
 //Details
 "bookings.details.edit.button" = "Modifier";
 "bookings.details.title" = "Détails de la réservation";
