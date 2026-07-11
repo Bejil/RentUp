@@ -14,9 +14,7 @@ public class RU_Reporting_Detail_ViewController : RU_ViewController {
     var bookings:[RU_Booking]? {
         
         didSet {
-            
-            let sortedBookings = bookings?.sorted { $0.dates.start > $1.dates.start }
-            filteredBookings = sortedBookings
+            applyFilters()
         }
     }
     public var filteredBookings:[RU_Booking]? {
@@ -40,12 +38,30 @@ public class RU_Reporting_Detail_ViewController : RU_ViewController {
     public var reportingCellOccupancySummaries: [String]?
     /// Texte secondaire : total net hôte proratisé (passé du mois · mois complet).
     public var reportingCellNetSummaries: [String]?
-    private var currentFilterName:String? {
-        
-        didSet {
-            
-            updateFilterNavigationItem()
+    
+    private struct ActiveFilters {
+        var platform: RU_Platform?
+        var classified: RU_Classified?
+        var period: RU_Reporting_MetricsPeriod = .default
+    }
+    private var activeFilters = ActiveFilters()
+    
+    var metricsPeriod: RU_Reporting_MetricsPeriod {
+        activeFilters.period
+    }
+    
+    private var activeFiltersTitle: String? {
+        var parts: [String] = []
+        if activeFilters.period != .default {
+            parts.append(activeFilters.period.title)
         }
+        if let platform = activeFilters.platform, let name = platform.type?.name {
+            parts.append(name)
+        }
+        if let classified = activeFilters.classified, let name = classified.name {
+            parts.append(name)
+        }
+        return parts.isEmpty ? nil : parts.joined(separator: " + ")
     }
     public lazy var tableView:RU_TableView = {
         
@@ -137,15 +153,83 @@ public class RU_Reporting_Detail_ViewController : RU_ViewController {
         chartScrollView.contentSize = CGSize(width: contentWidth, height: chartScrollView.bounds.height)
     }
     
+    private func applyFilters() {
+        var base = bookings ?? []
+        
+        if let platform = activeFilters.platform {
+            base = base.filter { $0.platform == platform }
+        }
+        if let classified = activeFilters.classified {
+            base = base.filter { $0.classified == classified }
+        }
+        
+        filteredBookings = base.sorted { $0.dates.start > $1.dates.start }
+        updateFilterNavigationItem()
+    }
+    
+    private func setMetricsPeriod(_ period: RU_Reporting_MetricsPeriod) {
+        activeFilters.period = period
+        updateFilterNavigationItem()
+        updateUI()
+    }
+    
+    private func presentCustomMetricsPeriodCalendar() {
+        let calendar = Calendar.current
+        let now = Date()
+        let currentMonthStart = calendar.date(from: calendar.dateComponents([.year, .month], from: now)) ?? now
+        let defaultFrom = calendar.date(byAdding: .month, value: -6, to: currentMonthStart) ?? currentMonthStart
+        let currentPeriod = activeFilters.period
+        
+        let initialFrom: Date
+        let initialTo: Date
+        if case .custom(let from, let to) = currentPeriod {
+            initialFrom = from
+            initialTo = to
+        } else {
+            initialFrom = defaultFrom
+            initialTo = now
+        }
+        
+        let calendarViewController = RU_Reporting_Period_Calendar_ViewController(from: initialFrom, to: initialTo)
+        calendarViewController.bookings = bookings ?? []
+        calendarViewController.didSelectRange = { [weak self] from, to in
+            self?.setMetricsPeriod(.custom(from: from, to: to))
+        }
+        UI.MainController.present(RU_NavigationController(rootViewController: calendarViewController), animated: true)
+    }
+    
+    private func makeMetricsPeriodMenu() -> UIMenu {
+        let currentPeriod = activeFilters.period
+        var children: [UIMenuElement] = RU_Reporting_MetricsPeriod.presets.map { preset in
+            UIAction(
+                title: preset.title,
+                state: currentPeriod.matchesPreset(preset) ? .on : .off
+            ) { [weak self] _ in
+                self?.setMetricsPeriod(preset)
+            }
+        }
+        children.append(
+            UIAction(
+                title: String(key: "reporting.period.custom"),
+                image: UIImage(systemName: "calendar.badge.clock"),
+                state: currentPeriod.isCustom ? .on : .off
+            ) { [weak self] _ in
+                self?.presentCustomMetricsPeriodCalendar()
+            }
+        )
+        return UIMenu(title: String(key: "reporting.period.menu"), children: children)
+    }
+    
     private func updateFilterNavigationItem() {
         
         var children:[UIMenuElement] = .init()
         
         children.append(UIAction(title: String(key: "reporting.filter.reset"), image: UIImage(systemName: "arrow.counterclockwise"), attributes: .destructive, handler: { [weak self] _ in
-            
-            self?.currentFilterName = nil
-            self?.filteredBookings = self?.bookings
+            self?.activeFilters = ActiveFilters()
+            self?.applyFilters()
         }))
+        
+        children.append(makeMetricsPeriodMenu())
         
         if let platforms = RU_Platform.all, !platforms.isEmpty {
             
@@ -153,10 +237,10 @@ public class RU_Reporting_Detail_ViewController : RU_ViewController {
                 
                 if let name = platform.type?.name {
                     
-                    return UIAction(title: name, handler: { [weak self] _ in
-                        
-                        self?.currentFilterName = name
-                        self?.filteredBookings = self?.bookings?.filter({ $0.platform == platform })
+                    return UIAction(title: name, state: self.activeFilters.platform == platform ? .on : .off, handler: { [weak self] _ in
+                        guard let self else { return }
+                        self.activeFilters.platform = (self.activeFilters.platform == platform) ? nil : platform
+                        self.applyFilters()
                     })
                 }
                 
@@ -166,16 +250,18 @@ public class RU_Reporting_Detail_ViewController : RU_ViewController {
         
         RU_Classified.getAll { [weak self] error, classifieds in
             
+            guard let self else { return }
+            
             if let classifieds, !classifieds.isEmpty {
                 
                 children.append(UIMenu(title: String(key: "reporting.filter.classified"), children: classifieds.compactMap({ classified in
                     
                     if let name = classified.name {
                         
-                        return UIAction(title: name, handler: { [weak self] _ in
-                            
-                            self?.currentFilterName = name
-                            self?.filteredBookings = self?.bookings?.filter({ $0.classified == classified })
+                        return UIAction(title: name, state: self.activeFilters.classified == classified ? .on : .off, handler: { [weak self] _ in
+                            guard let self else { return }
+                            self.activeFilters.classified = (self.activeFilters.classified == classified) ? nil : classified
+                            self.applyFilters()
                         })
                     }
                     
@@ -186,14 +272,14 @@ public class RU_Reporting_Detail_ViewController : RU_ViewController {
             if !children.isEmpty {
                 
                 let buttonTitle:String
-                if let filterName = self?.currentFilterName {
-                    buttonTitle = String(key: "reporting.filter.active") + filterName
+                if let title = self.activeFiltersTitle {
+                    buttonTitle = String(key: "reporting.filter.active") + title
                 }
                 else {
                     buttonTitle = String(key: "reporting.filter.button")
                 }
                 
-                self?.navigationItem.rightBarButtonItem = .init(title: buttonTitle, menu: .init(title: String(key: "reporting.filter.menu.title"), children: children))
+                self.navigationItem.rightBarButtonItem = .init(title: buttonTitle, menu: .init(title: String(key: "reporting.filter.menu.title"), children: children))
             }
         }
     }
@@ -221,7 +307,7 @@ public class RU_Reporting_Detail_ViewController : RU_ViewController {
             }
             else {
                 
-                self?.bookings = bookings
+                self?.bookings = ReportingMonthMetrics.eligibleBookings(bookings ?? [])
             }
         }
     }

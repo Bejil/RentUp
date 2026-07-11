@@ -6,12 +6,14 @@
 //
 
 import UIKit
+import BackgroundTasks
 
 @main
 public class AppDelegate: UIResponder, UIApplicationDelegate {
 
 	public func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
-		// Override point for customization after application launch.
+		RU_WidgetBackgroundRefresh.register()
+		RU_WidgetBackgroundRefresh.schedule()
 		return true
 	}
 

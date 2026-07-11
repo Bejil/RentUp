@@ -28,20 +28,21 @@ public class RU_Reporting_Detail_Profitability_ViewController: RU_Reporting_Deta
         guard !list.isEmpty else { return }
         
         let pastBookings = list.filter { $0.dates.end < now }
-        let firstStart = list.map(\.dates.start).min() ?? now
-        let lastEnd = list.map(\.dates.end).max() ?? now
-        let firstMonthStart = calendar.date(from: calendar.dateComponents([.year, .month], from: firstStart)) ?? firstStart
-        let lastMonthStart = calendar.date(from: calendar.dateComponents([.year, .month], from: lastEnd)) ?? lastEnd
+        let earliestStart = list.map(\.dates.start).min()
+        let monthRange = metricsPeriod.monthRange(
+            calendar: calendar,
+            now: now,
+            earliestBookingStart: earliestStart
+        )
         let currentMonthStart = calendar.date(from: calendar.dateComponents([.year, .month], from: now)) ?? now
-        let endMonthStart = max(lastMonthStart, currentMonthStart)
-        var monthStart = firstMonthStart
+        var monthStart = monthRange.firstMonthStart
         monthes = []
         actualValues = []
         forecastValues = []
         var occupancySummaries: [String] = []
         var netSummaries: [String] = []
         
-        while monthStart <= endMonthStart {
+        while monthStart <= monthRange.lastMonthStart {
             monthes?.append(monthStart)
             let daysInMonth = RU_Reporting_Detail_ViewController.ReportingMonthMetrics.daysInMonth(monthStart: monthStart, calendar: calendar)
             
