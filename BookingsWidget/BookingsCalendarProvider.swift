@@ -33,10 +33,25 @@ struct BookingsCalendarProvider: AppIntentTimelineProvider {
 	
 	func timeline(for configuration: BookingsWidgetConfigurationIntent, in context: Context) async -> Timeline<BookingsCalendarEntry> {
 		let now = Date()
-		let entry = makeEntry(for: now, snapshot: WidgetBookingsStore.load(), classified: configuration.classified)
-		let calendar = WidgetCalendarMonthBuilder.calendar
-		let nextRefresh = calendar.date(byAdding: .hour, value: 1, to: now) ?? now.addingTimeInterval(3600)
-		return Timeline(entries: [entry], policy: .after(nextRefresh))
+		let snapshot = WidgetBookingsStore.load()
+		let resolvedClassified = resolveClassified(configuration.classified)
+		let selectedClassifiedID = resolvedClassified?.id
+		let allBookings = snapshot?.bookings ?? []
+		let bookings = WidgetBookingsFilter.bookings(allBookings, for: selectedClassifiedID)
+		
+		var entryDates = [now]
+		entryDates.append(contentsOf: WidgetTimelineRefreshDates.upcoming(from: now, bookings: bookings))
+		
+		let entries = entryDates.map { date in
+			makeEntry(for: date, snapshot: snapshot, classified: configuration.classified)
+		}
+		
+		if entries.count > 1 {
+			return Timeline(entries: entries, policy: .atEnd)
+		}
+		
+		let nextRefresh = WidgetCalendarMonthBuilder.calendar.date(byAdding: .hour, value: 1, to: now) ?? now.addingTimeInterval(3600)
+		return Timeline(entries: entries, policy: .after(nextRefresh))
 	}
 	
 	private func makeEntry(

@@ -54,7 +54,7 @@ public class RU_Reporting_ViewController : RU_ViewController {
                 generalDistributionView.update(bookings: listForDistribution)
             }
 
-            let listForFees = filteredBookings?.filter { $0.status != .cancelled } ?? []
+            let listForFees = RU_Reporting_Detail_ViewController.ReportingMonthMetrics.eligibleBookings(filteredBookings ?? [])
             let hasAnyClassifiedWithFees = listForFees.contains(where: { ($0.classified?.fees ?? 0) > 0 })
             profitabilityTipView.isHidden = hasAnyClassifiedWithFees
             profitabilityPreviousMonthRow.isHidden = !hasAnyClassifiedWithFees
@@ -62,27 +62,153 @@ public class RU_Reporting_ViewController : RU_ViewController {
             profitabilityTotalRow.isHidden = !hasAnyClassifiedWithFees
             profitabilityButton.isHidden = !hasAnyClassifiedWithFees
             
-            guard let list = filteredBookings?.filter({ $0.status != .cancelled }), !list.isEmpty else { return }
+            let list = RU_Reporting_Detail_ViewController.ReportingMonthMetrics.eligibleBookings(filteredBookings ?? [])
+            guard !list.isEmpty else { return }
             
-            let listCopy = list
-            DispatchQueue.global(qos: .userInitiated).async { [weak self] in
-                guard let self else { return }
-                let calendar = Calendar.current
-                let now = Date()
-                let currentMonthStart = calendar.date(from: calendar.dateComponents([.year, .month], from: now)) ?? now
-                let currentMonthRange = calendar.range(of: .day, in: .month, for: now)
-                let currentMonthDays = currentMonthRange?.count ?? 30
-                let currentMonthEnd = calendar.date(byAdding: .day, value: currentMonthDays, to: currentMonthStart) ?? now
-                let previousMonthStart = calendar.date(byAdding: .month, value: -1, to: currentMonthStart) ?? currentMonthStart
-                let previousMonthRange = calendar.range(of: .day, in: .month, for: previousMonthStart)
-                let previousMonthDays = previousMonthRange?.count ?? 30
-                let previousMonthEnd = calendar.date(byAdding: .day, value: previousMonthDays, to: previousMonthStart) ?? previousMonthStart
-                let pastBookings = listCopy.filter { $0.dates.end < now }
-                let rawFirst = pastBookings.map(\.dates.start).min() ?? currentMonthStart
-                let maxStart = calendar.date(byAdding: .month, value: -60, to: currentMonthEnd) ?? rawFirst
-                let firstPastStart = rawFirst < maxStart ? maxStart : rawFirst
-                let periodEnd = currentMonthEnd
-                let totalPeriodDays = max(1, calendar.dateComponents([.day], from: firstPastStart, to: periodEnd).day ?? 1)
+            refreshOccupationAndProfitabilityMetrics(bookings: list)
+        }
+    }
+    private enum MetricsPeriodTarget {
+        case occupation
+        case profitability
+    }
+    
+    private var occupationMetricsPeriod: RU_Reporting_MetricsPeriod = .default
+    private var profitabilityMetricsPeriod: RU_Reporting_MetricsPeriod = .default
+    private lazy var occupationPeriodButton: RU_Button = makeMetricsPeriodButton(for: .occupation)
+    private lazy var profitabilityPeriodButton: RU_Button = makeMetricsPeriodButton(for: .profitability)
+    private lazy var occupationSectionStackView: RU_Section_StackView = .init()
+    private lazy var profitabilitySectionStackView: RU_Section_StackView = .init()
+    
+    private func makeMetricsPeriodButton(for target: MetricsPeriodTarget) -> RU_Button {
+        let button = RU_Button { _ in }
+        button.titleFont = Fonts.Content.Button.Title.withSize(Fonts.Size)
+        button.image = UIImage(systemName: "arrowtriangle.down.square")?.applyingSymbolConfiguration(.init(scale: .small))
+        button.configuration?.imagePadding = UI.Margins / 2
+        button.configuration?.imagePlacement = .trailing
+        button.showsMenuAsPrimaryAction = true
+        button.menu = makeMetricsPeriodMenu(for: target)
+        button.snp.makeConstraints { make in
+            make.height.equalTo(4 * UI.Margins)
+        }
+        return button
+    }
+    
+    private func metricsPeriod(for target: MetricsPeriodTarget) -> RU_Reporting_MetricsPeriod {
+        switch target {
+        case .occupation: return occupationMetricsPeriod
+        case .profitability: return profitabilityMetricsPeriod
+        }
+    }
+    
+    private func updateMetricsPeriodButtons() {
+        updateMetricsPeriodButton(occupationPeriodButton, for: .occupation)
+        updateMetricsPeriodButton(profitabilityPeriodButton, for: .profitability)
+    }
+    
+    private func updateMetricsPeriodButton(_ button: RU_Button, for target: MetricsPeriodTarget) {
+        button.title = metricsPeriod(for: target).title
+        button.configuration?.titleLineBreakMode = .byTruncatingTail
+        button.menu = makeMetricsPeriodMenu(for: target)
+    }
+    
+    private func makeMetricsPeriodMenu(for target: MetricsPeriodTarget) -> UIMenu {
+        let currentPeriod = metricsPeriod(for: target)
+        var children: [UIMenuElement] = RU_Reporting_MetricsPeriod.presets.map { preset in
+            UIAction(
+                title: preset.title,
+                state: currentPeriod.matchesPreset(preset) ? .on : .off
+            ) { [weak self] _ in
+                self?.setMetricsPeriod(preset, for: target)
+            }
+        }
+        children.append(
+            UIAction(
+                title: String(key: "reporting.period.custom"),
+                image: UIImage(systemName: "calendar.badge.clock"),
+                state: currentPeriod.isCustom ? .on : .off
+            ) { [weak self] _ in
+                self?.presentCustomMetricsPeriodAlert(for: target)
+            }
+        )
+        return UIMenu(title: String(key: "reporting.period.menu"), children: children)
+    }
+    
+    private func setMetricsPeriod(_ period: RU_Reporting_MetricsPeriod, for target: MetricsPeriodTarget) {
+        switch target {
+        case .occupation:
+            occupationMetricsPeriod = period
+        case .profitability:
+            profitabilityMetricsPeriod = period
+        }
+        updateMetricsPeriodButtons()
+        let list = RU_Reporting_Detail_ViewController.ReportingMonthMetrics.eligibleBookings(filteredBookings ?? [])
+        guard !list.isEmpty else { return }
+        refreshOccupationAndProfitabilityMetrics(bookings: list)
+    }
+    
+    private func presentCustomMetricsPeriodAlert(for target: MetricsPeriodTarget) {
+        let calendar = Calendar.current
+        let now = Date()
+        let currentMonthStart = calendar.date(from: calendar.dateComponents([.year, .month], from: now)) ?? now
+        let defaultFrom = calendar.date(byAdding: .month, value: -6, to: currentMonthStart) ?? currentMonthStart
+        let currentPeriod = metricsPeriod(for: target)
+        
+        let initialFrom: Date
+        let initialTo: Date
+        if case .custom(let from, let to) = currentPeriod {
+            initialFrom = from
+            initialTo = to
+        } else {
+            initialFrom = defaultFrom
+            initialTo = now
+        }
+        
+        RU_Booking.getAll { [weak self] error, bookings in
+            if let error {
+                RU_Alert_ViewController.present(error)
+                return
+            }
+            
+            let calendarViewController = RU_Reporting_Period_Calendar_ViewController(from: initialFrom, to: initialTo)
+            calendarViewController.bookings = RU_Reporting_Detail_ViewController.ReportingMonthMetrics.eligibleBookings(bookings ?? [])
+            calendarViewController.didSelectRange = { [weak self] from, to in
+                self?.setMetricsPeriod(.custom(from: from, to: to), for: target)
+            }
+            UI.MainController.present(RU_NavigationController(rootViewController: calendarViewController), animated: true)
+        }
+    }
+    
+    private func refreshOccupationAndProfitabilityMetrics(bookings listCopy: [RU_Booking]) {
+        DispatchQueue.global(qos: .userInitiated).async { [weak self] in
+            guard let self else { return }
+            let calendar = Calendar.current
+            let now = Date()
+            let currentMonthStart = calendar.date(from: calendar.dateComponents([.year, .month], from: now)) ?? now
+            let currentMonthRange = calendar.range(of: .day, in: .month, for: now)
+            let currentMonthDays = currentMonthRange?.count ?? 30
+            let currentMonthEnd = calendar.date(byAdding: .day, value: currentMonthDays, to: currentMonthStart) ?? now
+            let previousMonthStart = calendar.date(byAdding: .month, value: -1, to: currentMonthStart) ?? currentMonthStart
+            let previousMonthRange = calendar.range(of: .day, in: .month, for: previousMonthStart)
+            let previousMonthDays = previousMonthRange?.count ?? 30
+            let previousMonthEnd = calendar.date(byAdding: .day, value: previousMonthDays, to: previousMonthStart) ?? previousMonthStart
+            let pastBookings = listCopy.filter { $0.dates.end < now }
+            let earliestStart = pastBookings.map(\.dates.start).min()
+            let occupationBounds = self.occupationMetricsPeriod.bounds(
+                calendar: calendar,
+                now: now,
+                earliestBookingStart: earliestStart
+            )
+            let profitabilityBounds = self.profitabilityMetricsPeriod.bounds(
+                calendar: calendar,
+                now: now,
+                earliestBookingStart: earliestStart
+            )
+            let occupationPeriodStart = occupationBounds.start
+            let occupationPeriodEnd = occupationBounds.end
+            let occupationPeriodDays = max(1, calendar.dateComponents([.day], from: occupationPeriodStart, to: occupationPeriodEnd).day ?? 1)
+            let profitabilityPeriodStart = profitabilityBounds.start
+            let profitabilityPeriodEnd = profitabilityBounds.end
                 func nightsInMonth(_ b: RU_Booking, monthStart: Date, monthEnd: Date) -> Int {
                     let start = max(b.dates.start, monthStart), end = min(b.dates.end, monthEnd)
                     return max(0, calendar.dateComponents([.day], from: start, to: end).day ?? 0)
@@ -136,14 +262,14 @@ public class RU_Reporting_ViewController : RU_ViewController {
                 var previousMonthAllNights = 0
                 for b in previousMonthAllBookingsForOcc { previousMonthAllNights += nightsInMonth(b, monthStart: previousMonthStart, monthEnd: previousMonthEnd) }
                 let occPrevForecast = previousMonthDays > 0 ? Double(previousMonthAllNights) / Double(previousMonthDays) * 100 : 0
-                let totalPastBookingsForOcc = pastBookings.filter({ daysInPeriod($0, periodStart: firstPastStart, periodEnd: periodEnd) > 0 })
+                let totalPastBookingsForOcc = pastBookings.filter({ daysInPeriod($0, periodStart: occupationPeriodStart, periodEnd: occupationPeriodEnd) > 0 })
                 var totalPastNights = 0
-                for b in totalPastBookingsForOcc { totalPastNights += daysInPeriod(b, periodStart: firstPastStart, periodEnd: periodEnd) }
-                let occTotActual = Double(totalPastNights) / Double(totalPeriodDays) * 100
-                let totalAllBookingsForOcc = listCopy.filter({ daysInPeriod($0, periodStart: firstPastStart, periodEnd: periodEnd) > 0 })
+                for b in totalPastBookingsForOcc { totalPastNights += daysInPeriod(b, periodStart: occupationPeriodStart, periodEnd: occupationPeriodEnd) }
+                let occTotActual = Double(totalPastNights) / Double(occupationPeriodDays) * 100
+                let totalAllBookingsForOcc = listCopy.filter({ daysInPeriod($0, periodStart: occupationPeriodStart, periodEnd: occupationPeriodEnd) > 0 })
                 var totalAllNights = 0
-                for b in totalAllBookingsForOcc { totalAllNights += daysInPeriod(b, periodStart: firstPastStart, periodEnd: periodEnd) }
-                let occTotForecast = Double(totalAllNights) / Double(totalPeriodDays) * 100
+                for b in totalAllBookingsForOcc { totalAllNights += daysInPeriod(b, periodStart: occupationPeriodStart, periodEnd: occupationPeriodEnd) }
+                let occTotForecast = Double(totalAllNights) / Double(occupationPeriodDays) * 100
                 let currentMonthProfitability = RU_Reporting_Detail_ViewController.ReportingMonthMetrics.profitabilityPercentages(
                     monthStart: currentMonthStart,
                     bookings: listCopy,
@@ -161,32 +287,32 @@ public class RU_Reporting_ViewController : RU_ViewController {
                 )
                 let profPrevActual = previousMonthProfitability.actual
                 let profPrevForecast = previousMonthProfitability.forecast
-                let periodStart = firstPastStart
-                var periodStartMonth = calendar.date(from: calendar.dateComponents([.year, .month], from: periodStart)) ?? periodStart
+                let profitabilityPeriodStartMonth = calendar.date(from: calendar.dateComponents([.year, .month], from: profitabilityPeriodStart)) ?? profitabilityPeriodStart
+                var monthCursor = profitabilityPeriodStartMonth
                 var totalChargesActual: Double = 0
                 var totalChargesForecast: Double = 0
-                while periodStartMonth < periodEnd {
+                while monthCursor < profitabilityPeriodEnd {
                     autoreleasepool {
-                        let monthRange = calendar.range(of: .day, in: .month, for: periodStartMonth)
+                        let monthRange = calendar.range(of: .day, in: .month, for: monthCursor)
                         let daysInMonth = monthRange?.count ?? 30
-                        let monthEnd = calendar.date(byAdding: .day, value: daysInMonth, to: periodStartMonth) ?? periodStartMonth
-                        let monthPastBookings = pastBookings.filter({ nightsInMonth($0, monthStart: periodStartMonth, monthEnd: monthEnd) > 0 })
-                        let monthAllBookings = listCopy.filter({ nightsInMonth($0, monthStart: periodStartMonth, monthEnd: monthEnd) > 0 })
+                        let monthEnd = calendar.date(byAdding: .day, value: daysInMonth, to: monthCursor) ?? monthCursor
+                        let monthPastBookings = pastBookings.filter({ nightsInMonth($0, monthStart: monthCursor, monthEnd: monthEnd) > 0 })
+                        let monthAllBookings = listCopy.filter({ nightsInMonth($0, monthStart: monthCursor, monthEnd: monthEnd) > 0 })
                         totalChargesActual += uniqueClassifiedFees(for: monthPastBookings)
                         totalChargesForecast += uniqueClassifiedFees(for: monthAllBookings)
                     }
-                    periodStartMonth = calendar.date(byAdding: .month, value: 1, to: periodStartMonth) ?? periodStartMonth
+                    monthCursor = calendar.date(byAdding: .month, value: 1, to: monthCursor) ?? monthCursor
                 }
                 var totalPastRev: Double = 0
                 autoreleasepool {
-                    for b in pastBookings where daysInPeriod(b, periodStart: periodStart, periodEnd: periodEnd) > 0 {
-                        totalPastRev += proratedHostTotalInPeriod(b, periodStart: periodStart, periodEnd: periodEnd)
+                    for b in pastBookings where daysInPeriod(b, periodStart: profitabilityPeriodStart, periodEnd: profitabilityPeriodEnd) > 0 {
+                        totalPastRev += proratedHostTotalInPeriod(b, periodStart: profitabilityPeriodStart, periodEnd: profitabilityPeriodEnd)
                     }
                 }
                 var totalAllRev: Double = 0
                 autoreleasepool {
-                    for b in listCopy where daysInPeriod(b, periodStart: periodStart, periodEnd: periodEnd) > 0 {
-                        totalAllRev += proratedHostTotalInPeriod(b, periodStart: periodStart, periodEnd: periodEnd)
+                    for b in listCopy where daysInPeriod(b, periodStart: profitabilityPeriodStart, periodEnd: profitabilityPeriodEnd) > 0 {
+                        totalAllRev += proratedHostTotalInPeriod(b, periodStart: profitabilityPeriodStart, periodEnd: profitabilityPeriodEnd)
                     }
                 }
                 let profTotActual = totalChargesActual > 0 ? totalPastRev / totalChargesActual * 100 : (totalPastRev > 0 ? 100 : 0)
@@ -200,9 +326,9 @@ public class RU_Reporting_ViewController : RU_ViewController {
                     self.profitabilityPreviousMonthLabel.text = String(format: "%.0f%% (→ %.0f%%)", profPrevActual, profPrevForecast)
                     self.profitabilityTotalLabel.text = String(format: "%.0f%% (→ %.0f%%)", profTotActual, profTotForecast)
                 }
-            }
         }
     }
+    
     private struct ActiveFilters {
         var status: RU_Booking.Status?
         var platform: RU_Platform?
@@ -316,9 +442,10 @@ public class RU_Reporting_ViewController : RU_ViewController {
         contentStackView.addArrangedSubview(generalKPIView)
         contentStackView.addArrangedSubview(generalDistributionView)
         
-        let occupationSectionStackView:RU_Section_StackView = .init()
+        let occupationSectionStackView = self.occupationSectionStackView
         occupationSectionStackView.title = String(key: "reporting.section.occupancy")
         occupationSectionStackView.subtitle = String(key: "reporting.section.occupancy.subtitle")
+        occupationSectionStackView.accessoryView = occupationPeriodButton
         occupationSectionStackView.addArrangedSubview(createRow(icon: "calendar.badge.clock", title: String(key: "reporting.occupancy.previousMonth"), view: occupationPreviousMonthLabel))
         occupationSectionStackView.addArrangedSubview(createRow(icon: "calendar", title: String(key: "reporting.occupancy.currentMonth"), view: occupationCurrentMonthLabel))
         occupationSectionStackView.addArrangedSubview(createRow(icon: "equal.circle.fill", title: String(key: "reporting.occupancy.total"), view: occupationTotalLabel, isHighlighted: true))
@@ -334,15 +461,18 @@ public class RU_Reporting_ViewController : RU_ViewController {
         occupationSectionStackView.addArrangedSubview(occupationSectionButton)
         contentStackView.addArrangedSubview(occupationSectionStackView)
         
-        let profitabilitySectionStackView:RU_Section_StackView = .init()
+        let profitabilitySectionStackView = self.profitabilitySectionStackView
         profitabilitySectionStackView.title = String(key: "reporting.section.profitability")
         profitabilitySectionStackView.subtitle = String(key: "reporting.section.profitability.subtitle")
+        profitabilitySectionStackView.accessoryView = profitabilityPeriodButton
         profitabilitySectionStackView.addArrangedSubview(profitabilityTipView)
         profitabilitySectionStackView.addArrangedSubview(profitabilityPreviousMonthRow)
         profitabilitySectionStackView.addArrangedSubview(profitabilityCurrentMonthRow)
         profitabilitySectionStackView.addArrangedSubview(profitabilityTotalRow)
         profitabilitySectionStackView.addArrangedSubview(profitabilityButton)
         contentStackView.addArrangedSubview(profitabilitySectionStackView)
+        
+        updateMetricsPeriodButtons()
         
         NotificationCenter.add(.updateBookings) { [weak self] _ in
             
@@ -379,10 +509,10 @@ public class RU_Reporting_ViewController : RU_ViewController {
     }
     
     private func distributionBookings(from bookings: [RU_Booking]) -> [RU_Booking] {
-        bookings.filter { booking in
-            if activeFilters.status == nil && booking.status == .cancelled { return false }
-            return true
+        if activeFilters.status == nil {
+            return RU_Reporting_Detail_ViewController.ReportingMonthMetrics.eligibleBookings(bookings)
         }
+        return bookings
     }
     
     private func updateFilterNavigationItem() {

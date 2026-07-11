@@ -453,23 +453,14 @@ extension RU_Bookings_List_ViewController: UITableViewDelegate, UITableViewDataS
         }
         cell.cancelHandler = { [weak self] booking, state in
             
-            booking?.isCancelled = state
+            guard let booking else { return }
             
-            RU_Alert_ViewController.presentLoading { [weak self] alertController in
+            RU_Booking.handleCancellationToggle(for: booking, markingAsCancelled: state) { [weak self] error in
                 
-                booking?.save { [weak self] error in
-                    
-                    alertController?.close { [weak self] in
-                        
-                        if let error {
-                            
-                            RU_Alert_ViewController.present(error)
-                        }
-                        else {
-                            
-                            self?.updateData()
-                        }
-                    }
+                if let error {
+                    RU_Alert_ViewController.present(error)
+                } else {
+                    self?.updateData()
                 }
             }
         }

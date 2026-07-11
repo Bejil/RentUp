@@ -34,14 +34,15 @@ public class RU_Reporting_Detail_Occupation_ViewController : RU_Reporting_Detail
         var netSummaries: [String] = []
         
         let currentMonthStart = calendar.date(from: calendar.dateComponents([.year, .month], from: now)) ?? now
-        let firstStart = list.map(\.dates.start).min() ?? currentMonthStart
-        let lastEnd = list.map(\.dates.end).max() ?? currentMonthStart
-        let firstMonthStart = calendar.date(from: calendar.dateComponents([.year, .month], from: firstStart)) ?? firstStart
-        let lastMonthStart = calendar.date(from: calendar.dateComponents([.year, .month], from: lastEnd)) ?? lastEnd
-        let endMonthStart = max(lastMonthStart, currentMonthStart)
-        var monthStart = firstMonthStart
+        let earliestStart = list.map(\.dates.start).min()
+        let monthRange = metricsPeriod.monthRange(
+            calendar: calendar,
+            now: now,
+            earliestBookingStart: earliestStart
+        )
+        var monthStart = monthRange.firstMonthStart
         
-        while monthStart <= endMonthStart {
+        while monthStart <= monthRange.lastMonthStart {
             
             monthes?.append(monthStart)
             monthStart = calendar.date(byAdding: .month, value: 1, to: monthStart) ?? monthStart

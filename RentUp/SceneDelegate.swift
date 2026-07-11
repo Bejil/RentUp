@@ -48,6 +48,7 @@ public class SceneDelegate: UIResponder, UIWindowSceneDelegate {
 	public func sceneWillEnterForeground(_ scene: UIScene) {
 
         UIApplication.updateTabBarBadges()
+		RU_WidgetBackgroundRefresh.schedule()
 	}
     
     public func scene(_ scene: UIScene, openURLContexts URLContexts: Set<UIOpenURLContext>) {

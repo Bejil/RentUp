@@ -54,7 +54,7 @@ public class RU_Reporting_Alert_ViewController : RU_Alert_ViewController {
                 ) {
                     let end = monthEnd(from: monthStart)
                     let daysInMonth = max(1, calendar.range(of: .day, in: .month, for: monthStart)?.count ?? 30)
-                    let activeBookings = bookings.filter { !$0.isCancelled }
+                    let activeBookings = RU_Reporting_Detail_ViewController.ReportingMonthMetrics.eligibleBookings(bookings)
                     
                     var nights = 0
                     var netTotal: Double = 0
@@ -91,7 +91,7 @@ public class RU_Reporting_Alert_ViewController : RU_Alert_ViewController {
                 
                 func mostProfitablePlatform(monthStart: Date) -> RU_Platform? {
                     let end = monthEnd(from: monthStart)
-                    let activeBookings = bookings.filter { !$0.isCancelled }
+                    let activeBookings = RU_Reporting_Detail_ViewController.ReportingMonthMetrics.eligibleBookings(bookings)
                     var revenueByPlatformId: [String: Double] = [:]
                     
                     for b in activeBookings {
