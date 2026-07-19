@@ -29,10 +29,12 @@ public class RU_Reporting_Detail_Profitability_ViewController: RU_Reporting_Deta
         
         let pastBookings = list.filter { $0.dates.end < now }
         let earliestStart = list.map(\.dates.start).min()
+        let latestEnd = list.map(\.dates.end).max()
         let monthRange = metricsPeriod.monthRange(
             calendar: calendar,
             now: now,
-            earliestBookingStart: earliestStart
+            earliestBookingStart: earliestStart,
+            latestBookingEnd: latestEnd
         )
         let currentMonthStart = calendar.date(from: calendar.dateComponents([.year, .month], from: now)) ?? now
         var monthStart = monthRange.firstMonthStart
