@@ -13,6 +13,10 @@ public class RU_Splashscreen_ViewController : RU_ViewController {
     
     public var completion:((Bool)->Void)?
 	
+	private var isAnimationFinished = false
+	private var isLoadingFinished = false
+	private var hasClassifieds = false
+	
 	private lazy var animationView:LottieAnimationView = {
 		
 		$0.animation = LottieAnimation.named("splash_house")
@@ -76,9 +80,28 @@ public class RU_Splashscreen_ViewController : RU_ViewController {
         
         super.viewDidAppear(animated)
 		
-		animationView.play()
+		playAnimation()
         setUpPlatforms()
     }
+	
+	private func playAnimation() {
+		
+		isAnimationFinished = false
+		animationView.play { [weak self] finished in
+			
+			guard finished else { return }
+			
+			self?.isAnimationFinished = true
+			self?.finishIfReady()
+		}
+	}
+	
+	private func finishIfReady() {
+		
+		guard isAnimationFinished, isLoadingFinished else { return }
+		
+		completion?(hasClassifieds)
+	}
     
     private func setUpPlatforms() {
         
@@ -91,7 +114,7 @@ public class RU_Splashscreen_ViewController : RU_ViewController {
 				RU_Alert_ViewController.present(error, canDismiss: false, handler: { [weak self] in
 					
 					self?.animationView.currentProgress = 0
-					self?.animationView.play()
+					self?.playAnimation()
 					self?.setUpPlatforms()
 				})
 			}
@@ -106,13 +129,15 @@ public class RU_Splashscreen_ViewController : RU_ViewController {
 						RU_Alert_ViewController.present(error, canDismiss: false, handler: { [weak self] in
 							
 							self?.animationView.currentProgress = 0
-							self?.animationView.play()
+							self?.playAnimation()
 							self?.setUpPlatforms()
 						})
 					}
 					else {
 						
-						self?.completion?(!(classifieds?.isEmpty ?? true))
+						self?.hasClassifieds = !(classifieds?.isEmpty ?? true)
+						self?.isLoadingFinished = true
+						self?.finishIfReady()
 					}
 				}
 			}
