@@ -350,6 +350,13 @@
 "bookings.details.price.hostTotal" = "TOTAL";
 "bookings.details.approve.button" = "Marquer comme confirmée";
 "bookings.details.cancel.button" = "Marquer comme annulée";
+"bookings.details.checklist.button" = "Checklist";
+"bookings.details.checklist.button.progress" = "Checklist (%i/%i)";
+"bookings.details.checklist.progress.title" = "Progression";
+"bookings.details.checklist.progress.value" = "%i%%";
+"bookings.details.checklist.completed.title" = "Bravo !";
+"bookings.details.checklist.completed.message" = "La checklist est terminée. Tout est prêt pour la location.";
+"bookings.details.checklist.completed.button" = "Continuer";
 
 //MARK: - Settings
 "settings.title" = "Vos réglages";
@@ -403,6 +410,23 @@
 
 "settings.classified.configuration.section.title" = "Configuration";
 "settings.classified.configuration.section.subtitle" = "Définissez les types de lits que vous mettez à disposition";
+"settings.classified.checklist.section.title" = "Checklist avant location";
+"settings.classified.checklist.controller.title" = "Checklist";
+"settings.classified.checklist.section.subtitle" = "Points à vérifier et tâches ménagères avant chaque arrivée";
+"settings.classified.checklist.add.button" = "Ajouter un élément";
+"settings.classified.checklist.manage.button" = "Gérer la checklist (%i éléments)";
+"settings.classified.checklist.deleteSelected.button" = "Supprimer la sélection";
+"settings.classified.checklist.selectAll.button" = "Tout";
+"settings.classified.checklist.selectNone.button" = "Aucun";
+"settings.classified.checklist.deleteAll.button" = "Tout supprimer";
+"settings.classified.checklist.deleteAll.alert.title" = "Attention";
+"settings.classified.checklist.deleteAll.alert.content" = "Voulez-vous vraiment supprimer tous les éléments de la checklist ?";
+"settings.classified.checklist.create.title" = "Ajouter";
+"settings.classified.checklist.edit.title" = "Modifier";
+"settings.classified.checklist.seeMore.button" = "Voir plus";
+"settings.classified.checklist.title" = "Libellé";
+"settings.classified.checklist.title.placeholder" = "Ex: Vérifier la chaudière";
+"settings.classified.checklist.delete.button" = "Supprimer";
 "settings.classified.beds.double" = "Lits doubles";
 "settings.classified.beds.single" = "Lits simples";
 "settings.classified.beds.baby" = "Lits bébé";

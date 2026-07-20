@@ -56,4 +56,5 @@ public class RU_Booking : Codable, Equatable {
 	public var comment:String?
     public var costs:Costs = .init()
     public var isCancelled:Bool = false
+	public var checklistCompletedUUIDs:[String]?
 }

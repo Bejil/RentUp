@@ -160,6 +160,8 @@ public class RU_Bookings_Detail_ViewController : RU_ViewController {
             cancelButton.title = String(key: isCancelled ? "bookings.details.approve.button" : "bookings.details.cancel.button")
             cancelButton.type = isCancelled ? .primary : .delete
             cancelButton.image = UIImage(systemName: isCancelled ? "checkmark" : "xmark")
+            
+            refreshLiveClassifiedChecklist()
 		}
 	}
 	private lazy var childrenSectionRowStackView:RU_Section_Row_StackView = createRow(icon: "figure.child", title: String(key: "bookings.create.travelers.children"), view: childrenValueLabel)
@@ -278,6 +280,23 @@ public class RU_Bookings_Detail_ViewController : RU_ViewController {
             }
         }
     }
+	private lazy var checklistButton:RU_Button = {
+		
+		$0.image = UIImage(systemName: "checklist")
+		return $0
+		
+	}(RU_Button(String(key: "bookings.details.checklist.button")) { [weak self] _ in
+		
+		guard let self else { return }
+		
+		self.booking?.resolveLiveClassified { [weak self] _ in
+			
+			let viewController:RU_Bookings_Checklist_ViewController = .init()
+			viewController.booking = self?.booking
+			self?.navigationController?.pushViewController(viewController, animated: true)
+		}
+	})
+	private lazy var contentScrollView:RU_ScrollView = .init()
 	
 	public override func loadView() {
 		
@@ -292,8 +311,6 @@ public class RU_Bookings_Detail_ViewController : RU_ViewController {
             UI.MainController.present(RU_NavigationController(rootViewController: viewController), animated: true)
         }))
 		
-		let contentScrollView:RU_ScrollView = .init()
-		
 		let contentStackView:RU_StackView = .init()
 		contentStackView.axis = .vertical
 		contentStackView.spacing = 2*UI.Margins
@@ -307,6 +324,12 @@ public class RU_Bookings_Detail_ViewController : RU_ViewController {
 		view.addSubview(contentScrollView)
 		contentScrollView.snp.makeConstraints { make in
 			make.edges.equalToSuperview()
+		}
+		
+		view.addSubview(checklistButton)
+		checklistButton.snp.makeConstraints { make in
+			make.bottom.equalTo(view.safeAreaLayoutGuide).inset(UI.Margins)
+			make.left.right.equalTo(view.safeAreaLayoutGuide).inset(1.5 * UI.Margins)
 		}
 		
 		let datesSectionTitleStackView:RU_Section_StackView = .init()
@@ -349,6 +372,59 @@ public class RU_Bookings_Detail_ViewController : RU_ViewController {
                 }
             }
         }
+		
+		NotificationCenter.add(.updateClassifieds) { [weak self] _ in
+			
+			self?.refreshLiveClassifiedChecklist()
+		}
+		
+		checklistButton.isHidden = true
+		refreshLiveClassifiedChecklist()
+	}
+	
+	public override func viewWillAppear(_ animated: Bool) {
+		
+		super.viewWillAppear(animated)
+		
+		refreshLiveClassifiedChecklist()
+	}
+	
+	public override func viewDidLayoutSubviews() {
+		
+		super.viewDidLayoutSubviews()
+		
+		view.layoutIfNeeded()
+		
+		let bottomInset = checklistButton.isHidden ? 0 : checklistButton.bounds.height + 2 * UI.Margins
+		contentScrollView.contentInset.bottom = bottomInset
+		contentScrollView.verticalScrollIndicatorInsets.bottom = bottomInset
+	}
+	
+	private func refreshLiveClassifiedChecklist() {
+		
+		booking?.resolveLiveClassified { [weak self] _ in
+			
+			self?.updateChecklistButton()
+		}
+	}
+	
+	private func updateChecklistButton() {
+		
+		let checklist = booking?.classified?.checklist
+		let hasChecklist = !(checklist?.isEmpty ?? true)
+		checklistButton.isHidden = !hasChecklist
+		
+		if hasChecklist, let checklist {
+			
+			let total = checklist.count
+			let completed = checklist.filter { item in
+				booking?.checklistCompletedUUIDs?.contains(item.uuid) == true
+			}.count
+			
+			checklistButton.title = String(format: String(key: "bookings.details.checklist.button.progress"), completed, total)
+		}
+		
+		view.setNeedsLayout()
 	}
 	
 	private func createRow(icon: String, title: String, view: UIView, isHighlighted: Bool = false) -> RU_Section_Row_StackView {
