@@ -29,6 +29,17 @@ public class RU_Classified : Codable, Equatable {
 		public var capacity:Int?
 	}
 	
+	public class ChecklistItem : Codable, Equatable {
+		
+		public static func == (lhs: ChecklistItem, rhs: ChecklistItem) -> Bool {
+			
+			return lhs.uuid == rhs.uuid
+		}
+		
+		public var uuid:String = UUID().uuidString
+		public var title:String?
+	}
+	
 	public class Tarification : Codable {
 		
 		public class Offer : Codable {
@@ -65,4 +76,5 @@ public class RU_Classified : Codable, Equatable {
     public var fees:Int?
 	public var configuration:Configuration = .init()
 	public var tarification:[Tarification] = .init()
+	public var checklist:[ChecklistItem]?
 }

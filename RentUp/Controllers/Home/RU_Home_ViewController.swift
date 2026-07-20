@@ -20,8 +20,9 @@ public class RU_Home_ViewController: RU_ViewController {
 			
             currentBookingSectionStackView.booking = bookings?.current
             nextBookingSectionStackView.booking = bookings?.next
+			monthProgressView.update(bookings: bookings)
 			
-            if currentBookingSectionStackView.isHidden && nextBookingSectionStackView.isHidden {
+            if (bookings?.isEmpty ?? true) {
 				
                 let placeholderView = view.showPlaceholder(.Empty)
                 let button = placeholderView.addButton(String(key: "bookings.create.button")) { _ in
@@ -44,6 +45,7 @@ public class RU_Home_ViewController: RU_ViewController {
             }
 		}
 	}
+	private lazy var monthProgressView: RU_Home_MonthProgress_View = .init()
 	private lazy var currentBookingSectionStackView: RU_Booking_Card_Section_StackView = {
 		
 		$0.title = String(key: "home.currentBooking.section.title")
@@ -65,7 +67,7 @@ public class RU_Home_ViewController: RU_ViewController {
 	}()
 	private lazy var contentScrollView = RU_ScrollView()
 	private lazy var contentStackView: RU_StackView = {
-		let stack = RU_StackView(arrangedSubviews: [reportingTipStackView, promoTipStackView, bookingsRowStackView])
+		let stack = RU_StackView(arrangedSubviews: [reportingTipStackView, promoTipStackView, monthProgressView, bookingsRowStackView])
 		stack.axis = .vertical
 		stack.spacing = 2 * UI.Margins
 		stack.isLayoutMarginsRelativeArrangement = true

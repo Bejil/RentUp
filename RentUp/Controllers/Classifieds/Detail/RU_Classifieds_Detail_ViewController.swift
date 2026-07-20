@@ -72,6 +72,8 @@ public class RU_Classifieds_Detail_ViewController: RU_ViewController {
             
             comparatorTipStackView.isHidden = classified?.tarification.count ?? 0 <= 1
             
+            updateChecklistButton()
+            
             tarificationTableView.reloadData()
 		}
 	}
@@ -132,6 +134,21 @@ public class RU_Classifieds_Detail_ViewController: RU_ViewController {
         return $0
         
     }(RU_Tip_StackView())
+    private lazy var checklistButton:RU_Button = {
+        
+        $0.image = UIImage(systemName: "checklist")
+        return $0
+        
+    }(RU_Button(String(key: "settings.classified.checklist.manage.button")) { [weak self] _ in
+        
+        self?.openChecklist()
+    })
+    private lazy var checklistSectionStackView: RU_Section_StackView = {
+        $0.title = String(key: "settings.classified.checklist.section.title")
+        $0.subtitle = String(key: "settings.classified.checklist.section.subtitle")
+        $0.addArrangedSubview(checklistButton)
+        return $0
+    }(RU_Section_StackView())
 	private lazy var tarificationSectionStackView: RU_Section_StackView = {
 		$0.title = String(key: "settings.classified.tarification.section.title")
 		$0.subtitle = String(key: "settings.classified.tarification.section.subtitle")
@@ -180,6 +197,7 @@ public class RU_Classifieds_Detail_ViewController: RU_ViewController {
 
 		contentStackView.addArrangedSubview(generalSectionStackView)
 		contentStackView.addArrangedSubview(configurationSectionStackView)
+        contentStackView.addArrangedSubview(checklistSectionStackView)
 		contentStackView.addArrangedSubview(tarificationSectionStackView)
         
         NotificationCenter.add(.updateClassifieds) { [weak self] _ in
@@ -195,6 +213,15 @@ public class RU_Classifieds_Detail_ViewController: RU_ViewController {
                 }
             }
         }
+		
+		updateChecklistButton()
+	}
+	
+	public override func viewWillAppear(_ animated: Bool) {
+		
+		super.viewWillAppear(animated)
+		
+		updateChecklistButton()
 	}
 
     private func createRow(icon: String, title: String, view: UIView, isHighlighted: Bool = false) -> RU_Section_Row_StackView {
@@ -206,6 +233,32 @@ public class RU_Classifieds_Detail_ViewController: RU_ViewController {
         stackView.isHighlighted = isHighlighted
         return stackView
     }
+    
+    private func updateChecklistButton() {
+        
+        let count = classified?.checklist?.count ?? 0
+        
+        if count == 0 {
+            
+            checklistButton.title = String(key: "settings.classified.checklist.open.button")
+        }
+        else {
+            
+            checklistButton.title = String(format: String(key: "settings.classified.checklist.manage.button"), count)
+        }
+    }
+	
+	private func openChecklist() {
+		
+		let viewController:RU_Classifieds_Checklist_ViewController = .init()
+		viewController.classified = classified
+		viewController.shouldPersistChanges = true
+		viewController.completion = { [weak self] in
+			
+			self?.updateChecklistButton()
+		}
+		navigationController?.pushViewController(viewController, animated: true)
+	}
 }
 
 extension RU_Classifieds_Detail_ViewController : UITableViewDelegate, UITableViewDataSource {

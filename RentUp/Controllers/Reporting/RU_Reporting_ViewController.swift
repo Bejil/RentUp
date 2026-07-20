@@ -193,16 +193,19 @@ public class RU_Reporting_ViewController : RU_ViewController {
             let previousMonthDays = previousMonthRange?.count ?? 30
             let previousMonthEnd = calendar.date(byAdding: .day, value: previousMonthDays, to: previousMonthStart) ?? previousMonthStart
             let pastBookings = listCopy.filter { $0.dates.end < now }
-            let earliestStart = pastBookings.map(\.dates.start).min()
+            let earliestStart = listCopy.map(\.dates.start).min()
+            let latestEnd = listCopy.map(\.dates.end).max()
             let occupationBounds = self.occupationMetricsPeriod.bounds(
                 calendar: calendar,
                 now: now,
-                earliestBookingStart: earliestStart
+                earliestBookingStart: earliestStart,
+                latestBookingEnd: latestEnd
             )
             let profitabilityBounds = self.profitabilityMetricsPeriod.bounds(
                 calendar: calendar,
                 now: now,
-                earliestBookingStart: earliestStart
+                earliestBookingStart: earliestStart,
+                latestBookingEnd: latestEnd
             )
             let occupationPeriodStart = occupationBounds.start
             let occupationPeriodEnd = occupationBounds.end

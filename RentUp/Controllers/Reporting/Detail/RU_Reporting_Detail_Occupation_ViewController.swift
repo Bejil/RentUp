@@ -35,10 +35,12 @@ public class RU_Reporting_Detail_Occupation_ViewController : RU_Reporting_Detail
         
         let currentMonthStart = calendar.date(from: calendar.dateComponents([.year, .month], from: now)) ?? now
         let earliestStart = list.map(\.dates.start).min()
+        let latestEnd = list.map(\.dates.end).max()
         let monthRange = metricsPeriod.monthRange(
             calendar: calendar,
             now: now,
-            earliestBookingStart: earliestStart
+            earliestBookingStart: earliestStart,
+            latestBookingEnd: latestEnd
         )
         var monthStart = monthRange.firstMonthStart
         

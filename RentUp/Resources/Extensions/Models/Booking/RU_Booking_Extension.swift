@@ -38,6 +38,30 @@ extension RU_Booking {
 		
 		return platform != nil && dates.end > dates.start && travelers.adults ?? 0 >= 1 && (beds.doubles ?? 0 >= 1 || beds.singles ?? 0 >= 1)
 	}
+	
+	/// Récupère le bien à jour (checklist incluse) pour rester rétroactif si la liste a été créée après la résa.
+	public func resolveLiveClassified(_ completion:((RU_Classified?)->Void)?) {
+		
+		guard let classifiedUUID = classified?.uuid, !classifiedUUID.isEmpty else {
+			
+			completion?(nil)
+			return
+		}
+		
+		RU_Classified.getAll { [weak self] _, classifieds in
+			
+			let live = classifieds?.first(where: { $0.uuid == classifiedUUID })
+				?? classifieds?.first(where: { $0.id != nil && $0.id == self?.classified?.id })
+			
+			if let live {
+				
+				self?.classified = live
+			}
+			
+			completion?(live)
+		}
+	}
+	
     public static var shouldPresentReporting:Bool {
         
         let calendar = Calendar.current

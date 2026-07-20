@@ -139,6 +139,9 @@ public class RU_Bookings_Edit_ViewController : RU_ViewController {
 				
 				let calendarViewController = RU_Bookings_Edit_Calendar_ViewController()
                 calendarViewController.bookings = bookings?.filter({ $0.status != .cancelled })
+				if let self, self.hasPresetArrivalDate {
+					calendarViewController.preselectArrivalDate = self.booking?.dates.start
+				}
 				calendarViewController.currentBooking = self?.booking
 				calendarViewController.didSelectRange = { [weak self] startDate, endDate in
 					self?.booking?.dates.start = startDate
