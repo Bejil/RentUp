@@ -13,6 +13,7 @@
 		7A60A82F2F65DFE500393CE9 /* GoogleSignIn in Frameworks */ = {isa = PBXBuildFile; productRef = 7A60A82E2F65DFE500393CE9 /* GoogleSignIn */; };
 		7A60A8312F65DFE500393CE9 /* GoogleSignInSwift in Frameworks */ = {isa = PBXBuildFile; productRef = 7A60A8302F65DFE500393CE9 /* GoogleSignInSwift */; };
 		7A6F96D92F7B1B9800BF45A0 /* SPConfetti in Frameworks */ = {isa = PBXBuildFile; productRef = 7A6F96D82F7B1B9800BF45A0 /* SPConfetti */; };
+		7AF0A1012F7C000100BF45A0 /* Lottie in Frameworks */ = {isa = PBXBuildFile; productRef = 7AF0A1002F7C000100BF45A0 /* Lottie */; };
 		D466785E2F1FC1690079C4AA /* SnapKit in Frameworks */ = {isa = PBXBuildFile; productRef = D466785D2F1FC1690079C4AA /* SnapKit */; };
 		D4A9543E2F23DAB90038CAA3 /* IQKeyboardManagerSwift in Frameworks */ = {isa = PBXBuildFile; productRef = D4A9543D2F23DAB90038CAA3 /* IQKeyboardManagerSwift */; };
 /* End PBXBuildFile section */
@@ -104,6 +105,7 @@
 			files = (
 				7A60A8272F65DC1000393CE9 /* FirebaseAuth in Frameworks */,
 				7A6F96D92F7B1B9800BF45A0 /* SPConfetti in Frameworks */,
+				7AF0A1012F7C000100BF45A0 /* Lottie in Frameworks */,
 				D466785E2F1FC1690079C4AA /* SnapKit in Frameworks */,
 				7A60A8312F65DFE500393CE9 /* GoogleSignInSwift in Frameworks */,
 				D4A9543E2F23DAB90038CAA3 /* IQKeyboardManagerSwift in Frameworks */,
@@ -198,6 +200,7 @@
 				7A60A82E2F65DFE500393CE9 /* GoogleSignIn */,
 				7A60A8302F65DFE500393CE9 /* GoogleSignInSwift */,
 				7A6F96D82F7B1B9800BF45A0 /* SPConfetti */,
+				7AF0A1002F7C000100BF45A0 /* Lottie */,
 			);
 			productName = RentUp;
 			productReference = D466783F2F1FBFF20079C4AA /* RentUp.app */;
@@ -236,6 +239,7 @@
 				7A60A8252F65DC1000393CE9 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */,
 				7A60A82D2F65DFE500393CE9 /* XCRemoteSwiftPackageReference "GoogleSignIn-iOS" */,
 				7A6F96D72F7B1B9800BF45A0 /* XCRemoteSwiftPackageReference "SPConfetti" */,
+				7AF0A0FF2F7C000100BF45A0 /* XCRemoteSwiftPackageReference "lottie-ios" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = D46678402F1FBFF20079C4AA /* Products */;
@@ -597,6 +601,14 @@
 				minimumVersion = 1.4.2;
 			};
 		};
+		7AF0A0FF2F7C000100BF45A0 /* XCRemoteSwiftPackageReference "lottie-ios" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/airbnb/lottie-ios";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 4.5.0;
+			};
+		};
 		D466785C2F1FC1690079C4AA /* XCRemoteSwiftPackageReference "SnapKit" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/SnapKit/SnapKit.git";
@@ -640,6 +652,11 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 7A6F96D72F7B1B9800BF45A0 /* XCRemoteSwiftPackageReference "SPConfetti" */;
 			productName = SPConfetti;
+		};
+		7AF0A1002F7C000100BF45A0 /* Lottie */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 7AF0A0FF2F7C000100BF45A0 /* XCRemoteSwiftPackageReference "lottie-ios" */;
+			productName = Lottie;
 		};
 		D466785D2F1FC1690079C4AA /* SnapKit */ = {
 			isa = XCSwiftPackageProductDependency;

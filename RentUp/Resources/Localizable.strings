@@ -520,6 +520,9 @@
 //MARK: - TextView
 "textview.done.button" = "Valider";
 
+//MARK: - Splashscreen
+"splashscreen.baseline" = "Vos locations, unifiées";
+
 //MARK: - Onboarding
 "onboarding.welcome.title" = "Bienvenue !";
 "onboarding.welcome.message" = "RentUp vous aide à centraliser vos biens et réservations (Airbnb, Booking, etc.) en un seul endroit. Ajoutez votre premier bien pour commencer.";
