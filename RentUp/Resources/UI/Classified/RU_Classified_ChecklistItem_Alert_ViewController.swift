@@ -23,11 +23,17 @@ public class RU_Classified_ChecklistItem_Alert_ViewController : RU_Alert_ViewCon
 		$0.textField.textAlignment = .left
 		$0.textField.autocapitalizationType = .sentences
 		$0.textField.keyboardType = .default
+		$0.textField.returnKeyType = .done
 		$0.textField.addAction(.init(handler: { [weak self] _ in
 			
 			self?.updateSaveButton()
 			
 		}), for: .editingChanged)
+		$0.textField.addAction(.init(handler: { [weak self] _ in
+			
+			self?.save()
+			
+		}), for: .editingDidEndOnExit)
 		return $0
 		
 	}(RU_Section_TextFieldRow_StackView())
@@ -41,11 +47,7 @@ public class RU_Classified_ChecklistItem_Alert_ViewController : RU_Alert_ViewCon
 		
 		saveButton = addButton(title: String(key: "common.validate")) { [weak self] _ in
 			
-			guard let self else { return }
-			
-			item.title = titleTextFieldRowStack.textField.text?.trimmingCharacters(in: .whitespacesAndNewlines)
-			saveHandler?(item)
-			close()
+			self?.save()
 		}
 		
 		addCancelButton()
@@ -65,6 +67,15 @@ public class RU_Classified_ChecklistItem_Alert_ViewController : RU_Alert_ViewCon
 		super.viewDidAppear(animated)
 		
 		titleTextFieldRowStack.textField.becomeFirstResponder()
+	}
+	
+	private func save() {
+		
+		guard saveButton?.isEnabled == true else { return }
+		
+		item.title = titleTextFieldRowStack.textField.text?.trimmingCharacters(in: .whitespacesAndNewlines)
+		saveHandler?(item)
+		close()
 	}
 	
 	private func updateSaveButton() {

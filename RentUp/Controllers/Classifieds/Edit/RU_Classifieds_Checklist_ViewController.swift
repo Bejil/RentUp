@@ -14,6 +14,7 @@ public class RU_Classifieds_Checklist_ViewController : RU_ViewController {
 	
 	public var classified:RU_Classified?
 	public var isReadOnly:Bool = false
+	public var shouldPersistChanges:Bool = false
 	public var completion:(()->Void)?
 	
 	private var selectedItemUUIDs:Set<String> = []
@@ -263,7 +264,7 @@ public class RU_Classifieds_Checklist_ViewController : RU_ViewController {
 		updateNavigationItems()
 		updateBottomBar(animated: true)
 		updateSelection()
-		completion?()
+		notifyChanges()
 	}
 	
 	private func deleteSelectedItems() {
@@ -293,7 +294,7 @@ public class RU_Classifieds_Checklist_ViewController : RU_ViewController {
 			self?.setEditing(false, animated: true)
 			self?.updateNavigationItems()
 			self?.updateBottomBar(animated: true)
-			self?.completion?()
+			self?.notifyChanges()
 			alertController.close()
 		}
 		button.type = .delete
@@ -334,9 +335,24 @@ public class RU_Classifieds_Checklist_ViewController : RU_ViewController {
 			self?.updateEmptyState()
 			self?.updateNavigationItems()
 			self?.updateBottomBar(animated: true)
-			self?.completion?()
+			self?.notifyChanges()
 		}
 		alertController.present(as: .Alert)
+	}
+	
+	private func notifyChanges() {
+		
+		completion?()
+		
+		guard shouldPersistChanges else { return }
+		
+		classified?.save { error in
+			
+			if let error {
+				
+				RU_Alert_ViewController.present(error)
+			}
+		}
 	}
 }
 
@@ -402,6 +418,6 @@ extension RU_Classifieds_Checklist_ViewController : UITableViewDelegate, UITable
 		let item = items.remove(at: sourceIndexPath.row)
 		items.insert(item, at: destinationIndexPath.row)
 		classified?.checklist = items
-		completion?()
+		notifyChanges()
 	}
 }

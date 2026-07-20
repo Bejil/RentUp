@@ -413,6 +413,8 @@
 "settings.classified.checklist.section.title" = "Checklist avant location";
 "settings.classified.checklist.controller.title" = "Checklist";
 "settings.classified.checklist.section.subtitle" = "Points à vérifier et tâches ménagères avant chaque arrivée";
+"settings.classified.checklist.empty" = "Aucun élément pour le moment";
+"settings.classified.checklist.open.button" = "Gérer la checklist";
 "settings.classified.checklist.add.button" = "Ajouter un élément";
 "settings.classified.checklist.manage.button" = "Gérer la checklist (%i éléments)";
 "settings.classified.checklist.deleteSelected.button" = "Supprimer la sélection";
