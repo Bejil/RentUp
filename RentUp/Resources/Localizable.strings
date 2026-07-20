@@ -225,6 +225,9 @@
 "home.tip.promo.vacances.ete" = "Vacances d'été (zones A, B, C)";
 "home.tip.promo.vacances.toussaint" = "Vacances de la Toussaint (zones A, B, C)";
 "home.tip.promo.vacances.noel" = "Vacances de Noël (zones A, B, C)";
+"home.monthProgress.title" = "Ce mois-ci";
+"home.monthProgress.occupation" = "Occupation";
+"home.monthProgress.profitability" = "Rentabilité";
 
 //MARK: - Bookings
 "bookings.title" = "Vos réservations";
