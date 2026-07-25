@@ -74,6 +74,14 @@ public class RU_Classified : Codable, Equatable {
 	public var modificationDate:Date = .init()
 	public var name:String?
     public var fees:Int?
+	/// Heure d'arrivée des voyageurs (0–23). Défaut applicatif : 12.
+	public var checkInHour:Int?
+	/// Minutes d'arrivée (0–59). Défaut : 0.
+	public var checkInMinute:Int?
+	/// Heure de départ des voyageurs (0–23). Défaut applicatif : 12.
+	public var checkOutHour:Int?
+	/// Minutes de départ (0–59). Défaut : 0.
+	public var checkOutMinute:Int?
 	public var configuration:Configuration = .init()
 	public var tarification:[Tarification] = .init()
 	public var checklist:[ChecklistItem]?

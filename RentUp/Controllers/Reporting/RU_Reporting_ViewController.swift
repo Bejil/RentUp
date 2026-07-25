@@ -55,7 +55,7 @@ public class RU_Reporting_ViewController : RU_ViewController {
             }
 
             let listForFees = RU_Reporting_Detail_ViewController.ReportingMonthMetrics.eligibleBookings(filteredBookings ?? [])
-            let hasAnyClassifiedWithFees = listForFees.contains(where: { ($0.classified?.fees ?? 0) > 0 })
+            let hasAnyClassifiedWithFees = listForFees.contains(where: { ($0.effectiveClassifiedFees ?? 0) > 0 })
             profitabilityTipView.isHidden = hasAnyClassifiedWithFees
             profitabilityPreviousMonthRow.isHidden = !hasAnyClassifiedWithFees
             profitabilityCurrentMonthRow.isHidden = !hasAnyClassifiedWithFees
@@ -224,13 +224,14 @@ public class RU_Reporting_ViewController : RU_ViewController {
                     max(0, calendar.dateComponents([.day], from: b.dates.start, to: b.dates.end).day ?? 0)
                 }
                 func uniqueClassifiedFees(for bookings: [RU_Booking]) -> Double {
-                    var classifieds: [RU_Classified] = []
-                    bookings.compactMap({ $0.classified }).forEach {
-                        if !classifieds.contains($0) {
-                            classifieds.append($0)
+                    var feesByClassifiedUUID: [String: Int] = [:]
+                    bookings.forEach { booking in
+                        guard let uuid = booking.classified?.uuid else { return }
+                        if feesByClassifiedUUID[uuid] == nil {
+                            feesByClassifiedUUID[uuid] = booking.effectiveClassifiedFees ?? 0
                         }
                     }
-                    return Double(classifieds.compactMap({ $0.fees }).reduce(0, +))
+                    return Double(feesByClassifiedUUID.values.reduce(0, +))
                 }
                 func proratedHostTotal(_ b: RU_Booking, monthStart: Date, monthEnd: Date) -> Double {
                     let monthNights = nightsInMonth(b, monthStart: monthStart, monthEnd: monthEnd)

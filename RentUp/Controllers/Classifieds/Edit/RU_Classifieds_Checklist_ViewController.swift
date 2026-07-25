@@ -18,6 +18,10 @@ public class RU_Classifieds_Checklist_ViewController : RU_ViewController {
 	public var completion:(()->Void)?
 	
 	private var selectedItemUUIDs:Set<String> = []
+	private var editingItemUUID:String?
+	private var isCreatingItem:Bool = false
+	private var editingOriginalTitle:String?
+	private var keyboardBottomInset:CGFloat = 0
 	
 	private lazy var tableView:RU_TableView = {
 		
@@ -34,7 +38,7 @@ public class RU_Classifieds_Checklist_ViewController : RU_ViewController {
 		
 	}(RU_Button(String(key: "settings.classified.checklist.add.button")) { [weak self] _ in
 		
-		self?.presentChecklistItemAlert(item: nil)
+		self?.beginChecklistItemEditing(item: nil)
 	})
 	private lazy var deleteButton:RU_Button = {
 		
@@ -66,20 +70,12 @@ public class RU_Classifieds_Checklist_ViewController : RU_ViewController {
 		return $0
 		
 	}(RU_StackView())
-	private lazy var deleteAllButton:RU_Button = {
-		
-		$0.type = .delete
-		$0.image = UIImage(systemName: "trash.slash")
-		return $0
-		
-	}(RU_Button(String(key: "settings.classified.checklist.deleteAll.button")) { [weak self] _ in
-		
-		self?.presentDeleteAllAlert()
-	})
 	private lazy var bottomButtonsStackView:RU_StackView = {
 		
 		$0.axis = .vertical
 		$0.spacing = UI.Margins / 2
+		$0.addArrangedSubview(addButton)
+		$0.addArrangedSubview(editingActionsStackView)
 		return $0
 		
 	}(RU_StackView())
@@ -97,9 +93,6 @@ public class RU_Classifieds_Checklist_ViewController : RU_ViewController {
 		
 		if !isReadOnly {
 			
-			bottomButtonsStackView.addArrangedSubview(addButton)
-			bottomButtonsStackView.addArrangedSubview(editingActionsStackView)
-			bottomButtonsStackView.addArrangedSubview(deleteAllButton)
 			view.addSubview(bottomButtonsStackView)
 			bottomButtonsStackView.snp.makeConstraints { make in
 				make.bottom.equalTo(view.safeAreaLayoutGuide).inset(UI.Margins)
@@ -111,6 +104,9 @@ public class RU_Classifieds_Checklist_ViewController : RU_ViewController {
 		updateBottomBar(animated: false)
         applyTableEditingMode()
 		updateEmptyState()
+		
+		NotificationCenter.default.addObserver(self, selector: #selector(keyboardWillChangeFrame(_:)), name: UIResponder.keyboardWillChangeFrameNotification, object: nil)
+		NotificationCenter.default.addObserver(self, selector: #selector(keyboardWillHide(_:)), name: UIResponder.keyboardWillHideNotification, object: nil)
 	}
 	
 	public override func viewDidLayoutSubviews() {
@@ -162,26 +158,68 @@ public class RU_Classifieds_Checklist_ViewController : RU_ViewController {
 		
 		view.layoutIfNeeded()
 		
-		let bottomInset = isReadOnly ? 0 : bottomButtonsStackView.bounds.height + 2 * UI.Margins
+		let buttonsInset = isReadOnly ? 0 : bottomButtonsStackView.bounds.height + 2 * UI.Margins
+		let bottomInset = max(buttonsInset, keyboardBottomInset)
 		tableView.contentInset.bottom = bottomInset
 		tableView.verticalScrollIndicatorInsets.bottom = bottomInset
+	}
+	
+	@objc private func keyboardWillChangeFrame(_ notification: Notification) {
+		
+		guard let keyboardFrame = notification.userInfo?[UIResponder.keyboardFrameEndUserInfoKey] as? CGRect,
+			  let duration = notification.userInfo?[UIResponder.keyboardAnimationDurationUserInfoKey] as? Double else { return }
+		
+		let keyboardFrameInView = view.convert(keyboardFrame, from: nil)
+		let overlap = tableView.frame.intersection(keyboardFrameInView)
+		keyboardBottomInset = overlap.isNull || overlap.height <= 0 ? 0 : overlap.height + UI.Margins
+		
+		UIView.animate(withDuration: duration) {
+			
+			self.updateTableInsets()
+			self.view.layoutIfNeeded()
+		} completion: { _ in
+			
+			self.scrollToEditingItemIfNeeded()
+		}
+	}
+	
+	@objc private func keyboardWillHide(_ notification: Notification) {
+		
+		guard let duration = notification.userInfo?[UIResponder.keyboardAnimationDurationUserInfoKey] as? Double else { return }
+		
+		keyboardBottomInset = 0
+		
+		UIView.animate(withDuration: duration) {
+			
+			self.updateTableInsets()
+			self.view.layoutIfNeeded()
+		}
+	}
+	
+	private func scrollToEditingItemIfNeeded() {
+		
+		guard let uuid = editingItemUUID,
+			  let index = classified?.checklist?.firstIndex(where: { $0.uuid == uuid }) else { return }
+		
+		let indexPath = IndexPath(row: index, section: 0)
+		guard tableView.numberOfRows(inSection: 0) > index else { return }
+		
+		tableView.scrollToRow(at: indexPath, at: .middle, animated: true)
 	}
 	
 	private func updateBottomBar(animated: Bool) {
 		
 		guard !isReadOnly else { return }
 		
-		let isEmpty = classified?.checklist?.isEmpty ?? true
-		
 		let updates = {
 			
 			self.addButton.isHidden = self.isEditing
 			self.editingActionsStackView.isHidden = !self.isEditing
-			self.deleteAllButton.isHidden = self.isEditing || isEmpty
 			
 			self.addButton.alpha = self.addButton.isHidden ? 0 : 1
 			self.editingActionsStackView.alpha = self.editingActionsStackView.isHidden ? 0 : 1
-			self.deleteAllButton.alpha = self.deleteAllButton.isHidden ? 0 : 1
+			
+			self.bottomButtonsStackView.layoutIfNeeded()
 		}
 		
 		if animated {
@@ -198,14 +236,56 @@ public class RU_Classifieds_Checklist_ViewController : RU_ViewController {
 	
 	private func updateNavigationItems() {
 		
-		if isReadOnly {
+		let isEmpty = classified?.checklist?.isEmpty ?? true
+		var items:[UIBarButtonItem] = []
+		
+		if !isEmpty {
 			
-			navigationItem.rightBarButtonItem = nil
-			return
+			items.append(.init(image: UIImage(systemName: "square.and.arrow.up"), primaryAction: .init(handler: { [weak self] _ in
+				
+				self?.shareChecklist()
+			})))
 		}
 		
-		let isEmpty = classified?.checklist?.isEmpty ?? true
-		navigationItem.rightBarButtonItem = isEmpty ? nil : editButtonItem
+		if !isReadOnly, !isEmpty {
+			
+			items.append(editButtonItem)
+		}
+		
+		navigationItem.rightBarButtonItems = items.isEmpty ? nil : items
+	}
+	
+	private func shareChecklist() {
+		
+		guard let items = classified?.checklist, !items.isEmpty else { return }
+		
+		var lines:[String] = []
+		
+		if let name = classified?.name, !name.isEmpty {
+			
+			lines.append(String(format: String(key: "settings.classified.checklist.share.title"), " — \(name)"))
+		}
+		else {
+			
+			lines.append(String(format: String(key: "settings.classified.checklist.share.title"), ""))
+		}
+		
+		lines.append("")
+		
+		items.forEach { item in
+			
+			guard let title = item.title, !title.isEmpty else { return }
+			lines.append(String(format: String(key: "settings.classified.checklist.share.item"), title))
+		}
+		
+		let activityViewController = UIActivityViewController(activityItems: [lines.joined(separator: "\n")], applicationActivities: nil)
+		
+		if let popover = activityViewController.popoverPresentationController {
+			
+			popover.barButtonItem = navigationItem.rightBarButtonItems?.first
+		}
+		
+		present(activityViewController, animated: true)
 	}
 	
 	private func updateSelection() {
@@ -240,10 +320,103 @@ public class RU_Classifieds_Checklist_ViewController : RU_ViewController {
 		cell.isItemSelected = item.map { selectedItemUUIDs.contains($0.uuid) } ?? false
 		cell.verticalInset = (isReadOnly || isEditing) ? UI.Margins : UI.Margins / 2
 		cell.selectionStyle = .none
+		cell.isTitleEditing = item?.uuid == editingItemUUID
 		cell.infoHandler = { [weak self] in
 			
-			self?.presentChecklistItemAlert(item: item)
+			self?.beginChecklistItemEditing(item: item)
 		}
+		cell.titleCommitHandler = { [weak self] title in
+			
+			self?.commitChecklistItemEditing(title: title)
+		}
+		
+		if cell.isTitleEditing {
+			
+			DispatchQueue.main.async {
+				
+				cell.beginTitleEditing()
+			}
+		}
+	}
+	
+	private func beginChecklistItemEditing(item: RU_Classified.ChecklistItem?) {
+		
+		guard !isReadOnly, !isEditing else { return }
+		
+		if editingItemUUID != nil {
+			
+			view.endEditing(true)
+		}
+		
+		if let item {
+			
+			isCreatingItem = false
+			editingOriginalTitle = item.title
+			editingItemUUID = item.uuid
+		}
+		else {
+			
+			let newItem = RU_Classified.ChecklistItem()
+			
+			if classified?.checklist == nil {
+				
+				classified?.checklist = []
+			}
+			
+			classified?.checklist?.append(newItem)
+			isCreatingItem = true
+			editingOriginalTitle = nil
+			editingItemUUID = newItem.uuid
+		}
+		
+		tableView.reloadData()
+		updateEmptyState()
+		updateNavigationItems()
+		updateBottomBar(animated: true)
+		
+		DispatchQueue.main.async { [weak self] in
+			
+			self?.scrollToEditingItemIfNeeded()
+		}
+	}
+	
+	private func commitChecklistItemEditing(title: String?) {
+		
+		guard let uuid = editingItemUUID,
+			  let index = classified?.checklist?.firstIndex(where: { $0.uuid == uuid }) else { return }
+		
+		let trimmedTitle = title?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+		
+		if trimmedTitle.isEmpty {
+			
+			if isCreatingItem {
+				
+				classified?.checklist?.remove(at: index)
+				
+				if classified?.checklist?.isEmpty == true {
+					
+					classified?.checklist = nil
+				}
+			}
+			else {
+				
+				classified?.checklist?[index].title = editingOriginalTitle
+			}
+		}
+		else {
+			
+			classified?.checklist?[index].title = trimmedTitle
+		}
+		
+		editingItemUUID = nil
+		isCreatingItem = false
+		editingOriginalTitle = nil
+		
+		tableView.reloadData()
+		updateEmptyState()
+		updateNavigationItems()
+		updateBottomBar(animated: true)
+		notifyChanges()
 	}
 	
 	private func removeItems(at indexPaths: [IndexPath]) {
@@ -278,66 +451,6 @@ public class RU_Classifieds_Checklist_ViewController : RU_ViewController {
 		
 		removeItems(at: indexPaths)
 		setEditing(false, animated: true)
-	}
-	
-	private func presentDeleteAllAlert() {
-		
-		let alertController:RU_Alert_ViewController = .init()
-		alertController.title = String(key: "settings.classified.checklist.deleteAll.alert.title")
-		alertController.add(String(key: "settings.classified.checklist.deleteAll.alert.content"))
-		let button = alertController.addButton(title: String(key: "settings.classified.checklist.deleteAll.button")) { [weak self] _ in
-			
-			self?.classified?.checklist = nil
-			self?.selectedItemUUIDs.removeAll()
-			self?.tableView.reloadData()
-			self?.updateEmptyState()
-			self?.setEditing(false, animated: true)
-			self?.updateNavigationItems()
-			self?.updateBottomBar(animated: true)
-			self?.notifyChanges()
-			alertController.close()
-		}
-		button.type = .delete
-		button.image = UIImage(systemName: "trash.slash")
-		alertController.addCancelButton()
-		alertController.present()
-	}
-	
-	private func presentChecklistItemAlert(item: RU_Classified.ChecklistItem?) {
-		
-		let alertController:RU_Classified_ChecklistItem_Alert_ViewController = .init()
-		alertController.isCreating = item == nil
-		
-		if let item {
-			
-			alertController.item = item
-		}
-		
-		alertController.saveHandler = { [weak self] savedItem in
-			
-			if let item {
-				
-				if let index = self?.classified?.checklist?.firstIndex(where: { $0.uuid == item.uuid }) {
-					
-					self?.classified?.checklist?[index] = savedItem
-				}
-			}
-			else {
-				
-				if self?.classified?.checklist == nil {
-					
-					self?.classified?.checklist = []
-				}
-				self?.classified?.checklist?.append(savedItem)
-			}
-			
-			self?.tableView.reloadData()
-			self?.updateEmptyState()
-			self?.updateNavigationItems()
-			self?.updateBottomBar(animated: true)
-			self?.notifyChanges()
-		}
-		alertController.present(as: .Alert)
 	}
 	
 	private func notifyChanges() {

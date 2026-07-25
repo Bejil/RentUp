@@ -201,10 +201,14 @@
 "home.currentBooking.headline.departureToday" = "Les voyageurs partent aujourd'hui";
 "home.currentBooking.headline.departureTomorrow" = "Départ demain";
 "home.currentBooking.headline.departureIn" = "Départ dans %d jours";
+"home.currentStay.step.arrival" = "Arrivée";
+"home.currentStay.step.stay" = "Séjour";
+"home.currentStay.step.departure" = "Départ";
 "home.nextBooking.section.title" = "À venir";
 "home.nextBooking.headline.arrivalTomorrow" = "Arrivée demain";
 "home.nextBooking.headline.arrivalIn" = "Arrivée dans %d jours";
 "home.booking.nights" = "Nombre de nuitées";
+"home.booking.nights.short" = "nuits";
 "home.details.button" = "Plus de détails";
 "home.tip.promo.title" = "Idée promotion";
 "home.tip.promo.message" = "Un week-end prolongé ou des vacances approchent : pensez à créer une promotion pour remplir vos créneaux.";
@@ -228,6 +232,9 @@
 "home.monthProgress.title" = "Ce mois-ci";
 "home.monthProgress.occupation" = "Occupation";
 "home.monthProgress.profitability" = "Rentabilité";
+"home.dashboard.kpi.revenue" = "CA net";
+"home.dashboard.kpi.nights" = "Nuitées";
+"home.dashboard.kpi.bookings" = "Réservations";
 
 //MARK: - Bookings
 "bookings.title" = "Vos réservations";
@@ -250,6 +257,18 @@
 "bookings.create.classified.button" = "Sélectionnez";
 "bookings.create.platform.section.title" = "Plateforme";
 "bookings.create.platform.section.subtitle" = "Sur quelle plateforme la réservation a t'elle été faite ?";
+"bookings.create.platformReference.section.title" = "Référence plateforme";
+"bookings.create.platformReference.section.subtitle" = "Optionnel — permet d’ouvrir la réservation directement sur Airbnb, Booking ou Abritel";
+"bookings.create.platformReference.field" = "Code / n° de réservation";
+"booking.platformReference.placeholder.airbnb" = "Ex. HMXXXXXXXX ou ABC123";
+"booking.platformReference.placeholder.booking" = "Ex. 1234567890";
+"booking.platformReference.placeholder.abritel" = "Ex. 123456789";
+"booking.platformReference.help.airbnb.title" = "Code de confirmation Airbnb";
+"booking.platformReference.help.airbnb.content" = "C’est le code de confirmation de la réservation (souvent 6 caractères, ou un code type HM…). Vous le trouvez dans l’onglet Aujourd’hui → réservation → ⋯ → Gérer la réservation, ou dans l’e-mail de confirmation Airbnb.";
+"booking.platformReference.help.booking.title" = "Numéro de réservation Booking";
+"booking.platformReference.help.booking.content" = "C’est le Booking Reference Number (généralement 9 ou 10 chiffres). Vous le trouvez dans l’Extranet (admin.booking.com) → Réservations → détail de la réservation, section Booking details.";
+"booking.platformReference.help.abritel.title" = "Numéro de réservation Abritel";
+"booking.platformReference.help.abritel.content" = "C’est le numéro de réservation (Res ID). Vous le trouvez dans le tableau de bord propriétaire Abritel → détail de la réservation, dans les e-mails échangés, ou dans les rapports de paiement téléchargeables.";
 "bookings.create.dates.section.title" = "Dates du séjour";
 "bookings.create.dates.section.subtitle" = "Quelles sont les dates d'arrivée et de départ des voyageurs ?";
 "bookings.create.dates.button" = "Sélectionner";
@@ -300,6 +319,7 @@
 "booking.status.cancelled.name" = "Annulée";
 "booking.status.departure.today" = "Départ auj";
 "booking.status.departure.tomorrow" = "Départ dem";
+"booking.status.arrival.today" = "Arrivée auj";
 "booking.status.upcoming.tomorrow" = "À venir dem";
 //Cell
 "bookings.cell.dates.format" = "Du %@ au %@";
@@ -324,6 +344,7 @@
 "bookings.details.title" = "Détails de la réservation";
 "bookings.details.dates.section.title" = "Séjour";
 "bookings.details.platform" = "Plateforme";
+"bookings.details.openPlatform.button" = "Ouvrir sur %@";
 "bookings.details.dates.start" = "Arrivée";
 "bookings.details.dates.end" = "Départ";
 "bookings.details.nights.label" = "Nombre de nuits";
@@ -392,6 +413,10 @@
 "settings.classified.fees.tip.title" = "Calcul de vos charges";
 "settings.classified.fees.tip.content" = "Il s'agit des différents postes qui composent les dépenses fixes de votre bien: Prêt immobilier, Assurance habitation, Taxe foncière par mois, Charges de copropriété, Électricité, Gaz, Eau, Internet...";
 "settings.classified.fees" = "Charges";
+"settings.classified.schedule.section.title" = "Horaires";
+"settings.classified.schedule.section.subtitle" = "Arrivée et départ des voyageurs (statut et suivi du séjour)";
+"settings.classified.schedule.checkIn" = "Heure d'arrivée";
+"settings.classified.schedule.checkOut" = "Heure de départ";
 "settings.classified.capacity" = "Capacité max";
 "settings.classified.tarification.section.title" = "Tarification";
 "settings.classified.tarification.section.subtitle" = "Paramétrez les prix appliqués au bien";
@@ -420,15 +445,14 @@
 "settings.classified.checklist.deleteSelected.button" = "Supprimer la sélection";
 "settings.classified.checklist.selectAll.button" = "Tout";
 "settings.classified.checklist.selectNone.button" = "Aucun";
-"settings.classified.checklist.deleteAll.button" = "Tout supprimer";
-"settings.classified.checklist.deleteAll.alert.title" = "Attention";
-"settings.classified.checklist.deleteAll.alert.content" = "Voulez-vous vraiment supprimer tous les éléments de la checklist ?";
 "settings.classified.checklist.create.title" = "Ajouter";
 "settings.classified.checklist.edit.title" = "Modifier";
 "settings.classified.checklist.seeMore.button" = "Voir plus";
 "settings.classified.checklist.title" = "Libellé";
 "settings.classified.checklist.title.placeholder" = "Ex: Vérifier la chaudière";
 "settings.classified.checklist.delete.button" = "Supprimer";
+"settings.classified.checklist.share.title" = "Checklist%@";
+"settings.classified.checklist.share.item" = "• %@";
 "settings.classified.beds.double" = "Lits doubles";
 "settings.classified.beds.single" = "Lits simples";
 "settings.classified.beds.baby" = "Lits bébé";

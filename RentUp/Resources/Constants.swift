@@ -27,13 +27,22 @@ public struct UI {
 	public static func adaptiveMargins(for traitCollection: UITraitCollection) -> CGFloat {
 		traitCollection.isRegularWidth ? 24 : Margins
 	}
+	
+	/// Style partagé des pastilles plateforme / statut.
+	public struct Badge {
+		
+		public static var font: UIFont { Fonts.Content.Text.Bold.withSize(Fonts.Size - 2) }
+		public static let contentInsets = UIEdgeInsets(horizontal: Margins / 2, vertical: Margins / 4)
+		public static let cornerRadius = Margins / 2
+		public static var height: CGFloat { ceil(font.lineHeight) + contentInsets.top + contentInsets.bottom }
+	}
 }
 
 public struct Colors {
 	
-	public static let Primary:UIColor = UIColor(named: "Primary")!
-	public static let Secondary:UIColor = UIColor(named: "Secondary")!
-	public static let Tertiary:UIColor = UIColor(named: "Tertiary")!
+	public static let Primary:UIColor = UIColor(named: "First")!
+	public static let Secondary:UIColor = UIColor(named: "Second")!
+	public static let Tertiary:UIColor = UIColor(named: "Third")!
 	
 	public struct Background {
 		

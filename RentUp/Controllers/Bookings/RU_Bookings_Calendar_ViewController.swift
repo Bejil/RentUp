@@ -214,6 +214,26 @@ public class RU_Bookings_Calendar_ViewController: RU_ViewController {
 		weeksScrollHostView.scrollToMonthContaining(date, animated: animated)
 	}
 	
+	internal func scrollToToday(animated: Bool = true) {
+		scrollToMonthContaining(Date(), animated: animated)
+	}
+	
+	/// Position de la vue par rapport à aujourd'hui (pour le FAB chevron).
+	internal enum TodayScrollAffinity {
+		case visible
+		/// La vue est après aujourd'hui → chevron haut.
+		case afterToday
+		/// La vue est avant aujourd'hui → chevron bas.
+		case beforeToday
+	}
+	
+	internal var onCalendarDidScroll: (() -> Void)?
+	
+	internal func todayScrollAffinity() -> TodayScrollAffinity {
+		guard isViewLoaded else { return .visible }
+		return weeksScrollHostView.todayScrollAffinity()
+	}
+	
 	internal func updateCalendar() {
 		guard isViewLoaded else { return }
 		weeksScrollHostView.applyBookingsChange()
@@ -327,7 +347,7 @@ public class RU_Bookings_Calendar_ViewController: RU_ViewController {
         if let uuid = booking.classified?.uuid, !uuid.isEmpty {
             return "classified:\(uuid)"
         }
-        return "booking:\(booking.id)"
+        return "booking:\(booking.id ?? "")"
     }
     
     private func countPropertyRows(for bookings: [RU_Booking]) -> Int {
@@ -537,6 +557,42 @@ public class RU_Bookings_Calendar_ViewController: RU_ViewController {
             setNeedsLayout()
         }
         
+        func todayScrollAffinity() -> RU_Bookings_Calendar_ViewController.TodayScrollAffinity {
+            syncVisibleDayViewRegistry()
+            
+            let cal = owner.displayedCalendar
+            let today = cal.startOfDay(for: Date())
+            let visibleRect = bounds.inset(by: adjustedContentInset)
+            
+            if let dayView = dateToDayView[today] {
+                let frame = dayView.convert(dayView.bounds, to: self)
+                if visibleRect.intersects(frame) {
+                    return .visible
+                }
+                if frame.midY < visibleRect.midY {
+                    return .afterToday
+                }
+                return .beforeToday
+            }
+            
+            var visibleDates: [Date] = []
+            for case let cell as BookingCalendarWeekRowCell in visibleCells {
+                visibleDates.append(contentsOf: cell.datesInRow.map { cal.startOfDay(for: $0) })
+            }
+            
+            guard let minVisible = visibleDates.min(), let maxVisible = visibleDates.max() else {
+                return .visible
+            }
+            
+            if maxVisible < today {
+                return .beforeToday
+            }
+            if minVisible > today {
+                return .afterToday
+            }
+            return .visible
+        }
+        
         override func layoutSubviews() {
             let safe = safeAreaInsets
             let safeAreaSignature = "\(bounds.width)|\(safe.left)|\(safe.right)"
@@ -560,17 +616,47 @@ public class RU_Bookings_Calendar_ViewController: RU_ViewController {
             
             if let target = pendingScrollMonth {
                 let ts = target.timeIntervalSince1970
-                if let itemIndex = displayItems.firstIndex(where: {
-                    if case .monthHeader(let t) = $0 { return t == ts }
-                    return false
-                }) {
+                if centerMonth(timestamp: ts, animated: pendingScrollAnimated) {
                     pendingScrollMonth = nil
-                    let indexPath = IndexPath(item: itemIndex, section: 0)
-                    scrollToItem(at: indexPath, at: .centeredVertically, animated: pendingScrollAnimated)
                 }
             }
             
             rebuildRangePaths()
+        }
+        
+        /// Centre verticalement le bloc complet du mois (header + semaines) dans la zone visible.
+        @discardableResult
+        private func centerMonth(timestamp: TimeInterval, animated: Bool) -> Bool {
+            guard let startIndex = displayItems.firstIndex(where: {
+                if case .monthHeader(let t) = $0 { return t == timestamp }
+                return false
+            }) else {
+                return false
+            }
+            
+            var endIndex = startIndex
+            for index in (startIndex + 1)..<displayItems.count {
+                if case .monthGap = displayItems[index] { break }
+                if case .monthHeader = displayItems[index] { break }
+                endIndex = index
+            }
+            
+            guard let startAttributes = layoutAttributesForItem(at: IndexPath(item: startIndex, section: 0)),
+                  let endAttributes = layoutAttributesForItem(at: IndexPath(item: endIndex, section: 0)) else {
+                return false
+            }
+            
+            let monthMidY = (startAttributes.frame.minY + endAttributes.frame.maxY) / 2
+            let visibleHeight = bounds.height - adjustedContentInset.top - adjustedContentInset.bottom
+            guard visibleHeight > 0 else { return false }
+            
+            let targetOffsetY = monthMidY - adjustedContentInset.top - visibleHeight / 2
+            let minOffset = -adjustedContentInset.top
+            let maxOffset = max(minOffset, contentSize.height - bounds.height + adjustedContentInset.bottom)
+            let clampedOffsetY = min(max(targetOffsetY, minOffset), maxOffset)
+            
+            setContentOffset(CGPoint(x: contentOffset.x, y: clampedOffsetY), animated: animated)
+            return true
         }
         
         private func configureCell(collectionView: UICollectionView, indexPath: IndexPath, item: CalendarRowItem) -> UICollectionViewCell {
@@ -1000,6 +1086,7 @@ public class RU_Bookings_Calendar_ViewController: RU_ViewController {
         func scrollViewDidScroll(_ scrollView: UIScrollView) {
             rebuildRangePaths()
             appendForwardMonthBatchIfNeeded()
+            owner.onCalendarDidScroll?()
         }
         
         func collectionView(_ collectionView: UICollectionView, willDisplay cell: UICollectionViewCell, forItemAt indexPath: IndexPath) {
@@ -1140,6 +1227,10 @@ private final class BookingCalendarWeekRowCell: UICollectionViewCell {
             guard let date = dayDates[i] else { continue }
             registry[calendar.startOfDay(for: date)] = dayViews[i]
         }
+    }
+    
+    var datesInRow: [Date] {
+        dayDates.compactMap { $0 }
     }
     
     func refreshContent(contentProvider: (Date) -> BookingDayViewContent) {

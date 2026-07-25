@@ -85,6 +85,7 @@ public enum WidgetBookingPresentation {
 		case .upcoming:
 			let startDay = calendar.startOfDay(for: booking.start)
 			let days = calendar.dateComponents([.day], from: today, to: startDay).day ?? 0
+			if days == 0 { return "Arrivée auj" }
 			if days == 1 { return "À venir dem" }
 			return "À venir ➜ \(days) j"
 		}

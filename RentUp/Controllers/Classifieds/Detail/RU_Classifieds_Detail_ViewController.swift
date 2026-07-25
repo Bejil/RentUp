@@ -26,6 +26,15 @@ public class RU_Classifieds_Detail_ViewController: RU_ViewController {
                 
 				feesValueLabel.text = nil
 			}
+			
+			checkInValueLabel.text = Self.formatScheduleTime(
+				hour: classified?.effectiveCheckInHour ?? RU_Classified.defaultCheckInHour,
+				minute: classified?.effectiveCheckInMinute ?? 0
+			)
+			checkOutValueLabel.text = Self.formatScheduleTime(
+				hour: classified?.effectiveCheckOutHour ?? RU_Classified.defaultCheckOutHour,
+				minute: classified?.effectiveCheckOutMinute ?? 0
+			)
 
 			if let capacity = classified?.configuration.capacity {
                 
@@ -80,6 +89,8 @@ public class RU_Classifieds_Detail_ViewController: RU_ViewController {
 
 	private lazy var nameValueLabel: RU_Label = .init()
 	private lazy var feesValueLabel: RU_Label = .init()
+	private lazy var checkInValueLabel: RU_Label = .init()
+	private lazy var checkOutValueLabel: RU_Label = .init()
 	private lazy var capacityValueLabel: RU_Label = .init()
 	private lazy var capacitySectionRowStackView: RU_Section_Row_StackView = createRow(
 		icon: "person.2.fill",
@@ -109,6 +120,13 @@ public class RU_Classifieds_Detail_ViewController: RU_ViewController {
 		$0.subtitle = String(key: "settings.classified.general.section.subtitle")
 		$0.addArrangedSubview(createRow(icon: "house.fill", title: String(key: "settings.classified.name"), view: nameValueLabel))
 		$0.addArrangedSubview(createRow(icon: "eurosign", title: String(key: "settings.classified.fees"), view: feesValueLabel))
+		return $0
+	}(RU_Section_StackView())
+	private lazy var scheduleSectionStackView: RU_Section_StackView = {
+		$0.title = String(key: "settings.classified.schedule.section.title")
+		$0.subtitle = String(key: "settings.classified.schedule.section.subtitle")
+		$0.addArrangedSubview(createRow(icon: "figure.walk.arrival", title: String(key: "settings.classified.schedule.checkIn"), view: checkInValueLabel))
+		$0.addArrangedSubview(createRow(icon: "figure.walk.departure", title: String(key: "settings.classified.schedule.checkOut"), view: checkOutValueLabel))
 		return $0
 	}(RU_Section_StackView())
 	private lazy var configurationSectionStackView: RU_Section_StackView = {
@@ -196,6 +214,7 @@ public class RU_Classifieds_Detail_ViewController: RU_ViewController {
 		}
 
 		contentStackView.addArrangedSubview(generalSectionStackView)
+		contentStackView.addArrangedSubview(scheduleSectionStackView)
 		contentStackView.addArrangedSubview(configurationSectionStackView)
         contentStackView.addArrangedSubview(checklistSectionStackView)
 		contentStackView.addArrangedSubview(tarificationSectionStackView)
@@ -233,6 +252,11 @@ public class RU_Classifieds_Detail_ViewController: RU_ViewController {
         stackView.isHighlighted = isHighlighted
         return stackView
     }
+	
+	private static func formatScheduleTime(hour: Int, minute: Int) -> String {
+		
+		String(format: "%02d:%02d", hour, minute)
+	}
     
     private func updateChecklistButton() {
         

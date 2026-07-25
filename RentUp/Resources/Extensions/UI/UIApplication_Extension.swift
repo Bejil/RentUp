@@ -102,10 +102,6 @@ extension UIApplication {
                 indexesToBadge.insert(.Home)
             }
             
-            if hasCurrentBooking || hasUpcomingBookingWithin5Days {
-                indexesToBadge.insert(.Bookings)
-            }
-            
             DispatchQueue.main.async {
                 if let adaptiveRoot = window?.rootViewController as? RU_AdaptiveRootViewController {
                     adaptiveRoot.updateBadges(indexesToBadge)

@@ -19,12 +19,12 @@ public final class RU_AdaptiveRootViewController: UIViewController {
 		super.viewDidLoad()
 		view.backgroundColor = Colors.Background.Application
 		installAppropriateContainer(animated: false)
-	}
-	
-	public override func traitCollectionDidChange(_ previousTraitCollection: UITraitCollection?) {
-		super.traitCollectionDidChange(previousTraitCollection)
-		guard traitCollection.horizontalSizeClass != previousTraitCollection?.horizontalSizeClass else { return }
-		installAppropriateContainer(animated: true)
+		
+		registerForTraitChanges([UITraitHorizontalSizeClass.self]) { (self: Self, previousTraitCollection: UITraitCollection) in
+			
+			guard self.traitCollection.horizontalSizeClass != previousTraitCollection.horizontalSizeClass else { return }
+			self.installAppropriateContainer(animated: true)
+		}
 	}
 	
 	public func selectSection(
@@ -162,6 +162,10 @@ extension RU_AdaptiveRootViewController: RU_SidebarViewControllerDelegate {
 		if let split = embeddedSplitViewController {
 			enforceFixedSidebarLayout(on: split)
 		}
+		if section == .Home {
+			let home = navigationControllers[.Home]?.viewControllers.first as? RU_Home_ViewController
+			home?.handleTabReselect()
+		}
 	}
 }
 
@@ -171,19 +175,27 @@ extension RU_AdaptiveRootViewController: UISplitViewControllerDelegate {
 		_ splitViewController: UISplitViewController,
 		willChangeTo displayMode: UISplitViewController.DisplayMode
 	) {
-		notifySplitViewLayoutDidChange()
+		handleSplitViewLayoutChange(splitViewController)
 	}
 	
 	public func splitViewController(_ splitViewController: UISplitViewController, willHide column: UISplitViewController.Column) {
-		notifySplitViewLayoutDidChange()
+		handleSplitViewLayoutChange(splitViewController)
 	}
 	
 	public func splitViewController(_ splitViewController: UISplitViewController, willShow column: UISplitViewController.Column) {
-		notifySplitViewLayoutDidChange()
+		handleSplitViewLayoutChange(splitViewController)
 	}
 	
-	public func splitViewControllerDidChange(_ svc: UISplitViewController) {
-		enforceFixedSidebarLayout(on: svc)
+	public func splitViewControllerDidCollapse(_ splitViewController: UISplitViewController) {
+		handleSplitViewLayoutChange(splitViewController)
+	}
+	
+	public func splitViewControllerDidExpand(_ splitViewController: UISplitViewController) {
+		handleSplitViewLayoutChange(splitViewController)
+	}
+	
+	private func handleSplitViewLayoutChange(_ splitViewController: UISplitViewController) {
+		enforceFixedSidebarLayout(on: splitViewController)
 		notifySplitViewLayoutDidChange()
 	}
 	

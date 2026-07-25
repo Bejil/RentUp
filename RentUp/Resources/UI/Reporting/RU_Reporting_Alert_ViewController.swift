@@ -59,7 +59,7 @@ public class RU_Reporting_Alert_ViewController : RU_Alert_ViewController {
                     var nights = 0
                     var netTotal: Double = 0
                     var platformCountById: [String: Int] = [:]
-                    var classifieds: [RU_Classified] = []
+                    var feesByClassifiedUUID: [String: Int] = [:]
                     
                     for b in activeBookings {
                         let n = nightsInMonth(b, monthStart: monthStart, monthEnd: end)
@@ -71,14 +71,14 @@ public class RU_Reporting_Alert_ViewController : RU_Alert_ViewController {
                         if let p = b.platform {
                             platformCountById[p.uuid, default: 0] += 1
                         }
-                        if let c = b.classified, !classifieds.contains(c) {
-                            classifieds.append(c)
+                        if let uuid = b.classified?.uuid, feesByClassifiedUUID[uuid] == nil {
+                            feesByClassifiedUUID[uuid] = b.effectiveClassifiedFees ?? 0
                         }
                     }
                     
                     let occupation = Double(nights) / Double(daysInMonth) * 100
                     
-                    let charges = Double(classifieds.compactMap(\.fees).reduce(0, +))
+                    let charges = Double(feesByClassifiedUUID.values.reduce(0, +))
                     let profitability = charges > 0 ? (netTotal / charges) * 100 : (netTotal > 0 ? 100 : 0)
                     
                     let mostUsedPlatformId = platformCountById.max(by: { $0.value < $1.value })?.key
@@ -158,7 +158,7 @@ public class RU_Reporting_Alert_ViewController : RU_Alert_ViewController {
                     
                     UIApplication.wait {
                         
-                        MB_Confetti.start()
+                        RU_Confetti.start()
                     }
                 }
                 else if m1.netTotal < m2.netTotal {
@@ -290,7 +290,7 @@ public class RU_Reporting_Alert_ViewController : RU_Alert_ViewController {
             self?.liquidView.removeFromSuperview()
         }
         
-        MB_Confetti.stop()
+        RU_Confetti.stop()
         
         super.close(completion)
     }

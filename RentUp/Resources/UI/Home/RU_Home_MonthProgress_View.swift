@@ -31,14 +31,77 @@ public class RU_Home_MonthProgress_View: RU_StackView {
 		return $0
 	}(RU_StackView())
 	
-	private lazy var occupationProgressRow = MetricProgressRowView(
-		icon: "chart.bar.fill",
+	private lazy var revenueTile: MetricStatTileView = .init(
+		icon: UIImage(systemName: "eurosign.circle.fill"),
+		caption: String(key: "home.dashboard.kpi.revenue")
+	)
+	private lazy var nightsTile: MetricStatTileView = .init(
+		icon: UIImage(systemName: "moon.stars.fill"),
+		caption: String(key: "home.dashboard.kpi.nights")
+	)
+	private lazy var bookingsTile: MetricStatTileView = .init(
+		icon: UIImage(systemName: "calendar.badge.clock"),
+		caption: String(key: "home.dashboard.kpi.bookings")
+	)
+	
+	private lazy var kpiDivider1: UIView = {
+		$0.backgroundColor = Colors.Content.Text.withAlphaComponent(0.12)
+		return $0
+	}(UIView())
+	
+	private lazy var kpiDivider2: UIView = {
+		$0.backgroundColor = Colors.Content.Text.withAlphaComponent(0.12)
+		return $0
+	}(UIView())
+	
+	private lazy var kpiRow: RU_StackView = {
+		$0.axis = .horizontal
+		$0.distribution = .fillEqually
+		$0.alignment = .fill
+		$0.addArrangedSubview(revenueTile)
+		$0.addArrangedSubview(nightsTile)
+		$0.addArrangedSubview(bookingsTile)
+		return $0
+	}(RU_StackView())
+	
+	private lazy var kpiContainerView: UIView = {
+		let container = UIView()
+		container.addSubview(kpiRow)
+		container.addSubview(kpiDivider1)
+		container.addSubview(kpiDivider2)
+		kpiRow.snp.makeConstraints { make in
+			make.edges.equalToSuperview()
+		}
+		return container
+	}()
+	
+	private lazy var occupationRing = MetricRingView(
 		title: String(key: "home.monthProgress.occupation")
 	)
-	private lazy var profitabilityProgressRow = MetricProgressRowView(
-		icon: "eurosign.circle.fill",
+	private lazy var profitabilityRing = MetricRingView(
 		title: String(key: "home.monthProgress.profitability")
 	)
+	
+	private lazy var ringsStackView: RU_StackView = {
+		$0.axis = .horizontal
+		$0.distribution = .fillEqually
+		$0.spacing = UI.Margins
+		$0.alignment = .top
+		$0.addArrangedSubview(occupationRing)
+		$0.addArrangedSubview(profitabilityRing)
+		return $0
+	}(RU_StackView())
+	
+	private lazy var contentStackView: RU_StackView = {
+		$0.axis = .vertical
+		$0.spacing = UI.Margins
+		$0.isLayoutMarginsRelativeArrangement = true
+		$0.layoutMargins = .init(UI.Margins)
+		$0.addArrangedSubview(headerStackView)
+		$0.addArrangedSubview(kpiContainerView)
+		$0.addArrangedSubview(ringsStackView)
+		return $0
+	}(RU_StackView())
 	
 	private lazy var metricsCardView: UIView = {
 		let card = UIView()
@@ -49,18 +112,8 @@ public class RU_Home_MonthProgress_View: RU_StackView {
 		card.layer.shadowOpacity = 0.08
 		card.layer.shadowRadius = UI.Margins
 		
-		let stack = RU_StackView(arrangedSubviews: [
-			headerStackView,
-			occupationProgressRow,
-			profitabilityProgressRow
-		])
-		stack.axis = .vertical
-		stack.spacing = UI.Margins
-		stack.isLayoutMarginsRelativeArrangement = true
-		stack.layoutMargins = .init(UI.Margins)
-		
-		card.addSubview(stack)
-		stack.snp.makeConstraints { make in
+		card.addSubview(contentStackView)
+		contentStackView.snp.makeConstraints { make in
 			make.edges.equalToSuperview()
 		}
 		return card
@@ -78,8 +131,23 @@ public class RU_Home_MonthProgress_View: RU_StackView {
 		fatalError("init(coder:) has not been implemented")
 	}
 	
+	public override func layoutSubviews() {
+		super.layoutSubviews()
+		layoutKPIDividers()
+	}
+	
+	private func layoutKPIDividers() {
+		guard kpiContainerView.bounds.width > 0 else { return }
+		let inset = UI.Margins
+		let width = kpiContainerView.bounds.width
+		let height = max(0, kpiContainerView.bounds.height - 2 * inset)
+		kpiDivider1.frame = CGRect(x: width / 3, y: inset, width: 1, height: height)
+		kpiDivider2.frame = CGRect(x: 2 * width / 3, y: inset, width: 1, height: height)
+	}
+	
 	public func update(bookings: [RU_Booking]?) {
-		let list = RU_Reporting_Detail_ViewController.ReportingMonthMetrics.eligibleBookings(bookings ?? [])
+		let metrics = RU_Reporting_Detail_ViewController.ReportingMonthMetrics.self
+		let list = metrics.eligibleBookings(bookings ?? [])
 		guard !list.isEmpty else {
 			isHidden = true
 			return
@@ -98,12 +166,22 @@ public class RU_Home_MonthProgress_View: RU_StackView {
 		monthLabel.text = formatter.string(from: monthStart).capitalized
 		
 		func nightsInMonth(_ booking: RU_Booking) -> Int {
-			RU_Reporting_Detail_ViewController.ReportingMonthMetrics.nightsInMonth(
+			metrics.nightsInMonth(
 				booking: booking,
 				monthStart: monthStart,
 				calendar: calendar
 			)
 		}
+		
+		let inMonth = list.filter { nightsInMonth($0) > 0 }
+		let revenue = inMonth.reduce(0.0) {
+			$0 + metrics.proratedHostTotal(booking: $1, monthStart: monthStart, calendar: calendar)
+		}
+		let nights = inMonth.reduce(0) { $0 + nightsInMonth($1) }
+		
+		revenueTile.value = metrics.formatNetEUR(revenue)
+		nightsTile.value = Self.formatCount(nights)
+		bookingsTile.value = Self.formatCount(inMonth.count)
 		
 		let pastBookings = list.filter { $0.dates.end < now }
 		let pastNights = pastBookings.reduce(0) { $0 + nightsInMonth($1) }
@@ -111,101 +189,117 @@ public class RU_Home_MonthProgress_View: RU_StackView {
 		let occActual = daysInMonth > 0 ? Double(pastNights) / Double(daysInMonth) * 100 : 0
 		let occForecast = daysInMonth > 0 ? Double(allNights) / Double(daysInMonth) * 100 : 0
 		
-		occupationProgressRow.set(actual: occActual, forecast: occForecast)
+		occupationRing.set(actual: occActual, forecast: occForecast)
 		
-		let hasFees = list.contains { ($0.classified?.fees ?? 0) > 0 }
-		profitabilityProgressRow.isHidden = !hasFees
+		let hasFees = list.contains { ($0.effectiveClassifiedFees ?? 0) > 0 }
+		profitabilityRing.isHidden = !hasFees
 		if hasFees {
-			let profitability = RU_Reporting_Detail_ViewController.ReportingMonthMetrics.profitabilityPercentages(
+			let profitability = metrics.profitabilityPercentages(
 				monthStart: monthStart,
 				bookings: list,
 				now: now,
 				calendar: calendar
 			)
-			profitabilityProgressRow.set(actual: profitability.actual, forecast: profitability.forecast)
+			profitabilityRing.set(actual: profitability.actual, forecast: profitability.forecast)
 		}
+	}
+	
+	private static func formatCount(_ value: Int) -> String {
+		let formatter = NumberFormatter()
+		formatter.locale = Locale(identifier: "fr_FR")
+		formatter.numberStyle = .decimal
+		formatter.groupingSeparator = " "
+		formatter.maximumFractionDigits = 0
+		return formatter.string(from: NSNumber(value: value)) ?? "\(value)"
 	}
 }
 
-// MARK: - Progress row
+// MARK: - KPI tile
 
-private final class MetricProgressRowView: RU_StackView {
+private final class MetricStatTileView: RU_StackView {
 	
-	/// Remplissage = actual / forecast (le track représente le prévisionnel = 100 %).
-	private var fillRatio: Double = 0 {
-		didSet {
-			shouldAnimateProgress = true
-			setNeedsLayout()
-		}
+	var value: String? {
+		get { valueLabel.text }
+		set { valueLabel.text = newValue }
 	}
 	
 	private lazy var iconView: UIImageView = {
 		$0.contentMode = .scaleAspectFit
 		$0.tintColor = Colors.Secondary
 		$0.snp.makeConstraints { make in
-			make.size.equalTo(1.5 * UI.Margins)
+			make.size.equalTo(2 * UI.Margins)
 		}
 		return $0
 	}(UIImageView())
 	
+	private lazy var valueLabel: RU_Label = {
+		$0.font = Fonts.Content.Title.H3
+		$0.textColor = Colors.Primary
+		$0.textAlignment = .center
+		$0.adjustsFontSizeToFitWidth = true
+		$0.minimumScaleFactor = 0.55
+		return $0
+	}(RU_Label())
+	
+	private lazy var captionLabel: RU_Label = {
+		$0.font = Fonts.Content.Text.Regular.withSize(Fonts.Size - 1)
+		$0.textColor = Colors.Content.Text.withAlphaComponent(0.5)
+		$0.textAlignment = .center
+		$0.numberOfLines = 2
+		return $0
+	}(RU_Label())
+	
+	init(icon: UIImage?, caption: String) {
+		super.init(frame: .zero)
+		
+		axis = .vertical
+		spacing = UI.Margins / 3
+		alignment = .center
+		isLayoutMarginsRelativeArrangement = true
+		layoutMargins = .init(top: UI.Margins / 2, left: UI.Margins / 3, bottom: UI.Margins / 2, right: UI.Margins / 3)
+		
+		iconView.image = icon?.applyingSymbolConfiguration(.init(pointSize: Fonts.Size + 2, weight: .semibold))
+		captionLabel.text = caption
+		
+		addArrangedSubview(iconView)
+		addArrangedSubview(valueLabel)
+		addArrangedSubview(captionLabel)
+	}
+	
+	@MainActor required init(coder: NSCoder) {
+		fatalError("init(coder:) has not been implemented")
+	}
+}
+
+// MARK: - Ring metric
+
+private final class MetricRingView: RU_StackView {
+	
+	private lazy var chartView: RU_DonutChart_HostingView = {
+		let view = RU_DonutChart_HostingView()
+		view.snp.makeConstraints { make in
+			make.height.equalTo(view.snp.width)
+		}
+		return view
+	}()
+	
 	private lazy var titleLabel: RU_Label = {
 		$0.font = Fonts.Content.Text.Regular
+		$0.textAlignment = .center
+		$0.numberOfLines = 2
 		return $0
 	}(RU_Label())
 	
-	private lazy var percentageLabel: RU_Label = {
-		$0.font = Fonts.Content.Title.H4
-		$0.textAlignment = .right
-		$0.setContentHuggingPriority(.required, for: .horizontal)
-		return $0
-	}(RU_Label())
-	
-	private lazy var headerStackView: RU_StackView = {
-		$0.axis = .horizontal
-		$0.spacing = UI.Margins / 2
-		$0.alignment = .center
-		$0.addArrangedSubview(iconView)
-		$0.addArrangedSubview(titleLabel)
-		$0.addArrangedSubview(UIView())
-		$0.addArrangedSubview(percentageLabel)
-		return $0
-	}(RU_StackView())
-	
-	private lazy var progressTrackView: UIView = {
-		$0.backgroundColor = Colors.Primary.withAlphaComponent(0.12)
-		$0.layer.cornerRadius = 3
-		$0.clipsToBounds = true
-		$0.snp.makeConstraints { make in
-			make.height.equalTo(6)
-		}
-		return $0
-	}(UIView())
-	
-	private lazy var progressFillView: UIView = {
-		$0.backgroundColor = Colors.Secondary
-		$0.layer.cornerRadius = 3
-		return $0
-	}(UIView())
-	
-	private var progressFillWidthConstraint: Constraint?
-	private var shouldAnimateProgress = true
-	
-	init(icon: String, title: String) {
+	init(title: String) {
 		super.init(frame: .zero)
 		
 		axis = .vertical
 		spacing = UI.Margins / 2
+		alignment = .fill
 		
-		iconView.image = UIImage(systemName: icon)?.applyingSymbolConfiguration(.init(scale: .medium))
 		titleLabel.text = title
-		
-		addArrangedSubview(headerStackView)
-		addArrangedSubview(progressTrackView)
-		progressTrackView.addSubview(progressFillView)
-		progressFillView.snp.makeConstraints { make in
-			make.top.bottom.leading.equalToSuperview()
-			progressFillWidthConstraint = make.width.equalTo(0).constraint
-		}
+		addArrangedSubview(chartView)
+		addArrangedSubview(titleLabel)
 	}
 	
 	@MainActor required init(coder: NSCoder) {
@@ -213,33 +307,16 @@ private final class MetricProgressRowView: RU_StackView {
 	}
 	
 	func set(actual: Double, forecast: Double) {
-		percentageLabel.text = String(format: "%.0f%% (→ %.0f%%)", actual, forecast)
-		fillRatio = forecast > 0 ? min(1, actual / forecast) : 0
-	}
-	
-	override func layoutSubviews() {
-		super.layoutSubviews()
-		guard progressTrackView.bounds.width > 0 else { return }
-		
-		let targetWidth = max(0, min(1, fillRatio)) * progressTrackView.bounds.width
-		
-		if shouldAnimateProgress {
-			shouldAnimateProgress = false
-			progressFillWidthConstraint?.update(offset: 0)
-			progressTrackView.layoutIfNeeded()
-			
-			UIView.animate(
-				withDuration: 0.55,
-				delay: 0.05,
-				usingSpringWithDamping: 0.82,
-				initialSpringVelocity: 0.6,
-				options: [.curveEaseOut]
-			) {
-				self.progressFillWidthConstraint?.update(offset: targetWidth)
-				self.progressTrackView.layoutIfNeeded()
-			}
-		} else {
-			progressFillWidthConstraint?.update(offset: targetWidth)
-		}
+		// Remplissage = avancement vers le prévisionnel (comme les barres d’origine).
+		// Important pour la rentabilité, souvent > 100 %.
+		let progress = forecast > 0 ? actual / forecast : 0
+		let center = String(format: "%.0f%%", actual)
+		let subtitle = String(format: "→ %.0f%%", forecast)
+		chartView.configure(
+			segments: RU_DonutChart_HostingView.ringSegments(progress: progress),
+			style: .ring(centerText: center, subtitle: subtitle),
+			innerRadius: 0.68,
+			animated: true
+		)
 	}
 }

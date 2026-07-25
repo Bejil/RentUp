@@ -43,6 +43,18 @@ public class RU_Booking : Codable, Equatable {
         public var compensation:Double?
     }
 	
+	/// Entrées de prix figées à la création / changement de bien ou plateforme.
+	public class PricingSnapshot : Codable {
+		
+		public var capturedAt:Date = .init()
+		public var classifiedFees:Int?
+		public var pricePerNight:Int?
+		public var cleaning:Int?
+		public var offers:[RU_Classified.Tarification.Offer] = .init()
+		public var travelers:RU_Classified.Tarification.Traveler = .init()
+		public var platformCommission:RU_Platform.Commission?
+	}
+	
     @DocumentID public var id: String?
     public var uuid:String = UUID().uuidString
     public var uid:String? = RU_Account.shared.user?.uid
@@ -53,8 +65,11 @@ public class RU_Booking : Codable, Equatable {
 	public var travelers:Travelers = .init()
 	public var classified:RU_Classified?
 	public var beds:RU_Classified.Configuration.Beds = .init()
-	public var comment:String?
+    public var comment:String?
+    /// Code / n° de réservation sur la plateforme (Airbnb, Booking, Abritel).
+    public var platformReference:String?
     public var costs:Costs = .init()
     public var isCancelled:Bool = false
 	public var checklistCompletedUUIDs:[String]?
+	public var pricingSnapshot:PricingSnapshot?
 }

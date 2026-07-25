@@ -54,6 +54,8 @@ public class RU_Bookings_Detail_ViewController : RU_ViewController {
 				commentTipStackView.isHidden = true
 			}
 			
+			updateOpenPlatformButton()
+			
 			if let adults = booking?.travelers.adults {
 				
 				adultsValueLabel.text = "\(adults)"
@@ -183,6 +185,15 @@ public class RU_Bookings_Detail_ViewController : RU_ViewController {
 	private lazy var babyBedsValueLabel:RU_Label = .init()
 	private lazy var babyBedsSectionRowStackView:RU_Section_Row_StackView = createRow(icon: "stroller", title: String(key: "bookings.details.configuration.beds.baby"), view: babyBedsValueLabel)
 	private lazy var platformLabel:RU_Platform_Label = .init()
+	private lazy var openPlatformButton: RU_Button = {
+		$0.type = .secondary
+		$0.image = UIImage(systemName: "arrow.up.right.square")
+		$0.isHidden = true
+		return $0
+	}(RU_Button(String(key: "bookings.details.openPlatform.button")) { [weak self] _ in
+		guard let url = self?.booking?.platformReservationURL else { return }
+		UIApplication.shared.open(url)
+	})
 	private lazy var datesStartValueLabel:RU_Label = .init()
 	private lazy var datesEndValueLabel:RU_Label = .init()
 	private lazy var nightsValueLabel:RU_Label = .init()
@@ -344,6 +355,7 @@ public class RU_Bookings_Detail_ViewController : RU_ViewController {
 		datesSectionTitleStackView.addArrangedSubview(createRow(icon: "airplane.departure", title: String(key: "bookings.details.dates.end"), view: datesEndValueLabel))
 		datesSectionTitleStackView.addArrangedSubview(createRow(icon: "moon.fill", title: String(key: "bookings.details.nights.label"), view: nightsValueLabel))
 		contentStackView.addArrangedSubview(datesSectionTitleStackView)
+		contentStackView.addArrangedSubview(openPlatformButton)
 		
 		contentStackView.addArrangedSubview(commentTipStackView)
 		
@@ -400,6 +412,16 @@ public class RU_Bookings_Detail_ViewController : RU_ViewController {
 		contentScrollView.verticalScrollIndicatorInsets.bottom = bottomInset
 	}
 	
+	private func updateOpenPlatformButton() {
+		guard let booking, booking.canOpenPlatformReservation,
+			  let platformName = booking.platform?.type?.name else {
+			openPlatformButton.isHidden = true
+			return
+		}
+		openPlatformButton.isHidden = false
+		openPlatformButton.title = String(format: String(key: "bookings.details.openPlatform.button"), platformName)
+	}
+	
 	private func refreshLiveClassifiedChecklist() {
 		
 		booking?.resolveLiveClassified { [weak self] _ in
@@ -422,6 +444,10 @@ public class RU_Bookings_Detail_ViewController : RU_ViewController {
 			}.count
 			
 			checklistButton.title = String(format: String(key: "bookings.details.checklist.button.progress"), completed, total)
+            
+            let state = completed == total
+            checklistButton.type = state ? .tertiary : .primary
+            checklistButton.image = UIImage(systemName: state ? "checkmark.circle.fill" : "checklist")
 		}
 		
 		view.setNeedsLayout()

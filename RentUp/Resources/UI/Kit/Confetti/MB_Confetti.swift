@@ -1,5 +1,5 @@
 //
-//  MB_Confetti.swift
+//  RU_Confetti.swift
 //  CurseCounter
 //
 //  Created by BLIN Michael on 14/02/2025.
@@ -7,7 +7,7 @@
 
 import SPConfetti
 
-public class MB_Confetti {
+public class RU_Confetti {
 	
 	public static func start() {
 		

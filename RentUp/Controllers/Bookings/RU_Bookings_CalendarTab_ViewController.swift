@@ -11,6 +11,7 @@ import SnapKit
 public class RU_Bookings_CalendarTab_ViewController: RU_Bookings_Calendar_ViewController {
 	
 	private var hasLoadedBookingsOnce = false
+	private var didApplyCalendarBottomInset = false
 	
 	private lazy var createButton: RU_Button = {
 		
@@ -20,6 +21,25 @@ public class RU_Bookings_CalendarTab_ViewController: RU_Bookings_Calendar_ViewCo
 	}(RU_Button(String(key: "bookings.create.button")) { _ in
 		
 		RU_Booking.create()
+	})
+	
+	private lazy var todayButton: RU_Button = {
+		
+		$0.type = .tertiary
+		$0.image = UIImage(systemName: "chevron.down")
+		$0.alpha = 0
+		
+		let size = 4 * UI.Margins
+		$0.configuration?.background.cornerRadius = size / 2
+		$0.snp.remakeConstraints { make in
+			make.size.equalTo(size)
+		}
+		
+		return $0
+		
+	}(RU_Button { [weak self] _ in
+		
+		self?.scrollToToday(animated: true)
 	})
 	
 	public override func loadView() {
@@ -47,6 +67,16 @@ public class RU_Bookings_CalendarTab_ViewController: RU_Bookings_Calendar_ViewCo
 			make.right.bottom.left.equalTo(view.safeAreaLayoutGuide).inset(UI.Margins)
 		}
 		
+		view.addSubview(todayButton)
+		todayButton.snp.makeConstraints { make in
+			make.right.equalTo(view.safeAreaLayoutGuide).inset(UI.Margins)
+			make.bottom.equalTo(createButton.snp.top).offset(-1.5 * UI.Margins)
+		}
+		
+		onCalendarDidScroll = { [weak self] in
+			self?.updateTodayButton()
+		}
+		
 		NotificationCenter.add(.updateBookings) { [weak self] _ in
 			
 			self?.updateData(showLoading: false)
@@ -64,12 +94,19 @@ public class RU_Bookings_CalendarTab_ViewController: RU_Bookings_Calendar_ViewCo
 		
 		super.viewDidLayoutSubviews()
 		
-		let bottomInset = createButton.bounds.height + 2 * UI.Margins
+		let todayButtonReserve = 4 * UI.Margins + 1.5 * UI.Margins
+		let bottomInset = createButton.bounds.height + todayButtonReserve + 2 * UI.Margins
 		if let collectionView = view as? UICollectionView,
 		   abs(collectionView.contentInset.bottom - bottomInset) > 0.5 {
 			collectionView.contentInset.bottom = bottomInset
 			collectionView.verticalScrollIndicatorInsets.bottom = bottomInset
+			if !didApplyCalendarBottomInset {
+				didApplyCalendarBottomInset = true
+				scrollToToday(animated: false)
+			}
 		}
+		
+		updateTodayButton()
 	}
 	
 	public override func viewWillAppear(_ animated: Bool) {
@@ -78,6 +115,23 @@ public class RU_Bookings_CalendarTab_ViewController: RU_Bookings_Calendar_ViewCo
 		
 		if hasLoadedBookingsOnce {
 			updateData(showLoading: false)
+		}
+	}
+	
+	private func updateTodayButton() {
+		
+		UIView.animation {
+			
+			switch self.todayScrollAffinity() {
+			case .visible:
+				self.todayButton.alpha = 0
+			case .afterToday:
+				self.todayButton.image = UIImage(systemName: "chevron.up")
+				self.todayButton.alpha = 1
+			case .beforeToday:
+				self.todayButton.image = UIImage(systemName: "chevron.down")
+				self.todayButton.alpha = 1
+			}
 		}
 	}
 	
@@ -105,6 +159,7 @@ public class RU_Bookings_CalendarTab_ViewController: RU_Bookings_Calendar_ViewCo
 			}
 			
 			self.bookings = bookings?.filter({ $0.status != .cancelled })
+			self.updateTodayButton()
 		}
 	}
 }
