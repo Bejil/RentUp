@@ -23,13 +23,10 @@ public class RU_Platform_Label: UIView {
 		set { textLabel.text = newValue }
 	}
 
-	private let imageSize: CGFloat = 10
-
 	private lazy var iconImageView: UIImageView = {
 		$0.contentMode = .scaleAspectFit
-		$0.snp.makeConstraints { make in
-			make.size.equalTo(imageSize)
-		}
+		$0.setContentHuggingPriority(.required, for: .horizontal)
+		$0.setContentCompressionResistancePriority(.required, for: .horizontal)
 		return $0
 	}(UIImageView())
 
@@ -44,17 +41,21 @@ public class RU_Platform_Label: UIView {
 		$0.axis = .horizontal
 		$0.spacing = UI.Margins / 3
 		$0.alignment = .center
+		$0.isLayoutMarginsRelativeArrangement = true
+		$0.insetsLayoutMarginsFromSafeArea = false
 		return $0
 	}(RU_StackView(arrangedSubviews: [iconImageView, textLabel]))
 
 	public override init(frame: CGRect) {
 		super.init(frame: frame)
 		layer.masksToBounds = true
+		setContentHuggingPriority(.required, for: .horizontal)
+		setContentCompressionResistancePriority(.required, for: .horizontal)
 		addSubview(contentStackView)
 		contentStackView.snp.makeConstraints { make in
-            make.left.right.equalToSuperview().inset(UI.Margins/3)
-            make.top.bottom.equalToSuperview().inset(UI.Margins/7)
+			make.edges.equalToSuperview()
 		}
+		update()
 	}
 
 	@MainActor required init?(coder: NSCoder) {
@@ -63,40 +64,33 @@ public class RU_Platform_Label: UIView {
 
 	private func update() {
 		backgroundColor = platform?.type?.backgroundColor
-        textLabel.textColor = platform?.type?.textColor
+		textLabel.textColor = platform?.type?.textColor
 		iconImageView.image = platform?.type?.icon
-        iconImageView.tintColor = platform?.type?.textColor
+		iconImageView.tintColor = platform?.type?.textColor
 		iconImageView.isHidden = isMinimal || platform?.type?.icon == nil
+
+		let minimalSize = 2.5 * UI.Margins
+		layer.cornerRadius = isMinimal ? minimalSize / 2 : UI.Badge.cornerRadius
 
 		if isMinimal {
 			textLabel.text = platform?.type?.name.first.map { String($0).uppercased() }
 			textLabel.font = Fonts.Content.Title.H3
-		} else {
-			textLabel.text = platform?.type?.name
-			textLabel.font = Fonts.Content.Text.Bold.withSize(Fonts.Size - 2)
-		}
-
-		let minimalSize = 2.5 * UI.Margins
-		layer.cornerRadius = isMinimal ? minimalSize / 2 : UI.Margins / 2
-
-		if isMinimal {
 			contentStackView.layoutMargins = .zero
-			contentStackView.isLayoutMarginsRelativeArrangement = true
-			contentStackView.snp.remakeConstraints { make in
-				make.edges.equalToSuperview()
-			}
-			snp.makeConstraints { make in
+			contentStackView.spacing = 0
+			snp.remakeConstraints { make in
 				make.size.equalTo(minimalSize)
 			}
 		} else {
-			snp.removeConstraints()
-			contentStackView.isLayoutMarginsRelativeArrangement = true
-			contentStackView.layoutMargins = UIEdgeInsets(horizontal: UI.Margins / 3, vertical: UI.Margins / 7)
-			contentStackView.snp.remakeConstraints { make in
-				make.edges.equalToSuperview()
+			textLabel.text = platform?.type?.name
+			textLabel.font = UI.Badge.font
+			contentStackView.layoutMargins = UI.Badge.contentInsets
+			contentStackView.spacing = UI.Margins / 3
+			iconImageView.snp.remakeConstraints { make in
+				make.size.equalTo(ceil(UI.Badge.font.pointSize))
 			}
-			setContentHuggingPriority(.required, for: .horizontal)
-			setContentCompressionResistancePriority(.required, for: .horizontal)
+			snp.remakeConstraints { make in
+				make.height.equalTo(UI.Badge.height)
+			}
 		}
 	}
 }

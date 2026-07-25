@@ -8,7 +8,7 @@
 import UIKit
 import SnapKit
 
-public class RU_Booking_Status_Label : RU_Label {
+public class RU_Booking_Status_Label : UIView {
 	
 	public var booking:RU_Booking? {
 		
@@ -17,7 +17,7 @@ public class RU_Booking_Status_Label : RU_Label {
 			guard let booking else { return }
 			
 			backgroundColor = booking.status.backgroundColor
-			textColor = booking.status.textColor
+			textLabel.textColor = booking.status.textColor
 			
 			let calendar = Calendar.current
 			let today = calendar.startOfDay(for: Date())
@@ -25,42 +25,71 @@ public class RU_Booking_Status_Label : RU_Label {
 			switch booking.status {
 				
 			case .upcoming:
-				let startDay = calendar.startOfDay(for: booking.dates.start)
+				let startDay = calendar.startOfDay(for: booking.stayCheckInDate)
 				let days = calendar.dateComponents([.day], from: today, to: startDay).day ?? 0
-				if days == 1 {
-					text = String(key: "booking.status.upcoming.tomorrow")
+				if days == 0 {
+					textLabel.text = String(key: "booking.status.arrival.today")
+				} else if days == 1 {
+					textLabel.text = String(key: "booking.status.upcoming.tomorrow")
 				} else {
-					text = "\(booking.status.text) ➜ \(days) j"
+					textLabel.text = "\(booking.status.text) ➜ \(days) j"
 				}
 				
 			case .current:
-				let endDay = calendar.startOfDay(for: booking.dates.end)
+				let endDay = calendar.startOfDay(for: booking.stayCheckOutDate)
 				let days = calendar.dateComponents([.day], from: today, to: endDay).day ?? 0
 				if days == 0 {
-					text = String(key: "booking.status.departure.today")
+					textLabel.text = String(key: "booking.status.departure.today")
 				} else if days == 1 {
-					text = String(key: "booking.status.departure.tomorrow")
+					textLabel.text = String(key: "booking.status.departure.tomorrow")
 				} else {
-					text = "\(booking.status.text) ➜ \(days) j"
+					textLabel.text = "\(booking.status.text) ➜ \(days) j"
 				}
 				
 			default:
-				text = booking.status.text
+				textLabel.text = booking.status.text
 			}
 		}
 	}
+	
+	private lazy var textLabel: RU_Label = {
+		
+		$0.font = UI.Badge.font
+		$0.textAlignment = .center
+		$0.numberOfLines = 1
+		$0.setContentHuggingPriority(.required, for: .horizontal)
+		$0.setContentCompressionResistancePriority(.required, for: .horizontal)
+		return $0
+		
+	}(RU_Label())
+	
+	private lazy var contentStackView: RU_StackView = {
+		
+		$0.axis = .horizontal
+		$0.alignment = .center
+		$0.isLayoutMarginsRelativeArrangement = true
+		$0.insetsLayoutMarginsFromSafeArea = false
+		$0.layoutMargins = UI.Badge.contentInsets
+		$0.addArrangedSubview(textLabel)
+		return $0
+		
+	}(RU_StackView())
 	
 	public override init(frame: CGRect) {
 		
 		super.init(frame: frame)
 		
-		font = Fonts.Content.Text.Bold.withSize(Fonts.Size-2)
-		textAlignment = .center
-		numberOfLines = 1
-		contentInsets = .init(horizontal: UI.Margins/3, vertical: UI.Margins/7)
-		layer.cornerRadius = UI.Margins/2
+		layer.masksToBounds = true
+		layer.cornerRadius = UI.Badge.cornerRadius
 		setContentHuggingPriority(.required, for: .horizontal)
 		setContentCompressionResistancePriority(.required, for: .horizontal)
+		addSubview(contentStackView)
+		contentStackView.snp.makeConstraints { make in
+			make.edges.equalToSuperview()
+		}
+		snp.makeConstraints { make in
+			make.height.equalTo(UI.Badge.height)
+		}
 	}
 	
 	@MainActor required init?(coder: NSCoder) {

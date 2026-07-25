@@ -18,8 +18,8 @@ public class RU_Home_ViewController: RU_ViewController {
 			
 			view.dismissPlaceholder()
 			
-            currentBookingSectionStackView.booking = bookings?.current
             nextBookingSectionStackView.booking = bookings?.next
+			currentStayStickyView.booking = bookings?.current
 			monthProgressView.update(bookings: bookings)
 			
             if (bookings?.isEmpty ?? true) {
@@ -46,33 +46,31 @@ public class RU_Home_ViewController: RU_ViewController {
 		}
 	}
 	private lazy var monthProgressView: RU_Home_MonthProgress_View = .init()
-	private lazy var currentBookingSectionStackView: RU_Booking_Card_Section_StackView = {
-		
-		$0.title = String(key: "home.currentBooking.section.title")
-		$0.isEmphasized = true
-		return $0
-		
-	}(RU_Booking_Card_Section_StackView())
 	private lazy var nextBookingSectionStackView: RU_Booking_Card_Section_StackView = {
 		
 		$0.title = String(key: "home.nextBooking.section.title")
 		return $0
 		
 	}(RU_Booking_Card_Section_StackView())
-	private lazy var bookingsRowStackView: RU_StackView = {
-		let stack = RU_StackView(arrangedSubviews: [currentBookingSectionStackView, nextBookingSectionStackView])
-		stack.spacing = 2 * UI.Margins
-		stack.distribution = .fillEqually
-		return stack
-	}()
 	private lazy var contentScrollView = RU_ScrollView()
 	private lazy var contentStackView: RU_StackView = {
-		let stack = RU_StackView(arrangedSubviews: [reportingTipStackView, promoTipStackView, monthProgressView, bookingsRowStackView])
+		let stack = RU_StackView(arrangedSubviews: [
+			reportingTipStackView,
+			promoTipStackView,
+			monthProgressView,
+			nextBookingSectionStackView
+		])
 		stack.axis = .vertical
 		stack.spacing = 2 * UI.Margins
 		stack.isLayoutMarginsRelativeArrangement = true
 		return stack
 	}()
+	private lazy var currentStayStickyView: RU_Home_CurrentStay_StickyView = {
+		$0.onVisibilityChange = { [weak self] _ in
+			self?.updateCurrentStayInset()
+		}
+		return $0
+	}(RU_Home_CurrentStay_StickyView())
     private lazy var reportingTipStackView:RU_Reporting_Tip_StackView = {
         
         $0.isHidden = true
@@ -112,23 +110,47 @@ public class RU_Home_ViewController: RU_ViewController {
 			traitCollection: traitCollection
 		)
 		
+		view.addSubview(currentStayStickyView)
+		currentStayStickyView.snp.makeConstraints { make in
+			make.left.right.bottom.equalTo(view.safeAreaLayoutGuide).inset(UI.Margins)
+		}
+		
 		NotificationCenter.add(.updateBookings) { [weak self] _ in
 			
 			self?.updateBookings()
 		}
 	}
 	
-	public override func traitCollectionDidChange(_ previousTraitCollection: UITraitCollection?) {
-		super.traitCollectionDidChange(previousTraitCollection)
-		guard traitCollection.horizontalSizeClass != previousTraitCollection?.horizontalSizeClass else { return }
-		updateAdaptiveLayoutMargins()
-		bookingsRowStackView.axis = traitCollection.isRegularWidth ? .horizontal : .vertical
+	public override func viewDidLoad() {
+		
+		super.viewDidLoad()
+		
+		registerForTraitChanges([UITraitHorizontalSizeClass.self]) { (self: Self, previousTraitCollection: UITraitCollection) in
+			
+			guard self.traitCollection.horizontalSizeClass != previousTraitCollection.horizontalSizeClass else { return }
+			self.updateAdaptiveLayoutMargins()
+		}
 	}
 	
 	private func updateAdaptiveLayoutMargins() {
 		let margins = UI.adaptiveMargins(for: traitCollection)
 		contentStackView.layoutMargins = UIEdgeInsets(top: margins, left: margins, bottom: margins, right: margins)
-		bookingsRowStackView.axis = traitCollection.isRegularWidth ? .horizontal : .vertical
+		updateCurrentStayInset()
+	}
+	
+	func handleTabReselect() {
+		currentStayStickyView.restoreAfterDismiss()
+	}
+	
+	private func updateCurrentStayInset() {
+		view.layoutIfNeeded()
+		
+		let stickyVisible = currentStayStickyView.booking != nil && !currentStayStickyView.isHidden
+		let stickyHeight = stickyVisible ? currentStayStickyView.bounds.height : 0
+		let bottomInset = stickyVisible ? stickyHeight + 2 * UI.Margins : 0
+		
+		contentScrollView.contentInset.bottom = bottomInset
+		contentScrollView.verticalScrollIndicatorInsets.bottom = bottomInset
 	}
 	
 	public override func viewWillAppear(_ animated: Bool) {

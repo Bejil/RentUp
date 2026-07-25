@@ -91,7 +91,17 @@ extension RU_TabBarController : UITabBarControllerDelegate {
 		
         RU_Feedback.shared.make(.On)
 		
+		notifyHomeTabReselect(from: viewController)
+		
 		return true
+	}
+	
+	private func notifyHomeTabReselect(from viewController: UIViewController) {
+		
+		let navigationController = viewController as? UINavigationController
+		let home = navigationController?.viewControllers.first as? RU_Home_ViewController
+			?? viewController as? RU_Home_ViewController
+		home?.handleTabReselect()
 	}
 }
 

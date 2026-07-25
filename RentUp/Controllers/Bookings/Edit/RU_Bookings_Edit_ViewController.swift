@@ -78,6 +78,8 @@ public class RU_Bookings_Edit_ViewController : RU_ViewController {
             }
 			
 			commentTextField.text = booking?.comment
+			platformReferenceTextFieldRow.textField.text = booking?.platformReference
+			updatePlatformReferenceHelp()
 			
 			deleteButton.isHidden = false
 			
@@ -105,6 +107,8 @@ public class RU_Bookings_Edit_ViewController : RU_ViewController {
 			if let index = self?.platformSegmentedControl.selectedSegmentIndex {
 				
 				self?.booking?.platform = RU_Platform.all?[index]
+				self?.booking?.capturePricingSnapshot()
+				self?.updatePlatformReferenceHelp()
 				self?.updateSaveButton()
 			}
 			
@@ -112,6 +116,31 @@ public class RU_Bookings_Edit_ViewController : RU_ViewController {
 		return $0
 		
 	}(RU_Platform_SegmentedControl())
+	private lazy var platformReferenceTipStackView: RU_Tip_StackView = {
+		$0.icon = UIImage(systemName: "info.circle.fill")
+		return $0
+	}(RU_Tip_StackView())
+	private lazy var platformReferenceTextFieldRow: RU_Section_TextFieldRow_StackView = {
+		$0.title = String(key: "bookings.create.platformReference.field")
+		$0.image = UIImage(systemName: "link")
+		$0.textField.keyboardType = .asciiCapable
+		$0.textField.autocapitalizationType = .none
+		$0.textField.autocorrectionType = .no
+		$0.textField.smartQuotesType = .no
+		$0.textField.smartDashesType = .no
+		$0.textField.addAction(.init(handler: { [weak self] _ in
+			self?.booking?.platformReference = self?.platformReferenceTextFieldRow.textField.text
+			self?.updateSaveButton()
+		}), for: .editingChanged)
+		return $0
+	}(RU_Section_TextFieldRow_StackView())
+	private lazy var platformReferenceSectionStackView: RU_Section_StackView = {
+		$0.title = String(key: "bookings.create.platformReference.section.title")
+		$0.subtitle = String(key: "bookings.create.platformReference.section.subtitle")
+		$0.addArrangedSubview(platformReferenceTipStackView)
+		$0.addArrangedSubview(platformReferenceTextFieldRow)
+		return $0
+	}(RU_Section_StackView())
 	private lazy var datesButton:RU_Button = {
 		
 		$0.type = .secondary
@@ -347,6 +376,8 @@ public class RU_Bookings_Edit_ViewController : RU_ViewController {
 		button?.isLoading = true
 		
 		self?.booking?.comment = self?.commentTextField.text
+		let reference = self?.platformReferenceTextFieldRow.textField.text?.trimmingCharacters(in: .whitespacesAndNewlines)
+		self?.booking?.platformReference = (reference?.isEmpty == false) ? reference : nil
 		
 		self?.booking?.save { [weak self] error in
 			
@@ -402,6 +433,8 @@ public class RU_Bookings_Edit_ViewController : RU_ViewController {
 		platformsSectionTitleStackView.subtitle = String(key: "bookings.create.platform.section.subtitle")
 		platformsSectionTitleStackView.addArrangedSubview(platformSegmentedControl)
 		contentStackView.addArrangedSubview(platformsSectionTitleStackView)
+		contentStackView.addArrangedSubview(platformReferenceSectionStackView)
+		updatePlatformReferenceHelp()
 		
 		let datesSectionTitleStackView:RU_Section_StackView = .init()
 		datesSectionTitleStackView.title = String(key: "bookings.create.dates.section.title")
@@ -487,6 +520,7 @@ public class RU_Bookings_Edit_ViewController : RU_ViewController {
                 let completion: ((RU_Classified?) -> Void)? = { [weak self] classified in
                     
                     self?.booking?.classified = classified
+					self?.booking?.capturePricingSnapshot()
                     
                     self?.adultsRow.value = String(0)
                     self?.adultsRow.stepper.sendActions(for: .valueChanged)
@@ -541,6 +575,7 @@ public class RU_Bookings_Edit_ViewController : RU_ViewController {
 		}
 		
 		platformSegmentedControl.classified = booking?.classified
+		updatePlatformReferenceHelp()
 		
 		if let value = booking?.classified?.configuration.beds.doubles {
 			
@@ -582,6 +617,21 @@ public class RU_Bookings_Edit_ViewController : RU_ViewController {
             
 			saveButton.subtitle = nil
 		}
+	}
+	
+	private func updatePlatformReferenceHelp() {
+		let type = booking?.platform?.type
+		let supportsLink = type?.supportsReservationLink ?? false
+		platformReferenceSectionStackView.isHidden = !supportsLink
+		
+		guard supportsLink, let type else { return }
+		
+		platformReferenceTipStackView.reset()
+		platformReferenceTipStackView.title = type.platformReferenceHelpTitle
+		platformReferenceTipStackView.addLabel(type.platformReferenceHelpContent)
+		
+		let placeholderKey = "booking.platformReference.placeholder.\(type.rawValue)"
+		platformReferenceTextFieldRow.textField.placeholder = String(key: placeholderKey)
 	}
 	
 	private func wouldExceedCapacity(adults: Int? = nil, children: Int? = nil, babies: Int? = nil) -> Bool {

@@ -11,6 +11,25 @@ import FirebaseAuth
 
 extension RU_Classified {
 	
+	public static let defaultCheckInHour = 12
+	public static let defaultCheckOutHour = 12
+	
+	public var effectiveCheckInHour: Int {
+		min(max(checkInHour ?? Self.defaultCheckInHour, 0), 23)
+	}
+	
+	public var effectiveCheckInMinute: Int {
+		min(max(checkInMinute ?? 0, 0), 59)
+	}
+	
+	public var effectiveCheckOutHour: Int {
+		min(max(checkOutHour ?? Self.defaultCheckOutHour, 0), 23)
+	}
+	
+	public var effectiveCheckOutMinute: Int {
+		min(max(checkOutMinute ?? 0, 0), 59)
+	}
+	
 	public var canSave:Bool {
 		
 		return name != nil && configuration.capacity ?? 0 >= 1 && !tarification.filter({ $0.price ?? 0 > 0 }).isEmpty && (configuration.beds.doubles ?? 0 >= 1 || configuration.beds.singles ?? 0 >= 1)

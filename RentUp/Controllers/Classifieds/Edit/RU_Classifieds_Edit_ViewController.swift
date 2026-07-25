@@ -10,6 +10,12 @@ import SnapKit
 
 public class RU_Classifieds_Edit_ViewController : RU_ViewController {
 	
+	private var editingChecklistItemUUID:String?
+	private var isCreatingChecklistItem:Bool = false
+	private var editingChecklistOriginalTitle:String?
+	private var keyboardBottomInset:CGFloat = 0
+	private var saveButtonBottomInset:CGFloat = 0
+	
 	public var classified:RU_Classified? {
 		
 		didSet {
@@ -20,6 +26,15 @@ public class RU_Classifieds_Edit_ViewController : RU_ViewController {
                 
                 feesRow.textField.text = "\(value)"
             }
+			
+			checkInRow.set(
+				hour: classified?.effectiveCheckInHour ?? RU_Classified.defaultCheckInHour,
+				minute: classified?.effectiveCheckInMinute ?? 0
+			)
+			checkOutRow.set(
+				hour: classified?.effectiveCheckOutHour ?? RU_Classified.defaultCheckOutHour,
+				minute: classified?.effectiveCheckOutMinute ?? 0
+			)
 			
 			if let value = classified?.configuration.capacity {
 				
@@ -86,6 +101,36 @@ public class RU_Classifieds_Edit_ViewController : RU_ViewController {
         return $0
         
     }(RU_Section_TextFieldRow_StackView())
+	private lazy var checkInRow:RU_Section_TimeRow_StackView = {
+		
+		$0.image = UIImage(systemName: "figure.walk.arrival")
+		$0.title = String(key: "settings.classified.schedule.checkIn")
+		$0.datePicker.addAction(.init(handler: { [weak self] _ in
+			
+			guard let self else { return }
+			self.classified?.checkInHour = self.checkInRow.hour
+			self.classified?.checkInMinute = self.checkInRow.minute
+			self.updateSaveButton()
+			
+		}), for: .valueChanged)
+		return $0
+		
+	}(RU_Section_TimeRow_StackView())
+	private lazy var checkOutRow:RU_Section_TimeRow_StackView = {
+		
+		$0.image = UIImage(systemName: "figure.walk.departure")
+		$0.title = String(key: "settings.classified.schedule.checkOut")
+		$0.datePicker.addAction(.init(handler: { [weak self] _ in
+			
+			guard let self else { return }
+			self.classified?.checkOutHour = self.checkOutRow.hour
+			self.classified?.checkOutMinute = self.checkOutRow.minute
+			self.updateSaveButton()
+			
+		}), for: .valueChanged)
+		return $0
+		
+	}(RU_Section_TimeRow_StackView())
 	private lazy var capacityRow:RU_Section_StepperRow_StackView = {
 		
 		$0.image = UIImage(systemName: "person.2.fill")
@@ -160,7 +205,7 @@ public class RU_Classifieds_Edit_ViewController : RU_ViewController {
 		
 	}(RU_Button(String(key: "settings.classified.checklist.add.button")) { [weak self] _ in
 		
-		self?.presentChecklistItemAlert(item: nil)
+		self?.beginChecklistItemEditing(item: nil)
 	})
 	private lazy var checklistTableView:RU_TableView = {
 		
@@ -230,6 +275,7 @@ public class RU_Classifieds_Edit_ViewController : RU_ViewController {
 				self?.dismiss {
 					
 					NotificationCenter.post(.updateClassifieds)
+					NotificationCenter.post(.updateBookings)
 				}
 			}
 		}
@@ -273,6 +319,13 @@ public class RU_Classifieds_Edit_ViewController : RU_ViewController {
         generalSectionStackView.addArrangedSubview(feesRow)
 		contentStackView.addArrangedSubview(generalSectionStackView)
 		
+		let scheduleSectionStackView:RU_Section_StackView = .init()
+		scheduleSectionStackView.title = String(key: "settings.classified.schedule.section.title")
+		scheduleSectionStackView.subtitle = String(key: "settings.classified.schedule.section.subtitle")
+		scheduleSectionStackView.addArrangedSubview(checkInRow)
+		scheduleSectionStackView.addArrangedSubview(checkOutRow)
+		contentStackView.addArrangedSubview(scheduleSectionStackView)
+		
 		let configurationSectionStackView:RU_Section_StackView = .init()
 		configurationSectionStackView.title = String(key: "settings.classified.configuration.section.title")
 		configurationSectionStackView.subtitle = String(key: "settings.classified.configuration.section.subtitle")
@@ -308,6 +361,9 @@ public class RU_Classifieds_Edit_ViewController : RU_ViewController {
             make.bottom.equalTo(view.safeAreaLayoutGuide).inset(UI.Margins)
             make.left.right.equalTo(view.safeAreaLayoutGuide).inset(1.5 * UI.Margins)
         }
+		
+		NotificationCenter.default.addObserver(self, selector: #selector(keyboardWillChangeFrame(_:)), name: UIResponder.keyboardWillChangeFrameNotification, object: nil)
+		NotificationCenter.default.addObserver(self, selector: #selector(keyboardWillHide(_:)), name: UIResponder.keyboardWillHideNotification, object: nil)
 	}
     
     public override func viewWillAppear(_ animated: Bool) {
@@ -330,10 +386,71 @@ public class RU_Classifieds_Edit_ViewController : RU_ViewController {
         
         view.layoutIfNeeded()
         
-        let bottomInset = saveButton.bounds.height + 2 * UI.Margins
-        contentScrollView.contentInset.bottom = bottomInset
-        contentScrollView.verticalScrollIndicatorInsets.bottom = bottomInset
+        saveButtonBottomInset = saveButton.bounds.height + 2 * UI.Margins
+		updateScrollInsets()
     }
+	
+	private func updateScrollInsets() {
+		
+		let bottomInset = max(saveButtonBottomInset, keyboardBottomInset)
+		contentScrollView.contentInset.bottom = bottomInset
+		contentScrollView.verticalScrollIndicatorInsets.bottom = bottomInset
+	}
+	
+	@objc private func keyboardWillChangeFrame(_ notification: Notification) {
+		
+		guard let keyboardFrame = notification.userInfo?[UIResponder.keyboardFrameEndUserInfoKey] as? CGRect,
+			  let duration = notification.userInfo?[UIResponder.keyboardAnimationDurationUserInfoKey] as? Double else { return }
+		
+		let keyboardFrameInView = view.convert(keyboardFrame, from: nil)
+		let overlap = contentScrollView.frame.intersection(keyboardFrameInView)
+		keyboardBottomInset = overlap.isNull || overlap.height <= 0 ? 0 : overlap.height + UI.Margins
+		
+		UIView.animate(withDuration: duration) {
+			
+			self.updateScrollInsets()
+			self.view.layoutIfNeeded()
+		} completion: { _ in
+			
+			self.scrollToEditingChecklistItemIfNeeded()
+		}
+	}
+	
+	@objc private func keyboardWillHide(_ notification: Notification) {
+		
+		guard let duration = notification.userInfo?[UIResponder.keyboardAnimationDurationUserInfoKey] as? Double else { return }
+		
+		keyboardBottomInset = 0
+		
+		UIView.animate(withDuration: duration) {
+			
+			self.updateScrollInsets()
+			self.view.layoutIfNeeded()
+		}
+	}
+	
+	private func scrollToEditingChecklistItemIfNeeded() {
+		
+		guard let uuid = editingChecklistItemUUID,
+			  let index = classified?.checklist?.firstIndex(where: { $0.uuid == uuid }) else { return }
+		
+		let indexPath = IndexPath(row: index, section: 0)
+		checklistTableView.layoutIfNeeded()
+		
+		var cell = checklistTableView.cellForRow(at: indexPath)
+		
+		if cell == nil {
+			
+			checklistTableView.scrollToRow(at: indexPath, at: .middle, animated: false)
+			checklistTableView.layoutIfNeeded()
+			cell = checklistTableView.cellForRow(at: indexPath)
+		}
+		
+		guard let cell else { return }
+		
+		let frameInScrollView = cell.convert(cell.bounds, to: contentScrollView).insetBy(dx: 0, dy: -2 * UI.Margins)
+		contentScrollView.scrollRectToVisible(frameInScrollView, animated: true)
+	}
 	
 	private func updateSaveButton() {
 		
@@ -384,38 +501,83 @@ public class RU_Classifieds_Edit_ViewController : RU_ViewController {
 		updateSaveButton()
 	}
 	
-	private func presentChecklistItemAlert(item: RU_Classified.ChecklistItem?) {
+	private func beginChecklistItemEditing(item: RU_Classified.ChecklistItem?) {
 		
-		let alertController:RU_Classified_ChecklistItem_Alert_ViewController = .init()
-		alertController.isCreating = item == nil
+		if item == nil, (classified?.checklist?.count ?? 0) >= RU_Classifieds_Checklist_ViewController.inlineLimit {
+			
+			openChecklistViewController()
+			return
+		}
+		
+		if editingChecklistItemUUID != nil {
+			
+			view.endEditing(true)
+		}
 		
 		if let item {
 			
-			alertController.item = item
+			isCreatingChecklistItem = false
+			editingChecklistOriginalTitle = item.title
+			editingChecklistItemUUID = item.uuid
+		}
+		else {
+			
+			let newItem = RU_Classified.ChecklistItem()
+			
+			if classified?.checklist == nil {
+				
+				classified?.checklist = []
+			}
+			
+			classified?.checklist?.append(newItem)
+			isCreatingChecklistItem = true
+			editingChecklistOriginalTitle = nil
+			editingChecklistItemUUID = newItem.uuid
 		}
 		
-		alertController.saveHandler = { [weak self] savedItem in
+		updateChecklistSection()
+		updateSaveButton()
+		
+		DispatchQueue.main.async { [weak self] in
 			
-			if let item {
+			self?.scrollToEditingChecklistItemIfNeeded()
+		}
+	}
+	
+	private func commitChecklistItemEditing(title: String?) {
+		
+		guard let uuid = editingChecklistItemUUID,
+			  let index = classified?.checklist?.firstIndex(where: { $0.uuid == uuid }) else { return }
+		
+		let trimmedTitle = title?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+		
+		if trimmedTitle.isEmpty {
+			
+			if isCreatingChecklistItem {
 				
-				if let index = self?.classified?.checklist?.firstIndex(where: { $0.uuid == item.uuid }) {
+				classified?.checklist?.remove(at: index)
+				
+				if classified?.checklist?.isEmpty == true {
 					
-					self?.classified?.checklist?[index] = savedItem
+					classified?.checklist = nil
 				}
 			}
 			else {
 				
-				if self?.classified?.checklist == nil {
-					
-					self?.classified?.checklist = []
-				}
-				self?.classified?.checklist?.append(savedItem)
+				classified?.checklist?[index].title = editingChecklistOriginalTitle
 			}
-			
-			self?.updateChecklistSection()
-			self?.updateSaveButton()
 		}
-		alertController.present(as: .Alert)
+		else {
+			
+			classified?.checklist?[index].title = trimmedTitle
+		}
+		
+		editingChecklistItemUUID = nil
+		isCreatingChecklistItem = false
+		editingChecklistOriginalTitle = nil
+		
+		updateChecklistSection()
+		updateSaveButton()
 	}
 }
 
@@ -437,14 +599,29 @@ extension RU_Classifieds_Edit_ViewController : UITableViewDelegate, UITableViewD
 		if tableView == checklistTableView {
 			
 			let cell: RU_Classified_ChecklistItem_TableViewCell = tableView.dequeueReusableCell(withIdentifier: RU_Classified_ChecklistItem_TableViewCell.identifier) as! RU_Classified_ChecklistItem_TableViewCell
-			cell.item = classified?.checklist?[indexPath.row]
+			let item = classified?.checklist?[indexPath.row]
+			cell.item = item
 			cell.showsInfoButton = true
 			cell.verticalInset = UI.Margins / 2
 			cell.selectionStyle = .none
+			cell.isTitleEditing = item?.uuid == editingChecklistItemUUID
 			cell.infoHandler = { [weak self] in
 				
-				self?.presentChecklistItemAlert(item: self?.classified?.checklist?[indexPath.row])
+				self?.beginChecklistItemEditing(item: item)
 			}
+			cell.titleCommitHandler = { [weak self] title in
+				
+				self?.commitChecklistItemEditing(title: title)
+			}
+			
+			if cell.isTitleEditing {
+				
+				DispatchQueue.main.async {
+					
+					cell.beginTitleEditing()
+				}
+			}
+			
 			return cell
 		}
 		

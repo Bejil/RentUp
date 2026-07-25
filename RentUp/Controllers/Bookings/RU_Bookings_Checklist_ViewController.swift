@@ -15,6 +15,7 @@ public class RU_Bookings_Checklist_ViewController : RU_ViewController {
 		didSet {
 			
 			tableView.reloadData()
+			updateNavigationItems()
 			updateProgress()
 		}
 	}
@@ -115,7 +116,56 @@ public class RU_Bookings_Checklist_ViewController : RU_ViewController {
 			make.left.right.bottom.equalTo(view.safeAreaLayoutGuide).inset(UI.Margins)
 		}
 		
+		updateNavigationItems()
 		updateProgress()
+	}
+	
+	private func updateNavigationItems() {
+		
+		guard !checklistItems.isEmpty else {
+			
+			navigationItem.rightBarButtonItem = nil
+			return
+		}
+		
+		navigationItem.rightBarButtonItem = .init(image: UIImage(systemName: "square.and.arrow.up"), primaryAction: .init(handler: { [weak self] _ in
+			
+			self?.shareChecklist()
+		}))
+	}
+	
+	private func shareChecklist() {
+		
+		guard !checklistItems.isEmpty else { return }
+		
+		var lines:[String] = []
+		
+		if let name = booking?.classified?.name, !name.isEmpty {
+			
+			lines.append(String(format: String(key: "settings.classified.checklist.share.title"), " — \(name)"))
+		}
+		else {
+			
+			lines.append(String(format: String(key: "settings.classified.checklist.share.title"), ""))
+		}
+		
+		lines.append("")
+		
+		checklistItems.forEach { item in
+			
+			guard let title = item.title, !title.isEmpty else { return }
+			
+			lines.append(String(format: String(key: "settings.classified.checklist.share.item"), title))
+		}
+		
+		let activityViewController = UIActivityViewController(activityItems: [lines.joined(separator: "\n")], applicationActivities: nil)
+		
+		if let popover = activityViewController.popoverPresentationController {
+			
+			popover.barButtonItem = navigationItem.rightBarButtonItem
+		}
+		
+		present(activityViewController, animated: true)
 	}
 	
 	public override func viewWillAppear(_ animated: Bool) {
@@ -191,16 +241,16 @@ public class RU_Bookings_Checklist_ViewController : RU_ViewController {
 		alertController.add(String(key: "bookings.details.checklist.completed.message"))
 		alertController.addButton(title: String(key: "bookings.details.checklist.completed.button")) { _ in
 			
-			MB_Confetti.stop()
+			RU_Confetti.stop()
 			alertController.close()
 		}
 		alertController.dismissHandler = {
 			
-			MB_Confetti.stop()
+			RU_Confetti.stop()
 		}
         alertController.present {
             
-            MB_Confetti.start()
+            RU_Confetti.start()
         }
 	}
 	

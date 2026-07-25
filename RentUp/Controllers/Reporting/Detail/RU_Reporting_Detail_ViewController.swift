@@ -503,13 +503,14 @@ extension RU_Reporting_Detail_ViewController {
         }
         
         static func uniqueClassifiedFees(for bookings: [RU_Booking]) -> Double {
-            var classifieds: [RU_Classified] = []
-            bookings.compactMap(\.classified).forEach {
-                if !classifieds.contains($0) {
-                    classifieds.append($0)
+            var feesByClassifiedUUID: [String: Int] = [:]
+            bookings.forEach { booking in
+                guard let uuid = booking.classified?.uuid else { return }
+                if feesByClassifiedUUID[uuid] == nil {
+                    feesByClassifiedUUID[uuid] = booking.effectiveClassifiedFees ?? 0
                 }
             }
-            return Double(classifieds.compactMap(\.fees).reduce(0, +))
+            return Double(feesByClassifiedUUID.values.reduce(0, +))
         }
         
         /// Taux de rendement = revenu net proratisé du mois / charges (frais uniques par bien).

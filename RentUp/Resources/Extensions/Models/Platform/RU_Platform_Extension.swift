@@ -73,31 +73,38 @@ extension RU_Platform {
 		
 		guard nights > 0 else { return nil }
 		
-		// Récupérer les prix depuis le classified pour cette plateforme
-		guard let tarification = booking.classified?.tarification.first(where: { $0.platform == self }),
-			  let pricePerNight = tarification.price else { return nil }
+		let snapshot = booking.pricingSnapshot
+		let legacyTarification = booking.classified?.tarification.first(where: { $0.platform == self })
+		
+		guard let pricePerNight = snapshot?.pricePerNight ?? legacyTarification?.price else { return nil }
+		
+		let travelersIncluded = snapshot?.travelers.included ?? legacyTarification?.travelers.included
+		let travelersExtraPrice = snapshot?.travelers.extraPrice ?? legacyTarification?.travelers.extraPrice
+		let offers = snapshot?.offers ?? legacyTarification?.offers ?? []
+		let cleaningAmount = snapshot?.cleaning ?? legacyTarification?.cleaning ?? 0
+		let commission = snapshot?.platformCommission ?? self.commission
 		
 		var totalNights = Double(pricePerNight * nights)
 		
 		// Supplément par voyageur au-dessus de n (x € par voyageur supplémentaire par nuit) — avant réductions
 		let totalTravelers = (booking.travelers.adults ?? 0) + (booking.travelers.children ?? 0)
-        if let n = tarification.travelers.included, let x = tarification.travelers.extraPrice, totalTravelers > n {
+		if let n = travelersIncluded, let x = travelersExtraPrice, totalTravelers > n {
 			let extraTravelers = totalTravelers - n
 			totalNights += Double(extraTravelers * x * nights)
 		}
 		
 		// Appliquer les réductions selon la durée du séjour (semaine / mois)
 		var discountPercent: Double = 0
-		if nights >= 28, let monthPercent = tarification.offers.first(where: { $0.reductiontype == .month })?.percent {
+		if nights >= 28, let monthPercent = offers.first(where: { $0.reductiontype == .month })?.percent {
 			discountPercent = Double(monthPercent)
 		}
-		else if nights >= 7, let weekPercent = tarification.offers.first(where: { $0.reductiontype == .week })?.percent {
+		else if nights >= 7, let weekPercent = offers.first(where: { $0.reductiontype == .week })?.percent {
 			discountPercent = Double(weekPercent)
 		}
 		let discount = totalNights * (discountPercent / 100)
 		totalNights = totalNights - discount
 		
-		let cleaning = Double(tarification.cleaning ?? 0)
+		let cleaning = Double(cleaningAmount)
 		let totalNightsCleaning = totalNights + cleaning
 		
 		var travelerFees: Double = 0
@@ -244,4 +251,42 @@ extension RU_Platform.PlatformType {
         
         return String(key: "platform.\(rawValue).priceFormula.host")
     }
+	
+	/// Indique si une référence plateforme peut ouvrir une réservation externe.
+	public var supportsReservationLink: Bool {
+		switch self {
+		case .airbnb, .booking, .abritel:
+			return true
+		case .direct:
+			return false
+		}
+	}
+	
+	public var platformReferenceHelpTitle: String {
+		String(key: "booking.platformReference.help.\(rawValue).title")
+	}
+	
+	public var platformReferenceHelpContent: String {
+		String(key: "booking.platformReference.help.\(rawValue).content")
+	}
+	
+	/// URL hôte vers la réservation, si le format de référence le permet.
+	public func reservationURL(for reference: String) -> URL? {
+		let trimmed = reference.trimmingCharacters(in: .whitespacesAndNewlines)
+		guard !trimmed.isEmpty, supportsReservationLink else { return nil }
+		
+		let encoded = trimmed.addingPercentEncoding(withAllowedCharacters: .urlPathAllowed) ?? trimmed
+		let queryEncoded = trimmed.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? trimmed
+		
+		switch self {
+		case .airbnb:
+			return URL(string: "https://www.airbnb.fr/hosting/reservations/details/\(encoded)")
+		case .booking:
+			return URL(string: "https://admin.booking.com/hotel/hoteladmin/extranet_ng/manage/booking.html?res_id=\(queryEncoded)")
+		case .abritel:
+			return URL(string: "https://www.abritel.fr/rm/reservations/\(encoded)")
+		case .direct:
+			return nil
+		}
+	}
 }

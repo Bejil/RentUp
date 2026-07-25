@@ -451,6 +451,7 @@ public class RU_Settings_ViewController: RU_ViewController {
                 let value = columns[7].trimmingCharacters(in: .whitespacesAndNewlines)
                 return value.isEmpty ? nil : value
             }()
+			booking.capturePricingSnapshot()
             
             if booking.dates.end > booking.dates.start {
                 bookings.append(booking)

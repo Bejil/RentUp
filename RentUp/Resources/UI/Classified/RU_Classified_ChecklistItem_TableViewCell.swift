@@ -16,12 +16,13 @@ public class RU_Classified_ChecklistItem_TableViewCell : RU_TableViewCell {
 	}
 	
 	public var infoHandler:(()->Void)?
+	public var titleCommitHandler:((String?)->Void)?
 	
 	public var showsInfoButton:Bool = true {
 		
 		didSet {
 			
-			infoButton.isHidden = !showsInfoButton
+			updateAccessoryVisibility()
 		}
 	}
 	
@@ -43,6 +44,15 @@ public class RU_Classified_ChecklistItem_TableViewCell : RU_TableViewCell {
 		}
 	}
 	
+	public var isTitleEditing:Bool = false {
+		
+		didSet {
+			
+			guard oldValue != isTitleEditing else { return }
+			updateEditingAppearance()
+		}
+	}
+	
 	public var verticalInset:CGFloat = UI.Margins {
 		
 		didSet {
@@ -58,6 +68,7 @@ public class RU_Classified_ChecklistItem_TableViewCell : RU_TableViewCell {
 		didSet {
 			
 			titleLabel.text = item?.title
+			titleTextField.text = item?.title
 		}
 	}
 	
@@ -80,9 +91,35 @@ public class RU_Classified_ChecklistItem_TableViewCell : RU_TableViewCell {
 		return $0
 		
 	}(RU_Label())
+	private lazy var titleTextField:RU_TextField = {
+		
+		$0.isHidden = true
+		$0.font = Fonts.Content.Text.Bold
+		$0.placeholder = String(key: "settings.classified.checklist.title.placeholder")
+		$0.autocapitalizationType = .sentences
+		$0.returnKeyType = .done
+		$0.inset = .zero
+		$0.backgroundColor = .clear
+		$0.snp.remakeConstraints { make in
+			make.height.greaterThanOrEqualTo(2 * UI.Margins)
+		}
+		$0.addAction(.init(handler: { [weak self] _ in
+			
+			self?.commitTitleEditing()
+			
+		}), for: .editingDidEndOnExit)
+		$0.addAction(.init(handler: { [weak self] _ in
+			
+			guard self?.isTitleEditing == true else { return }
+			self?.commitTitleEditing()
+			
+		}), for: .editingDidEnd)
+		return $0
+		
+	}(RU_TextField())
 	private lazy var infoButton:UIButton = {
 		
-		$0.setImage(UIImage(systemName: "info.circle"), for: .normal)
+		$0.setImage(UIImage(systemName: "pencil.circle"), for: .normal)
 		$0.tintColor = Colors.TableView.Tint
 		$0.addAction(.init(handler: { [weak self] _ in
 			
@@ -104,7 +141,7 @@ public class RU_Classified_ChecklistItem_TableViewCell : RU_TableViewCell {
 		$0.alignment = .center
 		return $0
 		
-	}(RU_StackView(arrangedSubviews: [selectionImageView, titleLabel, infoButton]))
+	}(RU_StackView(arrangedSubviews: [selectionImageView, titleLabel, titleTextField, infoButton]))
 	
 	public override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
 		
@@ -120,6 +157,7 @@ public class RU_Classified_ChecklistItem_TableViewCell : RU_TableViewCell {
 		}
 		
 		updateSelectionAppearance()
+		updateEditingAppearance()
 	}
 	
 	public override func layoutSubviews() {
@@ -138,11 +176,45 @@ public class RU_Classified_ChecklistItem_TableViewCell : RU_TableViewCell {
 		super.prepareForReuse()
 		
 		infoHandler = nil
+		titleCommitHandler = nil
 		showsInfoButton = true
 		showsSelectionControl = false
 		isItemSelected = false
+		isTitleEditing = false
 		verticalInset = UI.Margins
 		contentView.frame = bounds
+	}
+	
+	public func beginTitleEditing() {
+		
+		isTitleEditing = true
+		titleTextField.becomeFirstResponder()
+	}
+	
+	private func commitTitleEditing() {
+		
+		guard isTitleEditing else { return }
+		
+		let title = titleTextField.text
+		isTitleEditing = false
+		titleCommitHandler?(title)
+	}
+	
+	private func updateEditingAppearance() {
+		
+		titleLabel.isHidden = isTitleEditing
+		titleTextField.isHidden = !isTitleEditing
+		updateAccessoryVisibility()
+		
+		if isTitleEditing {
+			
+			titleTextField.text = item?.title
+		}
+	}
+	
+	private func updateAccessoryVisibility() {
+		
+		infoButton.isHidden = !showsInfoButton || isTitleEditing
 	}
 	
 	private func updateSelectionAppearance() {

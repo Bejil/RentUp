@@ -36,7 +36,7 @@ public class RU_Reporting_Detail_Profitability_ViewController: RU_Reporting_Deta
             earliestBookingStart: earliestStart,
             latestBookingEnd: latestEnd
         )
-        let currentMonthStart = calendar.date(from: calendar.dateComponents([.year, .month], from: now)) ?? now
+        
         var monthStart = monthRange.firstMonthStart
         monthes = []
         actualValues = []
